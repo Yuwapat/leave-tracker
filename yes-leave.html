@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครู</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Sarabun, Kanit & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#1A2E4C',
+                            900: '#0F1E36', // Deep Luxury Navy
+                            950: '#091322',
+                        },
+                        emerald: {
+                            50: '#F0FDF4',
+                            100: '#DCFCE7',
+                            200: '#BBF7D0',
+                            600: '#10B981',
+                            700: '#0D5C3A', // Luxury Emerald Jade
+                            800: '#0A462C',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Sarabun', 'Kanit', sans-serif;
+            background-color: #F8FAFC; /* Light neutral slate-50 background */
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAF9F6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0D5C3A;
+        }
+        
+        .luxury-gradient {
+            background: linear-gradient(135deg, #0F1E36 0%, #0D5C3A 100%);
+        }
+        .emerald-glow:focus {
+            box-shadow: 0 0 12px rgba(13, 92, 58, 0.15);
+            border-color: rgba(13, 92, 58, 0.5);
+        }
+        .luxury-shadow {
+            box-shadow: 0 10px 30px -10px rgba(15, 30, 54, 0.04), 0 1px 3px rgba(13, 92, 58, 0.01);
+        }
+        .luxury-shadow-hover:hover {
+            box-shadow: 0 16px 40px -10px rgba(15, 30, 54, 0.06), 0 2px 6px rgba(13, 92, 58, 0.02);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // =========================================================================
+        // สวิตช์เปิด-ปิด บัญชีสาธิตตอนใช้จริง (เปลี่ยนเป็น false เมื่อต้องการซ่อนกล่องข้อมูลตัวอย่าง)
+        const SHOW_DEMO_PORTAL = true; 
+        // =========================================================================
+
+        // บัญชีผู้ใช้เริ่มต้น
+        const initialUsers = [
+            { id: "A01", prefix: "นาย", name: "วิโรจน์ แอดมินวิทยะ", role: "admin", password: "1234", email: "admin@yuvaphat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, photo: "" },
+            { id: "HR01", prefix: "นางสาว", name: "กมลพร ยอดบุคคล", role: "hr", password: "1234", email: "hr@yuvaphat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, photo: "" },
+            { id: "T01", prefix: "นาย", name: "สมชาย รักเรียน", role: "teacher", password: "1234", email: "somchai.r@yuvaphat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, photo: "" },
+            { id: "T02", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuvaphat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 4, photo: "" },
+            { id: "T03", prefix: "นางสาว", name: "อารีย์ ดีใจ", role: "teacher", password: "1234", email: "aree.d@yuvaphat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 6, photo: "" },
+            { id: "T04", prefix: "นาย", name: "ปัญญา เลิศล้ำ", role: "teacher", password: "1234", email: "panya.l@yuvaphat.ac.th", sickQuota: 20, personalQuota: 10, lateCount: 0, photo: "" },
+            { id: "T05", prefix: "นางสาว", name: "ดรุณี ศรีสุข", role: "teacher", password: "1234", email: "darunee.s@yuvaphat.ac.th", sickQuota: 30, personalQuota: 20, lateCount: 9, photo: "" }
+        ];
+
+        // วันหยุดปฏิทิน 2569
+        const initialHolidays = [
+            { date: "2026-01-01", name: "วันขึ้นปีใหม่" },
+            { date: "2026-03-02", name: "วันมาฆบูชา" },
+            { date: "2026-04-06", name: "วันจักรี" },
+            { date: "2026-04-13", name: "วันสงกรานต์" },
+            { date: "2026-04-14", name: "วันสงกรานต์" },
+            { date: "2026-04-15", name: "วันสงกรานต์" },
+            { date: "2026-05-01", name: "วันแรงงานแห่งชาติ" },
+            { date: "2026-05-04", name: "วันฉัตรมงคล" },
+            { date: "2026-06-03", name: "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี" },
+            { date: "2026-07-28", name: "วันเฉลิมพระชนมพรรษาพระบาทสมเด็จพระเจ้าอยู่หัว" },
+            { date: "2026-08-12", name: "วันแม่แห่งชาติ" },
+            { date: "2026-10-13", name: "วันคล้ายวันสวรรคต ร.9" },
+            { date: "2026-10-23", name: "วันปิยมหาราช" },
+            { date: "2026-12-05", name: "วันพ่อแห่งชาติ" },
+            { date: "2026-12-10", name: "วันรัฐธรรมนูญ" },
+            { date: "2026-12-31", name: "วันสิ้นปี" }
+        ];
+
+        // กิจกรรมพิเศษ
+        const initialActivities = [
+            { date: "2026-06-18", name: "พิธีไหว้ครูประจำปี", session: "morning" }, 
+            { date: "2026-07-10", name: "ประชุมพบกันฉันท์พี่น้อง", session: "morning" }, 
+            { date: "2026-08-21", name: "กิจกรรมวันวิทยาศาสตร์", session: "afternoon" }, 
+            { date: "2026-11-27", name: "กิจกรรมวันลอยกระทงและสืบสานประเพณี", session: "afternoon" },
+            { date: "2026-12-25", name: "กิจกรรมวันคริสต์มาส", session: "morning" }
+        ];
+
+        // ประวัติการลาพนักงาน
+        const initialLeaves = [
+            {
+                id: "L01",
+                teacherId: "T01",
+                startDate: "2026-06-17",
+                endDate: "2026-06-17",
+                type: "personal",
+                period: "all_day",
+                reason: "ทำธุระต่อใบขับขี่ที่ขนส่ง",
+                totalDeducted: 1.0,
+                status: "approved",
+                breakdown: [
+                    { date: "2026-06-17", base: 1.0, penalty: 0, penaltyReason: "ปกติ", final: 1.0 }
+                ],
+                createdAt: "2026-05-10"
+            },
+            {
+                id: "L02",
+                teacherId: "T02",
+                startDate: "2026-06-18",
+                endDate: "2026-06-18",
+                type: "sick",
+                period: "all_day",
+                reason: "ไข้หวัดใหญ่ หาหมอโรงพยาบาล",
+                totalDeducted: 1.5,
+                status: "approved",
+                breakdown: [
+                    { date: "2026-06-18", base: 1.0, penalty: 0.5, penaltyReason: "มีกิจกรรมโรงเรียน (ช่วงเช้า)", final: 1.5 }
+                ],
+                createdAt: "2026-05-12"
+            }
+        ];
+
+        function App() {
+            const [users, setUsers] = React.useState(() => {
+                const saved = localStorage.getItem("leave_users");
+                return saved ? JSON.parse(saved) : initialUsers;
+            });
+
+            const [currentUser, setCurrentUser] = React.useState(() => {
+                const saved = localStorage.getItem("leave_current_user");
+                return saved ? JSON.parse(saved) : null;
+            });
+
+            const [holidays, setHolidays] = React.useState(() => {
+                const saved = localStorage.getItem("leave_holidays");
+                return saved ? JSON.parse(saved) : initialHolidays;
+            });
+
+            const [activities, setActivities] = React.useState(() => {
+                const saved = localStorage.getItem("leave_activities");
+                return saved ? JSON.parse(saved) : initialActivities;
+            });
+
+            const [leaves, setLeaves] = React.useState(() => {
+                const saved = localStorage.getItem("leave_leaves");
+                return saved ? JSON.parse(saved) : initialLeaves;
+            });
+
+            const [loginId, setLoginId] = React.useState("");
+            const [loginPassword, setLoginPassword] = React.useState("");
+            const [activeTab, setActiveTab] = React.useState("teacher"); 
+            const [adminSubTab, setAdminSubTab] = React.useState("leaves"); 
+            const [selectedTeacherId, setSelectedTeacherId] = React.useState("");
+            const [formData, setFormData] = React.useState({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day" });
+            const [notification, setNotification] = React.useState(null);
+
+            const [showAddTeacherModal, setShowAddTeacherModal] = React.useState(false);
+            const [newTeacher, setNewTeacher] = React.useState({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "" });
+            const [showEditTeacherModal, setShowEditTeacherModal] = React.useState(false);
+            const [editingTeacher, setEditingTeacher] = React.useState(null);
+            const [showAddHolidayModal, setShowAddHolidayModal] = React.useState(false);
+            const [newHoliday, setNewHoliday] = React.useState({ date: "", name: "" });
+            const [showAddActivityModal, setShowAddActivityModal] = React.useState(false);
+            const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "morning" });
+            const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, title: "", message: "", onConfirm: null });
+
+            React.useEffect(() => { localStorage.setItem("leave_users", JSON.stringify(users)); }, [users]);
+            React.useEffect(() => { localStorage.setItem("leave_current_user", currentUser ? JSON.stringify(currentUser) : ""); }, [currentUser]);
+            React.useEffect(() => { localStorage.setItem("leave_holidays", JSON.stringify(holidays)); }, [holidays]);
+            React.useEffect(() => { localStorage.setItem("leave_activities", JSON.stringify(activities)); }, [activities]);
+            React.useEffect(() => { localStorage.setItem("leave_leaves", JSON.stringify(leaves)); }, [leaves]);
+
+            React.useEffect(() => {
+                if (currentUser) {
+                    if (currentUser.role === "teacher") {
+                        setSelectedTeacherId(currentUser.id);
+                        setActiveTab("teacher");
+                    } else {
+                        const firstTeacher = users.find(u => u.role === "teacher") || users[0];
+                        setSelectedTeacherId(firstTeacher ? firstTeacher.id : "");
+                        setActiveTab("admin");
+                    }
+                }
+            }, [currentUser]);
+
+            // ล็อกวันเริ่มหยุดและวันสุดท้ายให้ตรงกันอัตโนมัติหากเลือก "ลาครึ่งวัน" เพื่อป้องกันการเลือกวันผิดพลาด
+            React.useEffect(() => {
+                if (formData.period !== "all_day" && formData.startDate) {
+                    setFormData(prev => ({ ...prev, endDate: prev.startDate }));
+                }
+            }, [formData.startDate, formData.period]);
+
+            const getTeacherStats = (teacherId) => {
+                const teacherObj = users.find(u => u.id === teacherId);
+                if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0 };
+                
+                const sickUsed = leaves
+                    .filter(l => l.teacherId === teacherId && l.status === "approved" && l.type === "sick")
+                    .reduce((sum, l) => sum + l.totalDeducted, 0);
+                    
+                const personalDeductedFromLeaves = leaves
+                    .filter(l => l.teacherId === teacherId && l.status === "approved" && l.type === "personal")
+                    .reduce((sum, l) => sum + l.totalDeducted, 0);
+                    
+                const lateCount = teacherObj.lateCount || 0;
+                const latePenalty = lateCount >= 4 ? Math.floor((lateCount - 3) / 3) + 1 : 0;
+                const personalUsed = personalDeductedFromLeaves + latePenalty;
+                
+                return { sickUsed, personalUsed, personalDeductedFromLeaves, latePenalty, lateCount };
+            };
+
+            const handleImageUpload = (file, callback) => {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 120;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const base64Str = canvas.toDataURL('image/jpeg', 0.7);
+                        callback(base64Str);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const showToast = (message, type = "success") => {
+                setNotification({ message, type });
+                setTimeout(() => setNotification(null), 4000);
+            };
+
+            const triggerConfirm = (title, message, onConfirmCallback) => {
+                setConfirmDialog({
+                    isOpen: true,
+                    title,
+                    message,
+                    onConfirm: () => {
+                        onConfirmCallback();
+                        setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null });
+                    }
+                });
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const input = loginId.trim().toLowerCase();
+                const matched = users.find(u => 
+                    (u.email && u.email.toLowerCase() === input) || 
+                    (u.id.toLowerCase() === input)
+                );
+                
+                if (matched && matched.password === loginPassword) {
+                    setCurrentUser(matched);
+                    showToast(`ยินดีต้อนรับคุณ ${matched.prefix}${matched.name}`);
+                    setLoginId("");
+                    setLoginPassword("");
+                } else {
+                    showToast("อีเมลโรงเรียน/รหัสประจำตัว หรือ รหัสผ่านไม่ถูกต้อง", "error");
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                showToast("ออกจากระบบเรียบร้อยแล้ว");
+            };
+
+            const getLocalDateString = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            const isWeekend = (date) => {
+                const day = date.getDay();
+                return day === 0 || day === 6; 
+            };
+
+            const isSchoolHoliday = (dateStr) => holidays.some(h => h.date === dateStr);
+            const getHolidayName = (dateStr) => {
+                const hol = holidays.find(h => h.date === dateStr);
+                return hol ? hol.name : "";
+            };
+            const getSchoolActivity = (dateStr) => activities.find(a => a.date === dateStr);
+
+            const getContiguousNonWorkingBlockLength = (targetDate, direction) => {
+                let current = new Date(targetDate.getTime());
+                let count = 0;
+                while (true) {
+                    current.setDate(current.getDate() + direction);
+                    const currentStr = getLocalDateString(current);
+                    if (isWeekend(current) || isSchoolHoliday(currentStr)) {
+                        count++;
+                    } else {
+                        break; 
+                    }
+                }
+                return count;
+            };
+
+            const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day") => {
+                const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
+                if (!startDateStr || !actualEndDateStr) return { total: 0, breakdown: [] };
+                
+                const start = new Date(startDateStr);
+                const end = new Date(actualEndDateStr);
+                
+                if (end < start) return { total: 0, breakdown: [] };
+
+                const breakdown = [];
+                let totalDeducted = 0;
+
+                let current = new Date(start.getTime());
+                while (current <= end) {
+                    const dateStr = getLocalDateString(current);
+                    
+                    if (isWeekend(current) || isSchoolHoliday(dateStr)) {
+                        const hName = getHolidayName(dateStr);
+                        const reasonLabel = isWeekend(current) ? "วันหยุดสุดสัปดาห์" : `วันหยุดราชการ (${hName})`;
+                        breakdown.push({ date: dateStr, base: 0, penalty: 0, penaltyReason: reasonLabel, final: 0 });
+                    } else {
+                        let base = period !== "all_day" ? 0.5 : 1.0;
+                        let penalty = 0;
+                        let penaltyReason = period !== "all_day" ? "อัตราลาครึ่งวัน" : "อัตราลาปกติ";
+
+                        const schoolActivity = getSchoolActivity(dateStr);
+                        let activityDeduction = 0;
+                        let hasActivity = false;
+                        if (schoolActivity) {
+                            hasActivity = true;
+                            activityDeduction = 1.5;
+                        }
+
+                        const prevBlock = getContiguousNonWorkingBlockLength(current, -1);
+                        const nextBlock = getContiguousNonWorkingBlockLength(current, 1);
+
+                        let adjDeduction = 1.0;
+                        let adjReason = "";
+
+                        // กฎค่อมวันหยุดทวีคูณ (Sandwich Rule) จะถูกคิดเฉพาะเมื่อเป็นการลาเต็มวันเพื่อความเป็นธรรม
+                        if (period === "all_day") {
+                            if (prevBlock > 0 && nextBlock > 0) {
+                                const totalHolidaysSandwich = prevBlock + nextBlock;
+                                adjDeduction = 1.0 + totalHolidaysSandwich;
+                                adjReason = `ลาค่อมวันหยุด (ก่อนหน้า ${prevBlock} หลัง ${nextBlock})`;
+                            } else {
+                                const maxBlock = Math.max(prevBlock, nextBlock);
+                                if (maxBlock >= 3) {
+                                    adjDeduction = 1.0 + maxBlock;
+                                    adjReason = `ติดวันหยุดยาวต่อเนื่อง (${maxBlock} วัน)`;
+                                } else if (maxBlock === 2) {
+                                    adjDeduction = 2.0;
+                                    adjReason = "ติดวันหยุดเสาร์-อาทิตย์";
+                                }
+                            }
+                        }
+
+                        let finalDeductedForDay = 1.0;
+                        
+                        if (period !== "all_day") {
+                            // การลาครึ่งวัน คิดเป็นสัดส่วนครึ่งหนึ่งจากเกณฑ์ของวันนั้น ๆ
+                            if (hasActivity) {
+                                finalDeductedForDay = activityDeduction * 0.5; // ตัวอย่าง: วันกิจกรรมหัก 1.5 ลาครึ่งวันหัก 0.75 วัน
+                                penalty = (activityDeduction - 1.0) * 0.5;
+                                penaltyReason = `ตรงกับวันกิจกรรม: ${schoolActivity.name} (ลาครึ่งวัน)`;
+                            } else {
+                                finalDeductedForDay = 0.5;
+                                penaltyReason = "ลาครึ่งวันปกติ";
+                            }
+                        } else {
+                            // ลาเต็มวันปกติ
+                            if (hasActivity && adjDeduction > 1.0) {
+                                if (adjDeduction >= activityDeduction) {
+                                    finalDeductedForDay = adjDeduction;
+                                    penalty = adjDeduction - 1.0;
+                                    penaltyReason = `${adjReason} และวันกิจกรรม`;
+                                } else {
+                                    finalDeductedForDay = activityDeduction;
+                                    penalty = 0.5;
+                                    penaltyReason = `มีกิจกรรมโรงเรียน (${schoolActivity.name}) [คิดเกณฑ์ 1.5 วัน]`;
+                                }
+                            } else if (adjDeduction > 1.0) {
+                                finalDeductedForDay = adjDeduction;
+                                penalty = adjDeduction - 1.0;
+                                penaltyReason = adjReason;
+                            } else if (hasActivity) {
+                                finalDeductedForDay = activityDeduction;
+                                penalty = 0.5;
+                                penaltyReason = `ตรงกับวันกิจกรรม: ${schoolActivity.name}`;
+                            }
+                        }
+
+                        breakdown.push({ date: dateStr, base: base, penalty: penalty, penaltyReason: penaltyReason, final: finalDeductedForDay });
+                        totalDeducted += finalDeductedForDay;
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+                return { total: totalDeducted, breakdown };
+            };
+
+            const leaveCalculation = calculateLeaveDays(formData.startDate, formData.endDate, formData.period);
+
+            const handleRequestLeave = (e) => {
+                e.preventDefault();
+                if (!formData.startDate || !formData.reason) {
+                    showToast("กรุณากรอกข้อมูลวันที่และเหตุผลการลาให้ครบถ้วน", "error");
+                    return;
+                }
+
+                if (formData.period === "all_day" && !formData.endDate) {
+                    showToast("กรุณาระบุวันสุดท้ายที่ต้องการลา", "error");
+                    return;
+                }
+
+                const currentTeacher = users.find(u => u.id === selectedTeacherId);
+                const stats = getTeacherStats(selectedTeacherId);
+                const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period);
+
+                if (calc.total === 0) {
+                    showToast("วันที่เลือกเป็นวันหยุดทั้งหมด ไม่จำเป็นต้องยื่นใบลา", "error");
+                    return;
+                }
+
+                const currentBalance = formData.type === "personal" 
+                    ? currentTeacher.personalQuota - stats.personalUsed
+                    : currentTeacher.sickQuota - stats.sickUsed;
+
+                if (calc.total > currentBalance) {
+                    showToast(`วันลาไม่พอ (ต้องการ ${calc.total} วัน แต่คงเหลือเพียง ${currentBalance} วัน)`, "error");
+                    return;
+                }
+
+                const newRequest = {
+                    id: "L" + String(leaves.length + 1).padStart(2, '0') + "_" + Date.now().toString().slice(-4),
+                    teacherId: selectedTeacherId,
+                    startDate: formData.startDate,
+                    endDate: formData.period !== "all_day" ? formData.startDate : formData.endDate,
+                    type: formData.type,
+                    period: formData.period,
+                    reason: formData.reason,
+                    totalDeducted: calc.total,
+                    status: "approved",
+                    breakdown: calc.breakdown,
+                    createdAt: getLocalDateString(new Date())
+                };
+
+                setLeaves([newRequest, ...leaves]);
+                setFormData({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day" });
+                showToast("บันทึกข้อมูลการลางานและปรับสิทธิ์สะสมเรียบร้อยแล้ว");
+            };
+
+            const handleDeleteLeave = (leaveId) => {
+                triggerConfirm(
+                    "ยืนยันการยกเลิกใบลา",
+                    "ต้องการยกเลิกประวัติการลางานใบนี้ใช่หรือไม่? ระบบจะคืนสิทธิ์วันลาให้ทันที",
+                    () => {
+                        setLeaves(leaves.filter(l => l.id !== leaveId));
+                        showToast("ยกเลิกรายการลางานและคืนสิทธิ์เรียบร้อยแล้ว");
+                    }
+                );
+            };
+
+            const handleAdjustLate = (id, amount) => {
+                setUsers(users.map(u => {
+                    if (u.id === id) {
+                        const newCount = Math.max(0, (u.lateCount || 0) + amount);
+                        return { ...u, lateCount: newCount };
+                    }
+                    return u;
+                }));
+                showToast("อัปเดตสถิติการมาสายเรียบร้อยแล้ว");
+            };
+
+            const handleGenerate49Teachers = () => {
+                const thaiFirstNames = [
+                    "กิตติ", "เฉลิม", "ณัฐพงษ์", "ทรงพล", "ธนพล", "นพดล", "ประเสริฐ", "พงษ์ศักดิ์", "ยุทธนา", "วรวุฒิ",
+                    "สุรชัย", "เกรียงไกร", "จารุวรรณ", "ชลลดา", "ดวงพร", "ทิพวรรณ", "นงลักษณ์", "เบญจวรรณ", "ปัทมา", "พรทิพย์"
+                ];
+                const thaiLastNames = [
+                    "สุวรรณรัตน์", "สมบูรณ์ดี", "รักษาใจ", "ดีเสมอ", "เจริญรุ่งเรือง", "เลิศวิจิตร", "ตั้งมโนมั่น", "เกียรติขจร", "ประชานิยม"
+                ];
+                const prefixes = ["นาย", "นาง", "นางสาว"];
+
+                const currentCount = users.filter(u => u.role === "teacher").length;
+                if (currentCount >= 47) {
+                    showToast("ในระบบมีจำนวนบุคลากรครบถ้วนแล้ว (49 คน)", "info");
+                    return;
+                }
+
+                const additionalUsers = [];
+                const neededTeachersCount = 47 - currentCount;
+                
+                for (let i = 1; i <= neededTeachersCount; i++) {
+                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                    const firstName = thaiFirstNames[Math.floor(Math.random() * thaiFirstNames.length)];
+                    const lastName = thaiLastNames[Math.floor(Math.random() * thaiLastNames.length)];
+                    const sickQuota = Math.floor(Math.random() * 11) + 20; 
+                    const personalQuota = Math.floor(Math.random() * 8) + 10; 
+                    const newId = `T${String(10 + i).padStart(2, '0')}`;
+                    const email = `teacher.${newId.toLowerCase()}@yuvaphat.ac.th`;
+
+                    additionalUsers.push({
+                        id: newId, prefix, name: `${firstName} ${lastName}`, role: "teacher", password: "1234", email, sickQuota, personalQuota, lateCount: 0, photo: ""
+                    });
+                }
+
+                setUsers([...users, ...additionalUsers]);
+                showToast(`สร้างรายชื่อบุคลากรจำลองเพิ่มเติมสำเร็จ ปัจจุบันมีบุคลากรครบ 49 คนพอดี`);
+            };
+
+            const handleAddTeacher = (e) => {
+                e.preventDefault();
+                if (!newTeacher.name) {
+                    showToast("กรุณากรอกชื่อ-นามสกุลครู", "error");
+                    return;
+                }
+                const prefixId = newTeacher.role === "admin" ? "A" : newTeacher.role === "hr" ? "HR" : "T";
+                const numSuffix = String(users.filter(u => u.id.startsWith(prefixId)).length + 1).padStart(2, '0');
+                const newId = prefixId + numSuffix;
+                const finalEmail = newTeacher.email.trim() || `${newId.toLowerCase()}@yuvaphat.ac.th`;
+
+                const u = {
+                    id: newId, prefix: newTeacher.prefix, name: newTeacher.name, role: newTeacher.role, password: newTeacher.password || "1234", email: finalEmail, sickQuota: Number(newTeacher.sickQuota), personalQuota: Number(newTeacher.personalQuota), lateCount: 0, photo: newTeacher.photo || ""
+                };
+                setUsers([...users, u]);
+                setNewTeacher({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "" });
+                setShowAddTeacherModal(false);
+                showToast(`เพิ่มบุคลากร ${u.id} - ${u.prefix}${u.name} สำเร็จ`);
+            };
+
+            const handleOpenEditTeacher = (teacher) => {
+                setEditingTeacher({ ...teacher });
+                setShowEditTeacherModal(true);
+            };
+
+            const handleUpdateTeacher = (e) => {
+                e.preventDefault();
+                if (!editingTeacher.name) {
+                    showToast("กรุณากรอกชื่อ-นามสกุลครู", "error");
+                    return;
+                }
+                setUsers(users.map(u => {
+                    if (u.id === editingTeacher.id) {
+                        return {
+                            ...u,
+                            prefix: editingTeacher.prefix,
+                            name: editingTeacher.name,
+                            sickQuota: Number(editingTeacher.sickQuota),
+                            personalQuota: Number(editingTeacher.personalQuota),
+                            photo: editingTeacher.photo || ""
+                        };
+                    }
+                    return u;
+                }));
+                setShowEditTeacherModal(false);
+                setEditingTeacher(null);
+                showToast("แก้ไขข้อมูลสิทธิ์การลาสะเรียบร้อยแล้ว");
+            };
+
+            const handleDeleteTeacher = (id) => {
+                triggerConfirm(
+                    "ลบรายชื่อบุคลากร",
+                    `ต้องการลบบุคลากร ${id} หรือไม่?`,
+                    () => {
+                        setUsers(users.filter(u => u.id !== id));
+                        showToast("ลบข้อมูลบุคลากรเรียบร้อยแล้ว", "error");
+                    }
+                );
+            };
+
+            const handleRoleChange = (userId, newRole) => {
+                if (userId === currentUser.id) {
+                    showToast("ไม่สามารถปรับเปลี่ยนสิทธิ์ตัวเองได้", "error");
+                    return;
+                }
+                setUsers(users.map(u => {
+                    if (u.id === userId) return { ...u, role: newRole };
+                    return u;
+                }));
+                showToast(`อัปเดตสิทธิ์ระบบเรียบร้อย`);
+            };
+
+            const handleUserPasswordChange = (userId, newPass) => {
+                if (!newPass.trim()) return;
+                setUsers(users.map(u => {
+                    if (u.id === userId) return { ...u, password: newPass };
+                    return u;
+                }));
+                showToast(`อัปเดตสหัสผ่านสำเร็จ`);
+            };
+
+            const handleUserEmailChange = (userId, newEmail) => {
+                if (!newEmail.trim()) return;
+                setUsers(users.map(u => {
+                    if (u.id === userId) return { ...u, email: newEmail.trim() };
+                    return u;
+                }));
+                showToast("อัปเดตอีเมลเรียบร้อย");
+            };
+
+            const handleAddHoliday = (e) => {
+                e.preventDefault();
+                if (!newHoliday.date || !newHoliday.name) {
+                    showToast("กรุณากรอกข้อมูลวันหยุดให้ครบถ้วน", "error");
+                    return;
+                }
+                setHolidays([...holidays, newHoliday].sort((a,b) => a.date.localeCompare(b.date)));
+                setNewHoliday({ date: "", name: "" });
+                setShowAddHolidayModal(false);
+                showToast("เพิ่มวันหยุดเรียบร้อย");
+            };
+
+            const handleDeleteHoliday = (date) => {
+                triggerConfirm("ลบวันหยุด", "ต้องการนำวันหยุดออกใช่หรือไม่?", () => {
+                    setHolidays(holidays.filter(h => h.date !== date));
+                    showToast("ลบวันหยุดเรียบร้อยแล้ว", "error");
+                });
+            };
+
+            const handleAddActivity = (e) => {
+                e.preventDefault();
+                if (!newActivity.date || !newActivity.name) {
+                    showToast("กรุณากรอกข้อมูลให้ครบถ้วน", "error");
+                    return;
+                }
+                setActivities([...activities, newActivity].sort((a,b) => a.date.localeCompare(b.date)));
+                setNewActivity({ date: "", name: "", session: "morning" });
+                setShowAddActivityModal(false);
+                showToast("บันทึกวันกิจกรรมเรียบร้อย");
+            };
+
+            const handleDeleteActivity = (date) => {
+                triggerConfirm("ยกเลิกกิจกรรม", "ต้องการลบกิจกรรมใช่หรือไม่?", () => {
+                    setActivities(activities.filter(a => a.date !== date));
+                    showToast("ลบวันกิจกรรมเรียบร้อยแล้ว", "error");
+                });
+            };
+
+            const formatThaiDate = (dateStr) => {
+                if (!dateStr) return "-";
+                const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                const d = new Date(dateStr);
+                return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+            };
+
+            const getSessionThai = (session) => {
+                if (session === "morning") return "ช่วงเช้า";
+                if (session === "afternoon") return "ช่วงบ่าย";
+                return "ทั้งวัน";
+            };
+
+            const renderAvatar = (teacherObj, sizeClass = "w-11 h-11 text-sm") => {
+                if (teacherObj && teacherObj.photo) {
+                    return (
+                        <div className="relative flex-shrink-0">
+                            <img 
+                                src={teacherObj.photo} 
+                                alt={teacherObj.name} 
+                                className={`${sizeClass.split(' ')[0]} ${sizeClass.split(' ')[1]} rounded-full object-cover border-2 border-emerald-700 shadow-md`}
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        </div>
+                    );
+                }
+                const initialChar = teacherObj ? teacherObj.name.trim().charAt(0) : "?";
+                return (
+                    <div className={`${sizeClass} rounded-full bg-gradient-to-tr from-navy-800 to-emerald-700 text-white font-extrabold flex items-center justify-center border-2 border-white shadow-md uppercase text-center flex-shrink-0`}>
+                        {initialChar}
+                    </div>
+                );
+            };
+
+            const selectedTeacher = users.find(u => u.id === selectedTeacherId);
+            const selectedTeacherStats = selectedTeacher ? getTeacherStats(selectedTeacherId) : null;
+
+            if (!currentUser) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-[#F1F5F9] p-4 relative overflow-hidden">
+                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-100/30 blur-3xl"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-navy-800/8 blur-3xl"></div>
+
+                        {/* หน้าล็อกอินขนาดกะทัดรัด (เดิม) สัดส่วนสมมาตรหรูหราเป๊ะ ๆ */}
+                        <div className="w-full max-w-md bg-white rounded-[28px] shadow-[0_20px_50px_-15px_rgba(15,30,54,0.12)] overflow-hidden border border-slate-100/80 relative z-10">
+                            
+                            <header className="luxury-gradient text-white p-8 text-center relative border-b-4 border-emerald-700">
+                                <div className="absolute top-0 left-0 right-0 bottom-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent)] pointer-events-none"></div>
+                                
+                                <div className="w-24 h-24 flex items-center justify-center mx-auto mb-3 relative overflow-hidden">
+                                    <img 
+                                        src="logo.png" 
+                                        alt="Yuwapat Logo" 
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                            if (e.target.src.indexOf('logo.png') !== -1) {
+                                                e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
+                                            } else {
+                                                e.target.style.display = 'none';
+                                                const fallback = e.target.nextSibling;
+                                                if (fallback) fallback.classList.remove('hidden');
+                                            }
+                                        }}
+                                    />
+                                    <i className="fa-solid fa-graduation-cap text-3xl text-emerald-100 hidden"></i>
+                                </div>
+
+                                <h2 className="text-xl font-extrabold tracking-wide text-white">Yuwapat Early Childhood School</h2>
+                                <p className="text-xs text-emerald-100 mt-1.5 font-normal">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                                <div className="w-10 h-0.5 bg-emerald-200/50 mx-auto mt-3 rounded-full"></div>
+                                <p className="text-[9px] text-slate-300 mt-1.5 uppercase tracking-widest font-light">Leave Management Portal</p>
+                            </header>
+
+                            {notification && (
+                                <div className="mx-6 mt-4 p-3.5 text-xs rounded-xl border flex items-center gap-3 bg-red-50 text-red-800 border-red-100 text-left">
+                                    <i className="fa-solid fa-triangle-exclamation text-red-500 text-base"></i>
+                                    <span className="font-semibold">{notification.message}</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleLogin} className="p-8 space-y-5">
+                                <div className="space-y-1.5 text-left">
+                                    <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider">อีเมลโรงเรียน / รหัสประจำตัว</label>
+                                    <div className="relative w-full">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <i className="fa-solid fa-envelope text-slate-400 text-sm"></i>
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            placeholder="ตัวอย่าง: admin@yuvaphat.ac.th"
+                                            value={loginId}
+                                            onChange={(e) => setLoginId(e.target.value)}
+                                            className="block w-full bg-slate-50/80 border border-slate-200 text-slate-800 pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:bg-white text-sm font-semibold text-left transition-all duration-300 emerald-glow placeholder-slate-400"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5 text-left">
+                                    <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider">รหัสผ่านเข้าใช้งาน</label>
+                                    <div className="relative w-full">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <i className="fa-solid fa-key text-slate-400 text-sm"></i>
+                                        </div>
+                                        <input 
+                                            type="password" 
+                                            placeholder="กรอกรหัสผ่าน (เริ่มต้น 1234)"
+                                            value={loginPassword}
+                                            onChange={(e) => setLoginPassword(e.target.value)}
+                                            className="block w-full bg-slate-50/80 border border-slate-200 text-slate-800 pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:bg-white text-sm font-semibold text-left transition-all duration-300 emerald-glow placeholder-slate-400"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <button 
+                                    type="submit"
+                                    className="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold py-3.5 px-6 rounded-xl transition duration-300 shadow-md flex items-center justify-center gap-2 text-xs uppercase tracking-wider border border-emerald-600"
+                                >
+                                    <i className="fa-solid fa-shield-halved"></i>
+                                    เข้าสู่ระบบความปลอดภัย
+                                </button>
+                            </form>
+
+                            {SHOW_DEMO_PORTAL && (
+                                <div className="bg-[#FAF9F5] p-8 border-t border-slate-100 text-xs text-slate-600 text-left">
+                                    <p className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <i className="fa-solid fa-circle-info text-emerald-700 animate-pulse"></i>
+                                        บัญชีสาธิตสำหรับทดสอบระบบ (Demo Accounts):
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <button onClick={() => { setLoginId("admin@yuvaphat.ac.th"); setLoginPassword("1234"); }} className="bg-white hover:bg-emerald-50 border p-2.5 rounded-xl text-left shadow-sm">
+                                            <span className="font-extrabold text-navy-900 block text-[10px]">⭐ ADMIN</span>
+                                            <span className="text-[9px] text-slate-500 block truncate">admin@yuvaphat.ac.th</span>
+                                        </button>
+                                        <button onClick={() => { setLoginId("hr@yuvaphat.ac.th"); setLoginPassword("1234"); }} className="bg-white hover:bg-emerald-50 border p-2.5 rounded-xl text-left shadow-sm">
+                                            <span className="font-extrabold text-navy-900 block text-[10px]">⭐ HR</span>
+                                            <span className="text-[9px] text-slate-500 block truncate">hr@yuvaphat.ac.th</span>
+                                        </button>
+                                        <button onClick={() => { setLoginId("somchai.r@yuvaphat.ac.th"); setLoginPassword("1234"); }} className="bg-white hover:bg-emerald-50 border p-2.5 rounded-xl text-left shadow-sm">
+                                            <span className="font-extrabold text-navy-900 block text-[10px]">⭐ TEACHER</span>
+                                            <span className="text-[9px] text-slate-500 block truncate">somchai.r...</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+                    
+                    <header className="luxury-gradient text-white shadow-xl sticky top-0 z-30 border-b border-emerald-700/50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+                            
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-14 h-14 flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                                    <img 
+                                        src="logo.png" 
+                                        alt="Yuwapat Logo" 
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                            if (e.target.src.indexOf('logo.png') !== -1) {
+                                                e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
+                                            } else {
+                                                e.target.style.display = 'none';
+                                                const fallback = e.target.nextSibling;
+                                                if (fallback) fallback.classList.remove('hidden');
+                                            }
+                                        }}
+                                    />
+                                    <i className="fa-solid fa-graduation-cap text-xl text-emerald-700 hidden"></i>
+                                </div>
+                                <div className="text-center lg:text-left">
+                                    <h1 className="text-lg sm:text-xl font-black tracking-wide text-white">
+                                        Yuwapat Early Childhood School
+                                    </h1>
+                                    <p className="text-xs sm:text-sm text-emerald-200 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 flex-wrap w-full lg:w-auto justify-center lg:justify-end">
+                                {currentUser.role !== "teacher" && (
+                                    <div className="flex bg-navy-950 p-1 rounded-xl border border-emerald-700/30">
+                                        <button 
+                                            onClick={() => setActiveTab("teacher")}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${activeTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                        >
+                                            พอร์ทัลคุณครู
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab("admin")}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                        >
+                                            ฝ่ายบริหารงานบุคคล
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-3 bg-navy-950 pl-4 pr-2 py-2 rounded-xl border border-emerald-700/30">
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{currentUser.role === 'admin' ? 'แอดมินสูงสุด' : currentUser.role === 'hr' ? 'ฝ่ายบุคคล (HR)' : 'คุณครู'}</p>
+                                        <p className="text-sm font-bold text-white">{currentUser.prefix}{currentUser.name}</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleLogout}
+                                        className="bg-red-600 hover:bg-red-700 text-white w-9 h-9 rounded-lg flex items-center justify-center transition shadow"
+                                        title="ออกจากระบบ"
+                                    >
+                                        <i className="fa-solid fa-power-off text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </header>
+
+                    {notification && (
+                        <div className="fixed top-24 right-4 z-50 animate-bounce">
+                            <div className={`shadow-2xl rounded-2xl p-4 flex items-center gap-3 border ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+                                <i className={`fa-solid ${notification.type === 'error' ? 'fa-circle-xmark text-red-500' : 'fa-circle-check text-emerald-600'} text-2xl`}></i>
+                                <div>
+                                    <p className="font-extrabold text-base">ระบบแจ้งเตือนวันลา</p>
+                                    <p className="text-sm mt-0.5 font-semibold">{notification.message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {confirmDialog.isOpen && (
+                        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-100">
+                                <div className="text-center">
+                                    <div className="bg-red-100 text-red-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                                        <i className="fa-solid fa-triangle-exclamation"></i>
+                                    </div>
+                                    <h3 className="font-extrabold text-slate-800 text-base">{confirmDialog.title}</h3>
+                                    <p className="text-sm text-slate-500 mt-2 font-medium text-center">{confirmDialog.message}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 mt-6">
+                                    <button 
+                                        onClick={() => setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null })}
+                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm transition"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button 
+                                        onClick={confirmDialog.onConfirm}
+                                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm transition shadow"
+                                    >
+                                        ยืนยัน
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+                        
+                        {activeTab === "teacher" && (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
+                                
+                                <div className="space-y-6 lg:col-span-1">
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
+                                        
+                                        {currentUser.role !== "teacher" ? (
+                                            <div className="mb-5">
+                                                <h2 className="text-xs sm:text-sm font-bold text-slate-700 mb-2 flex items-center gap-2 uppercase tracking-wide text-left">
+                                                    <i className="fa-solid fa-user-ninja text-emerald-700"></i>
+                                                    จำลองมุมมองบุคลากร
+                                                </h2>
+                                                <div className="relative">
+                                                    <select 
+                                                        value={selectedTeacherId}
+                                                        onChange={(e) => setSelectedTeacherId(e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 font-bold text-sm appearance-none cursor-pointer"
+                                                    >
+                                                        {users.filter(u => u.role === "teacher" || u.id === currentUser.id).map(u => (
+                                                            <option key={u.id} value={u.id}>
+                                                                [{u.id}] {u.prefix}{u.name} {u.id === currentUser.id ? "(ตัวท่าน)" : ""}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-700">
+                                                        <i className="fa-solid fa-chevron-down text-sm"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="mb-5">
+                                                <h2 className="text-xs sm:text-sm font-bold text-slate-700 mb-2 flex items-center gap-2 uppercase tracking-widest text-left">
+                                                    <i className="fa-solid fa-address-card text-emerald-700"></i>
+                                                    ข้อมูลผู้ใช้งานปัจจุบัน
+                                                </h2>
+                                                <div className="bg-emerald-50 text-emerald-800 rounded-xl p-3 border border-emerald-200/50 text-xs font-bold text-left">
+                                                    สิทธิ์ระบบ: ครูผู้ใช้ทั่วไป
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {selectedTeacher && (
+                                            <div className="bg-gradient-to-br from-navy-900 to-navy-800 text-white rounded-xl p-5 shadow relative overflow-hidden">
+                                                <div className="flex items-center gap-4">
+                                                    {renderAvatar(selectedTeacher, "w-14 h-14 text-base")}
+                                                    <div className="overflow-hidden w-full text-left">
+                                                        <p className="text-xs text-emerald-400 font-mono tracking-wider">{selectedTeacher.id}</p>
+                                                        <h3 className="font-extrabold text-sm text-white truncate">{selectedTeacher.prefix}{selectedTeacher.name}</h3>
+                                                        <p className="text-xs text-slate-300 font-light">ครูระดับปฐมวัย</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {selectedTeacher && selectedTeacherStats && (
+                                        <div className="space-y-4 text-left">
+                                            
+                                            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative overflow-hidden group luxury-shadow transition duration-200">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3.5 py-1 rounded-full border border-emerald-100">ลากิจส่วนตัว</span>
+                                                        <h4 className="text-4xl font-extrabold text-slate-800 mt-4">
+                                                            {(selectedTeacher.personalQuota - selectedTeacherStats.personalUsed).toFixed(1)}
+                                                            <span className="text-sm font-bold text-slate-400 ml-1.5">วันคงเหลือ</span>
+                                                        </h4>
+                                                    </div>
+                                                    <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-xl border border-emerald-100">
+                                                        <i className="fa-solid fa-briefcase text-xl"></i>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="mt-4 border-t border-slate-100 pt-3 text-sm space-y-2">
+                                                    <div className="flex justify-between text-slate-500 font-semibold">
+                                                        <span>สถิติการเข้างานสาย:</span>
+                                                        <span className={`font-mono font-bold text-base ${selectedTeacherStats.lateCount >= 4 ? 'text-red-600' : 'text-slate-800'}`}>{selectedTeacherStats.lateCount} ครั้ง</span>
+                                                    </div>
+                                                    {selectedTeacherStats.lateCount >= 4 && (
+                                                        <div className="bg-red-50 text-red-700 p-2.5 rounded-xl font-bold text-xs border border-red-100">
+                                                            มาสายสะสมเกินเกณฑ์ หักวันลากิจสะสม -{selectedTeacherStats.latePenalty} วัน
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="mt-3 pt-3 border-t border-slate-50 flex justify-between text-xs text-slate-400 font-semibold">
+                                                    <span>สิทธิ์เริ่มต้น: {selectedTeacher.personalQuota} วัน</span>
+                                                    <span>ใช้ลาจริง: {selectedTeacherStats.personalDeductedFromLeaves.toFixed(1)} วัน</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative overflow-hidden group luxury-shadow transition duration-200 text-left">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3.5 py-1 rounded-full border border-emerald-100">ลาป่วยสะสม</span>
+                                                        <h4 className="text-4xl font-extrabold text-slate-800 mt-4">
+                                                            {(selectedTeacher.sickQuota - selectedTeacherStats.sickUsed).toFixed(1)}
+                                                            <span className="text-sm font-bold text-slate-400 ml-1.5">วันคงเหลือ</span>
+                                                        </h4>
+                                                    </div>
+                                                    <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-xl border border-emerald-100">
+                                                        <i className="fa-solid fa-heart-pulse text-xl"></i>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400 font-semibold">
+                                                    <span>สิทธิ์เริ่มต้น: {selectedTeacher.sickQuota} วัน</span>
+                                                    <span>ใช้ลาป่วยรวม: {selectedTeacherStats.sickUsed.toFixed(1)} วัน</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-navy-900 text-slate-200 rounded-2xl p-6 shadow-md border border-emerald-700/20 text-left">
+                                        <h3 className="font-extrabold text-sm text-emerald-100 mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                            <i className="fa-solid fa-circle-exclamation text-emerald-600"></i>
+                                            กฎเกณฑ์และระเบียบการหักวันลา
+                                        </h3>
+                                        <ul className="text-xs sm:text-sm space-y-3.5 text-slate-300">
+                                            <li className="flex gap-2.5">
+                                                <span className="text-emerald-500 font-bold">✔</span>
+                                                <span>วันเสาร์-อาทิตย์ และวันหยุดปฏิทิน ไม่คิดหักวันลา</span>
+                                            </li>
+                                            <li className="flex gap-2.5">
+                                                <span className="text-amber-500 font-bold">⚠️</span>
+                                                <span>ลาค่อม/ติดเสาร์อาทิตย์ (เต็มวัน) หักเป็น <strong>2.0 วัน</strong></span>
+                                            </li>
+                                            <li className="flex gap-2.5">
+                                                <span className="text-amber-500 font-bold">⚠️</span>
+                                                <span>ลาตรงวันประชุมพบกันฉันท์พี่น้อง หรือวันกิจกรรมพิเศษ หัก <strong>1.5 วัน</strong> (ครึ่งวันหัก <strong>0.75 วัน</strong>)</span>
+                                            </li>
+                                            <li className="flex gap-2.5">
+                                                <span className="text-red-400 font-bold">🚨</span>
+                                                <span><strong>ลาค่อมวันหยุด (Sandwich):</strong> หักบวกวันหยุดสะสมเพิ่มทั้งหมด (เฉพาะยื่นลาเต็มวัน)</span>
+                                            </li>
+                                            <li className="flex gap-2.5 text-emerald-400 border-t border-navy-800 pt-3">
+                                                <span className="font-bold">⏰</span>
+                                                <span><strong>สายสะสม:</strong> 4 ครั้ง หัก <strong>1 วัน</strong>, 6 ครั้ง หัก <strong>2 วัน</strong>, 9 ครั้ง หัก <strong>3 วัน</strong> (เพิ่มทุก ๆ 3 ครั้ง)</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 lg:col-span-2">
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
+                                        <h2 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2 border-b pb-3.5 border-slate-100 text-left">
+                                            <i className="fa-regular fa-paper-plane text-emerald-700 text-xl"></i>
+                                            บันทึกยื่นใบขอลาและตรวจผลคำนวณสะสม
+                                        </h2>
+
+                                        <form onSubmit={handleRequestLeave} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                                                <div>
+                                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">วันเริ่มหยุด</label>
+                                                    <input 
+                                                        type="date" 
+                                                        value={formData.startDate}
+                                                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:bg-white text-sm font-semibold transition duration-200 emerald-glow"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">วันสุดท้ายที่ลา</label>
+                                                    <input 
+                                                        type="date" 
+                                                        value={formData.period !== "all_day" ? formData.startDate : formData.endDate}
+                                                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                                        disabled={formData.period !== "all_day"}
+                                                        className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 ${formData.period !== "all_day" ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200" : "bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:bg-white emerald-glow"}`}
+                                                        required={formData.period === "all_day"}
+                                                    />
+                                                    {formData.period !== "all_day" && (
+                                                        <p className="text-[10px] sm:text-xs text-emerald-700 font-bold mt-1.5">※ ระบบล็อกวันอัตโนมัติสำหรับการลาครึ่งวัน</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                                                <div>
+                                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">ช่วงเวลาที่ต้องการลา</label>
+                                                    <div className="grid grid-cols-3 gap-2.5">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, period: "all_day" })}
+                                                            className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all ${formData.period === 'all_day' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                                        >
+                                                            <i className="fa-solid fa-sun mr-1"></i> เต็มวัน
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, period: "morning" })}
+                                                            className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all ${formData.period === 'morning' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                                        >
+                                                            <i className="fa-solid fa-cloud-sun mr-1"></i> ครึ่งเช้า
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, period: "afternoon" })}
+                                                            className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all ${formData.period === 'afternoon' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                                        >
+                                                            <i className="fa-solid fa-cloud-moon mr-1"></i> ครึ่งบ่าย
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">ชนิดการลา</label>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, type: "personal" })}
+                                                            className={`py-3 px-4 rounded-xl text-xs sm:text-sm font-bold border transition-all ${formData.type === 'personal' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                                                        >
+                                                            <i className="fa-solid fa-briefcase mr-1.5"></i> ลากิจส่วนตัว
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, type: "sick" })}
+                                                            className={`py-3 px-4 rounded-xl text-xs sm:text-sm font-bold border transition-all ${formData.type === 'sick' ? 'bg-rose-50 border-rose-600 text-rose-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                                                        >
+                                                            <i className="fa-solid fa-heart-pulse mr-1.5"></i> ลาป่วยพนักงาน
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5 text-left">
+                                                <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">เหตุผลความจำเป็นที่ลา</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="ระบุเหตุผลความจำเป็น..."
+                                                    value={formData.reason}
+                                                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:bg-white text-sm font-semibold transition duration-200 emerald-glow"
+                                                    required
+                                                />
+                                            </div>
+
+                                            {leaveCalculation.total > 0 && (
+                                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 animate-fade-in shadow-inner text-left">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4 mb-4 border-slate-200">
+                                                        <div>
+                                                            <span className="text-[10px] sm:text-xs font-bold text-emerald-700 uppercase tracking-widest">คำนวณรายละเอียดโดยระบบ AI</span>
+                                                            <h4 className="font-extrabold text-slate-800 text-sm sm:text-base mt-0.5">ผลวิเคราะห์หักสิทธิ์รายวัน</h4>
+                                                        </div>
+                                                        <div className="text-left sm:text-right bg-white px-4 py-1.5 rounded-xl border shadow-sm">
+                                                            <p className="text-[10px] sm:text-xs text-slate-400 font-bold">จำนวนวันหักรวมทั้งสิ้น</p>
+                                                            <p className="text-2xl font-black text-red-600">{leaveCalculation.total.toFixed(2)} วัน</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                        {leaveCalculation.breakdown.map((day, idx) => (
+                                                            <div key={idx} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 text-xs sm:text-sm shadow-sm hover:border-emerald-700/20 transition">
+                                                                <div className="flex items-center gap-2 flex-wrap font-semibold text-slate-700">
+                                                                    <span>{formatThaiDate(day.date)}</span>
+                                                                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-100 font-bold px-2.5 py-0.5 rounded text-[10px] sm:text-xs">
+                                                                        {day.penaltyReason}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="font-bold text-slate-800 text-right">
+                                                                    {day.final === 0 ? (
+                                                                        <span className="text-slate-400 font-semibold">ยกเว้น (ไม่หัก)</span>
+                                                                    ) : (
+                                                                        <span className="text-red-600 font-bold">หัก {day.final.toFixed(2)} วัน</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <button 
+                                                type="submit"
+                                                className="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-extrabold py-3.5 px-6 rounded-xl transition duration-300 shadow flex items-center justify-center gap-2 text-xs sm:text-sm uppercase border border-emerald-600"
+                                            >
+                                                <i className="fa-regular fa-paper-plane"></i>
+                                                ส่งใบคำขออนุมัติและปรับยอดสะสม
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                        <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-5 flex items-center gap-2 border-b pb-3.5 border-slate-100 text-left">
+                                            <i className="fa-solid fa-clock-rotate-left text-emerald-700 text-lg"></i>
+                                            ประวัติการลาป่วยและลากิจพนักงานครู
+                                        </h2>
+
+                                        {leaves.filter(l => l.teacherId === selectedTeacherId).length === 0 ? (
+                                            <div className="text-center py-12 text-slate-400">
+                                                <i className="fa-solid fa-folder-open text-4xl mb-3 opacity-30 text-emerald-700"></i>
+                                                <p className="text-xs sm:text-sm font-bold text-slate-500">ไม่มีประวัติการยื่นใบลาในรอบปัจจุบัน</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="min-w-full text-xs sm:text-sm text-left">
+                                                    <thead>
+                                                        <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                                                            <th className="py-3 px-3">ระยะเวลาลางาน</th>
+                                                            <th className="py-3 px-3">ประเภท</th>
+                                                            <th className="py-3 px-3">จำนวนวันหักสุทธิ</th>
+                                                            <th className="py-3 px-3">เหตุผล</th>
+                                                            <th className="py-3 px-3">สถานะผล</th>
+                                                            <th className="py-3 px-3 text-center">จัดการ</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-50 font-semibold text-slate-700">
+                                                        {leaves.filter(l => l.teacherId === selectedTeacherId).map((l, index) => (
+                                                            <tr key={index} className="hover:bg-slate-50/50 transition">
+                                                                <td className="py-3.5 px-3 text-left">
+                                                                    <p className="font-extrabold text-slate-900">{formatThaiDate(l.startDate)}</p>
+                                                                    {l.startDate !== l.endDate && (
+                                                                        <p className="text-[10px] sm:text-xs text-slate-400 font-medium">ถึง {formatThaiDate(l.endDate)}</p>
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-3.5 px-3 text-left">
+                                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase ${l.type === 'personal' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-800 border-red-100'}`}>
+                                                                        {l.type === "personal" ? "ลากิจ" : "ลาป่วย"}
+                                                                    </span>
+                                                                    {l.period && l.period !== "all_day" && (
+                                                                        <span className="block text-[10px] sm:text-xs text-slate-500 font-bold mt-1 text-left">
+                                                                            {l.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย"}
+                                                                        </span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-3.5 px-3 font-bold text-slate-900 text-sm sm:text-base text-left">{l.totalDeducted.toFixed(2)} วัน</td>
+                                                                <td className="py-3.5 px-3 text-slate-500 max-w-[150px] truncate text-left" title={l.reason}>{l.reason}</td>
+                                                                <td className="py-3.5 px-3 text-left">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                                                        บันทึกหักสะสมแล้ว
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-3.5 px-3 text-center text-[10px] text-slate-400">
+                                                                    <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+                                                                        <i className="fa-solid fa-lock mr-1"></i> ติดต่อแอดมิน
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "admin" && (
+                            <div className="space-y-8 animate-fade-in text-left">
+                                
+                                <div className="bg-white rounded-2xl p-8 shadow-md border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-2 h-full bg-emerald-700"></div>
+                                    <div className="text-left">
+                                        <h2 className="text-xl sm:text-2xl font-black text-slate-800">แผงควบคุมบุคลากรและระเบียบวันลาฝ่ายบุคคล</h2>
+                                        <p className="text-sm text-slate-500 mt-1.5">บทบาทสิทธิ์ปัจจุบันของคุณ: <strong className="text-emerald-700 uppercase tracking-wider">{currentUser.role === "admin" ? "ผู้ดูแลระบบสูงสุด (ADMIN)" : "เจ้าหน้าที่ฝ่ายงานบุคคล (HR)"}</strong> สามารถจัดการข้อมูล ตรวจทาน และตั้งค่ากิจกรรมปฏิทินโรงเรียนได้</p>
+                                    </div>
+                                    <button
+                                        onClick={handleGenerate49Teachers}
+                                        className="bg-[#0D5C3A] hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm px-6 py-3.5 rounded-xl transition duration-300 flex items-center gap-2 shadow-md whitespace-nowrap"
+                                    >
+                                        <i className="fa-solid fa-users-viewfinder text-emerald-200"></i>
+                                        จำลองครูและบุคลากรครบ 49 คน
+                                    </button>
+                                </div>
+
+                                <div className="flex border-b border-slate-200 overflow-x-auto py-1 gap-2">
+                                    <button 
+                                        onClick={() => setAdminSubTab("leaves")}
+                                        className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition duration-300 rounded-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'leaves' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+                                    >
+                                        <i className="fa-solid fa-clipboard-list text-sm sm:text-base"></i>
+                                        ประวัติการลางานทั้งหมด ({leaves.length})
+                                    </button>
+                                    <button 
+                                        onClick={() => setAdminSubTab("teachers")}
+                                        className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition duration-300 rounded-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'teachers' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+                                    >
+                                        <i className="fa-solid fa-users text-sm sm:text-base"></i>
+                                        รายชื่อครูและโควตาสิทธิ์ ({users.filter(u => u.role === 'teacher').length})
+                                    </button>
+                                    <button 
+                                        onClick={() => setAdminSubTab("calendar")}
+                                        className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition duration-300 rounded-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'calendar' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+                                    >
+                                        <i className="fa-solid fa-calendar-days text-sm sm:text-base"></i>
+                                        ปฏิทินวันหยุด & กิจกรรมพิเศษ
+                                    </button>
+                                    
+                                    {currentUser.role === "admin" && (
+                                        <button 
+                                            onClick={() => setAdminSubTab("roles")}
+                                            className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition duration-300 rounded-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'roles' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+                                        >
+                                            <i className="fa-solid fa-user-lock text-sm sm:text-base text-emerald-600"></i>
+                                            จัดการสิทธิ์ความปลอดภัยระบบ
+                                        </button>
+                                    )}
+                                </div>
+
+                                {adminSubTab === "leaves" && (
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                        <h3 className="font-extrabold text-slate-800 text-sm sm:text-base mb-5 border-b pb-3 text-left">รายการประวัติวันลาทั้งหมด</h3>
+
+                                        {leaves.length === 0 ? (
+                                            <div className="text-center py-14 text-slate-400">
+                                                <div className="bg-emerald-50 text-emerald-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <i className="fa-solid fa-circle-check text-3xl"></i>
+                                                </div>
+                                                <p className="font-extrabold text-slate-800 text-base">ไม่มีประวัติการลางานในรอบนี้</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {leaves.map((l) => {
+                                                    const teacher = users.find(t => t.id === l.teacherId);
+                                                    return (
+                                                        <div key={l.id} className="border border-slate-100 bg-slate-50/50 p-6 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:border-emerald-700/20 hover:bg-white transition duration-300 shadow-sm animate-fade-in">
+                                                            <div className="space-y-3.5 w-full lg:max-w-3xl text-left">
+                                                                <div className="flex items-center gap-2.5 flex-wrap">
+                                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase ${l.type === 'personal' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
+                                                                        {l.type === "personal" ? "ลากิจ" : "ลาป่วย"}
+                                                                    </span>
+                                                                    
+                                                                    {l.period && l.period !== "all_day" && (
+                                                                        <span className="bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs px-3 py-1.5 rounded-full">
+                                                                            {l.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย"}
+                                                                        </span>
+                                                                    )}
+
+                                                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100">
+                                                                        {renderAvatar(teacher, "w-8 h-8 text-[11px]")}
+                                                                        <p className="font-extrabold text-slate-800 text-sm sm:text-base">คุณครู: {teacher ? `${teacher.prefix}${teacher.name}` : "ไม่ระบุชื่อ"} ({l.teacherId})</p>
+                                                                    </div>
+                                                                    <span className="bg-emerald-50 text-emerald-800 border font-bold text-xs px-2.5 py-1 rounded-full">อนุมัติสำเร็จ</span>
+                                                                </div>
+                                                                
+                                                                <div className="text-sm sm:text-base text-slate-600 flex flex-wrap gap-x-5 gap-y-1.5 font-medium text-left">
+                                                                    <span><i className="fa-solid fa-calendar-day mr-1.5 text-emerald-700"></i> ระยะเวลา: <strong className="text-slate-800">{formatThaiDate(l.startDate)}</strong> {l.startDate !== l.endDate && ` ถึง ${formatThaiDate(l.endDate)}`}</span>
+                                                                    <span><i className="fa-solid fa-circle-info mr-1.5 text-emerald-700"></i> เหตุผล: <strong className="text-slate-800">{l.reason}</strong></span>
+                                                                </div>
+
+                                                                <div className="bg-[#FCFCFC] rounded-xl p-4 border text-xs sm:text-sm space-y-1.5 shadow-inner text-left">
+                                                                    <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest">ประมวลผลการคำนวณวันลา:</p>
+                                                                    {l.breakdown.map((b, idx) => (
+                                                                        <div key={idx} className="flex justify-between gap-4 text-slate-600 font-semibold" id={`b-${l.id}-${idx}`}>
+                                                                            <span>• {formatThaiDate(b.date)}:</span>
+                                                                            <span className="font-bold text-slate-800">{b.final === 0 ? "วันหยุด (0 วัน)" : `หักสิทธิ์ ${b.final.toFixed(2)} วัน [${b.penaltyReason}]`}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* ปรับแต่งปุ่มยกเลิกในกล่องด้านขวาให้สั้นกระชับเป็น "ยกเลิกใบลา" และอยู่ในกรอบสมบูรณ์แบบไม่แยกบรรทัด */}
+                                                            <div className="flex items-center gap-5 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-4 lg:pt-0 flex-shrink-0">
+                                                                <div className="text-left lg:text-right">
+                                                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">ยอดหักวันลาสุทธิ</p>
+                                                                    <p className="text-2xl sm:text-3xl font-black text-red-600 leading-tight">{l.totalDeducted.toFixed(2)} วัน</p>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => handleDeleteLeave(l.id)}
+                                                                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4.5 py-2.5 rounded-xl text-xs sm:text-sm transition duration-200 flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap flex-shrink-0"
+                                                                >
+                                                                    <i className="fa-solid fa-trash-can text-sm sm:text-base"></i>
+                                                                    <span>ยกเลิกใบลา</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {adminSubTab === "teachers" && (
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 border-b pb-4 border-slate-100">
+                                            <div>
+                                                <h3 className="font-extrabold text-slate-800 text-base">ประวัติและตรวจสอบสิทธิ์โควตาวันลาสะสมของครูในโรงเรียน</h3>
+                                                <p className="text-xs text-slate-400 mt-1 uppercase">จำนวนบุคลากรประจำการ: {users.filter(u => u.role === "teacher").length} ท่าน</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => setShowAddTeacherModal(true)}
+                                                className="bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-xl transition shadow flex items-center gap-2 border"
+                                            >
+                                                <i className="fa-solid fa-plus-circle text-sm"></i>
+                                                เพิ่มคุณครูใหม่
+                                            </button>
+                                        </div>
+
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full text-xs sm:text-sm text-left">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                                                        <th className="py-3.5 px-3">รหัสพนักงาน</th>
+                                                        <th className="py-3.5 px-3">รูปถ่าย / ชื่อ-นามสกุลครู / อีเมลโรงเรียน</th>
+                                                        <th className="py-3.5 px-3 text-center">สถิติมาสายสะสม</th>
+                                                        <th className="py-3.5 px-3">ลากิจส่วนตัว (เริ่มต้น/ใช้ไป/คงเหลือ)</th>
+                                                        <th className="py-3.5 px-3">ลาป่วย (เริ่มต้น/ใช้ไป/คงเหลือ)</th>
+                                                        <th className="py-3.5 px-3 text-center">จัดการ</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                                                    {users.filter(u => u.role === "teacher").map((t) => {
+                                                        const stats = getTeacherStats(t.id);
+                                                        const pRemaining = t.personalQuota - stats.personalUsed;
+                                                        const sRemaining = t.sickQuota - stats.sickUsed;
+                                                        return (
+                                                            <tr key={t.id} className="hover:bg-slate-50/40 transition duration-150">
+                                                                <td className="py-4.5 px-3 font-mono text-slate-400 text-sm sm:text-base font-bold">{t.id}</td>
+                                                                <td className="py-4.5 px-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        {renderAvatar(t, "w-12 h-12 text-xs")}
+                                                                        <div className="text-left">
+                                                                            <p className="font-extrabold text-slate-900 text-sm sm:text-base">{t.prefix}{t.name}</p>
+                                                                            <p className="text-xs text-slate-400 font-mono font-medium">{t.email || `${t.id.toLowerCase()}@yuvaphat.ac.th`}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4.5 px-3 text-center">
+                                                                    <div className="inline-flex items-center gap-2 bg-slate-50 border px-3.5 py-2 rounded-2xl shadow-inner">
+                                                                        <button 
+                                                                            onClick={() => handleAdjustLate(t.id, -1)}
+                                                                            className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border text-slate-500 hover:bg-slate-100 transition shadow-sm"
+                                                                        >
+                                                                            <i className="fa-solid fa-minus text-[11px]"></i>
+                                                                        </button>
+                                                                        <span className={`font-mono font-black text-sm sm:text-base px-2 ${stats.lateCount >= 4 ? 'text-red-600 animate-pulse' : 'text-slate-800'}`}>
+                                                                            {stats.lateCount}
+                                                                        </span>
+                                                                        <button 
+                                                                            onClick={() => handleAdjustLate(t.id, 1)}
+                                                                            className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border text-slate-500 hover:bg-slate-100 transition shadow-sm"
+                                                                        >
+                                                                            <i className="fa-solid fa-plus text-[11px]"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    {stats.lateCount >= 4 && (
+                                                                        <div className="text-xs text-red-500 font-bold mt-1.5">
+                                                                            (หักวันลากิจสะสม -{stats.latePenalty} วัน)
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-4.5 px-3">
+                                                                    <div className="flex items-center gap-2 text-sm sm:text-base">
+                                                                        <span className="text-slate-400 font-medium">{t.personalQuota}</span>
+                                                                        <span className="text-slate-300">/</span>
+                                                                        <span className="text-red-500">{stats.personalUsed.toFixed(1)}</span>
+                                                                        <span className="text-slate-300">/</span>
+                                                                        <span className={`font-black px-2.5 py-0.5 rounded-lg text-xs ${pRemaining < 3 ? 'bg-red-50 text-red-700 border border-red-100 animate-pulse' : 'bg-emerald-50 text-emerald-800'}`}>
+                                                                            {pRemaining.toFixed(1)} วัน
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4.5 px-3">
+                                                                    <div className="flex items-center gap-2 text-sm sm:text-base">
+                                                                        <span className="text-slate-400 font-medium">{t.sickQuota}</span>
+                                                                        <span className="text-slate-300">/</span>
+                                                                        <span className="text-red-500">{stats.sickUsed.toFixed(1)}</span>
+                                                                        <span className="text-slate-300">/</span>
+                                                                        <span className={`font-black px-2.5 py-0.5 rounded-lg text-xs ${sRemaining < 5 ? 'bg-red-50 text-red-700 border border-red-100 animate-pulse' : 'bg-emerald-50 text-emerald-800'}`}>
+                                                                            {sRemaining.toFixed(1)} วัน
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4.5 px-3 text-center">
+                                                                    <div className="flex justify-center gap-2">
+                                                                        <button 
+                                                                            onClick={() => handleOpenEditTeacher(t)}
+                                                                            className="text-sky-600 hover:text-sky-800 p-2 rounded-xl bg-sky-50 hover:bg-sky-100/80 border border-sky-100 transition shadow-sm"
+                                                                            title="ปรับปรุงสิทธิ์โควตา"
+                                                                        >
+                                                                            <i className="fa-solid fa-user-pen"></i>
+                                                                        </button>
+                                                                        <button 
+                                                                            onClick={() => handleDeleteTeacher(t.id)}
+                                                                            className="text-slate-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition"
+                                                                            title="ลบพนักงาน"
+                                                                        >
+                                                                            <i className="fa-solid fa-user-minus"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {adminSubTab === "calendar" && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in text-sm sm:text-base">
+                                        
+                                        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                            <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
+                                                <div className="text-left">
+                                                    <h3 className="font-extrabold text-slate-800 text-base">วันหยุดราชการประจำปฏิทิน</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5 font-medium">วันหยุดราชการหลักที่มีผลลัพธ์คูณวันลาพิเศษ</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setShowAddHolidayModal(true)}
+                                                    className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition"
+                                                >
+                                                    <i className="fa-solid fa-plus mr-1 text-emerald-500"></i> เพิ่มวันหยุด
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                                                {holidays.map((h, i) => (
+                                                    <div key={i} className="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs sm:text-sm shadow-sm">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="bg-gradient-to-tr from-emerald-700 to-navy-800 text-white w-9 h-9 rounded-xl flex items-center justify-center font-extrabold shadow-sm">
+                                                                H
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="font-extrabold text-slate-800">{h.name}</p>
+                                                                <p className="text-xs text-slate-400 font-medium">{formatThaiDate(h.date)}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => handleDeleteHoliday(h.date)} className="text-slate-300 hover:text-red-500 p-2 rounded transition">
+                                                            <i className="fa-solid fa-circle-minus text-2xl"></i>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                            <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
+                                                <div className="text-left">
+                                                    <h3 className="font-extrabold text-slate-800 text-base">วันกิจกรรมพิเศษประจำโรงเรียน</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5 font-medium">วันจัดงานพิธีพิเศษ (โทษหักวันลากิจทวีคูณเป็น 1.5 วัน)</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setShowAddActivityModal(true)}
+                                                    className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition"
+                                                >
+                                                    <i className="fa-solid fa-plus mr-1 text-emerald-500"></i> เพิ่มกิจกรรม
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                                                {activities.map((a, i) => (
+                                                    <div key={i} className="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs sm:text-sm shadow-sm">
+                                                        <div className="flex items-center gap-3 text-left">
+                                                            <div className="bg-gradient-to-tr from-emerald-600 to-emerald-700 text-white w-9 h-9 rounded-xl flex items-center justify-center font-extrabold shadow-sm">
+                                                                A
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-extrabold text-slate-800">{a.name}</p>
+                                                                <p className="text-xs text-slate-400 font-medium">
+                                                                    {formatThaiDate(a.date)} &bull; <span className="text-emerald-700 font-bold">{getSessionThai(a.session)}</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => handleDeleteActivity(a.date)} className="text-slate-300 hover:text-red-500 p-2 rounded transition">
+                                                            <i className="fa-solid fa-circle-minus text-2xl"></i>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                )}
+
+                                {adminSubTab === "roles" && currentUser.role === "admin" && (
+                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                        <div className="border-b pb-4 mb-5 text-left">
+                                            <h3 className="font-extrabold text-slate-800 text-base">ปรับสิทธิ์ผู้ใช้งานในระบบงานบุคคล</h3>
+                                            <p className="text-xs text-slate-400 mt-1 uppercase">แก้ไขและตั้งค่าบทบาทความปลอดภัย บัญชีและรหัสผ่านพนักงานหลังบ้าน</p>
+                                        </div>
+
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full text-xs sm:text-sm text-left">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                                                        <th className="py-3.5 px-3">รหัสประจำตัว</th>
+                                                        <th className="py-3.5 px-3">ชื่อพนักงาน / อีเมลหน่วยงาน</th>
+                                                        <th className="py-3.5 px-3">ระดับสิทธิ์ (Role)</th>
+                                                        <th className="py-3.5 px-3">รหัสผ่านล็อกอิน</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                                                    {users.map((u) => (
+                                                        <tr key={u.id} className="hover:bg-slate-50/40 transition">
+                                                            <td className="py-4 px-3 font-mono font-black text-slate-500 text-sm sm:text-base">{u.id}</td>
+                                                            <td className="py-4 px-3 text-left">
+                                                                <p className="text-slate-900 font-extrabold text-sm sm:text-base">{u.prefix}{u.name}</p>
+                                                                <input 
+                                                                    type="email" 
+                                                                    value={u.email || ""} 
+                                                                    placeholder={`${u.id.toLowerCase()}@yuvaphat.ac.th`}
+                                                                    onChange={(e) => handleUserEmailChange(u.id, e.target.value)}
+                                                                    className="bg-[#FAF9F6] border border-slate-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 w-56 font-bold transition py-0.5"
+                                                                />
+                                                            </td>
+                                                            <td className="py-4 px-3">
+                                                                <select 
+                                                                    value={u.role}
+                                                                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                                                    disabled={u.id === currentUser.id}
+                                                                    className="bg-white border border-slate-200 text-slate-800 px-3.5 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 text-xs sm:text-sm font-semibold cursor-pointer transition shadow-sm"
+                                                                >
+                                                                    <option value="teacher">Teacher (คุณครูทั่วไป)</option>
+                                                                    <option value="hr">HR (เจ้าหน้าที่งานบุคคล)</option>
+                                                                    <option value="admin">Admin (ผู้ดูแลระบบสูงสุด)</option>
+                                                                </select>
+                                                            </td>
+                                                            <td className="py-4 px-3">
+                                                                <input 
+                                                                    type="text" 
+                                                                    value={u.password}
+                                                                    onChange={(e) => handleUserPasswordChange(u.id, e.target.value)}
+                                                                    className="bg-[#FAF9F6] border border-slate-200 text-slate-700 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-mono font-bold w-28 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition"
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+                        )}
+                    </main>
+
+                    {showAddTeacherModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md border animate-fade-in relative">
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
+                                <div className="flex justify-between items-center border-b pb-4 mb-5">
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">ลงทะเบียนสมาชิกบุคลากรใหม่</h3>
+                                    <button onClick={() => setShowAddTeacherModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleAddTeacher} className="space-y-4">
+                                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-dashed shadow-inner">
+                                        <div className="relative">
+                                            {newTeacher.photo ? (
+                                                <img src={newTeacher.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-emerald-700 shadow-md" />
+                                            ) : (
+                                                <div className="w-16 h-16 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl border-2 border-white shadow-inner">
+                                                    <i className="fa-solid fa-camera"></i>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 text-left">
+                                            <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1">รูปถ่ายประจำตัวพนักงานครู</label>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        handleImageUpload(file, (base64) => {
+                                                            setNewTeacher({ ...newTeacher, photo: base64 });
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2 text-left">
+                                        <div>
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">คำนำหน้า</label>
+                                            <select 
+                                                value={newTeacher.prefix}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, prefix: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                            >
+                                                <option value="นาย">นาย</option>
+                                                <option value="นาง">นาง</option>
+                                                <option value="นางสาว">นางสาว</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อ-นามสกุลจริง</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTeacher.name}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">อีเมลสังกัดโรงเรียน</label>
+                                        <input 
+                                            type="email" 
+                                            value={newTeacher.email}
+                                            onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
+                                            placeholder="sommai.d@yuvaphat.ac.th"
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 text-left">
+                                        <div>
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">สิทธิ์การทำงาน</label>
+                                            <select 
+                                                value={newTeacher.role}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, role: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-700 cursor-pointer"
+                                            >
+                                                <option value="teacher">คุณครูทั่วไป (Teacher)</option>
+                                                <option value="hr">ฝ่ายบุคคล (HR)</option>
+                                                <option value="admin">แอดมินสูงสุด (Admin)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">รหัสผ่านเริ่มต้น</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTeacher.password}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-mono font-bold text-center"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                        <div>
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">โควตาลากิจตั้งต้น (วัน)</label>
+                                            <input 
+                                                type="number" 
+                                                value={newTeacher.personalQuota}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, personalQuota: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-500 text-xs mb-1 font-bold">โควตาลาป่วยตั้งต้น (วัน)</label>
+                                            <input 
+                                                type="number" 
+                                                value={newTeacher.sickQuota}
+                                                onChange={(e) => setNewTeacher({ ...newTeacher, sickQuota: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl text-xs sm:text-sm transition shadow-md mt-4">
+                                        ลงทะเบียนประวัติลงฐานข้อมูล
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showEditTeacherModal && editingTeacher && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md border animate-fade-in relative">
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
+                                <div className="flex justify-between items-center border-b pb-4 mb-5">
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">
+                                        <i className="fa-solid fa-user-pen text-emerald-700 mr-2 text-sm"></i>
+                                        แก้ไขข้อมูลสิทธิ์พนักงาน
+                                    </h3>
+                                    <button onClick={() => { setShowEditTeacherModal(false); setEditingTeacher(null); }} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleUpdateTeacher} className="space-y-4">
+                                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-dashed shadow-inner">
+                                        <div className="relative">
+                                            {editingTeacher.photo ? (
+                                                <div className="relative group">
+                                                    <img src={editingTeacher.photo} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-emerald-700 shadow-md" />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setEditingTeacher({ ...editingTeacher, photo: "" })}
+                                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition"
+                                                    >
+                                                        <i className="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="w-16 h-16 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xl border-2 border-white shadow-inner">
+                                                    <i className="fa-solid fa-camera"></i>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 text-left">
+                                            <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1">รูปภาพประจำตัวครู</label>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        handleImageUpload(file, (base64) => {
+                                                            setEditingTeacher({ ...editingTeacher, photo: base64 });
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2 text-left">
+                                        <div>
+                                            <label className="block text-slate-500 text-[10px] mb-1 font-bold">คำนำหน้า</label>
+                                            <select 
+                                                value={editingTeacher.prefix}
+                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, prefix: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                            >
+                                                <option value="นาย">นาย</option>
+                                                <option value="นาง">นาง</option>
+                                                <option value="นางสาว">นางสาว</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-slate-500 text-[10px] mb-1 font-bold">ชื่อและนามสกุลจริง</label>
+                                            <input 
+                                                type="text" 
+                                                value={editingTeacher.name}
+                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                        <div>
+                                            <label className="block text-slate-500 text-[10px] mb-1 font-bold">สิทธิ์ลากิจเริ่มต้น (วัน)</label>
+                                            <input 
+                                                type="number" 
+                                                step="0.5"
+                                                value={editingTeacher.personalQuota}
+                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, personalQuota: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-500 text-[10px] mb-1 font-bold">สิทธิ์ลาป่วยเริ่มต้น (วัน)</label>
+                                            <input 
+                                                type="number" 
+                                                step="0.5"
+                                                value={editingTeacher.sickQuota}
+                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, sickQuota: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2.5 justify-end mt-5">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => { setShowEditTeacherModal(false); setEditingTeacher(null); }}
+                                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200"
+                                        >
+                                            ยกเลิก
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 shadow"
+                                        >
+                                            บันทึกข้อมูล
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAddHolidayModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border animate-fade-in">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
+                                    <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleAddHoliday} className="space-y-4">
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-[10px] mb-1 font-bold">เลือกวันหยุด</label>
+                                        <input 
+                                            type="date" 
+                                            value={newHoliday.date}
+                                            onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold text-center"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-[10px] mb-1 font-bold">ชื่ออธิบายรายละเอียดวันหยุด</label>
+                                        <input 
+                                            type="text" 
+                                            value={newHoliday.name}
+                                            onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+                                            placeholder="วันสงกรานต์, วันเข้าพรรษา..."
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold"
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition duration-300 shadow mt-2 border border-emerald-600">
+                                        บันทึกวันหยุดปฏิทิน
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAddActivityModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border animate-fade-in">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เพิ่มกิจกรรมพิเศษประจำปี</h3>
+                                    <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleAddActivity} className="space-y-4">
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-[10px] mb-1 font-bold">วันกิจกรรม</label>
+                                        <input 
+                                            type="date" 
+                                            value={newActivity.date}
+                                            onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold text-center"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-[10px] mb-1 font-bold">ช่วงเวลาการจัดงาน (เกณฑ์ลงโทษ)</label>
+                                        <select 
+                                            value={newActivity.session}
+                                            onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold text-slate-700 cursor-pointer"
+                                        >
+                                            <option value="morning">ช่วงเช้า (ลงโทษทวีคูณหักวันลา 1.5)</option>
+                                            <option value="afternoon">ช่วงบ่าย (ลงโทษทวีคูณหักวันลา 1.5)</option>
+                                        </select>
+                                    </div>
+                                    <div className="text-left">
+                                        <label className="block text-slate-500 text-[10px] mb-1 font-bold">ชื่อพิธีหรือรายละเอียด</label>
+                                        <input 
+                                            type="text" 
+                                            value={newActivity.name}
+                                            onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
+                                            placeholder="พิธีไหว้ครู, วันประชุมพบกันฉันท์พี่น้อง"
+                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold"
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition duration-300 shadow mt-2 border border-emerald-600">
+                                        บันทึกกิจกรรมพรีเมียม
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="bg-navy-950 text-slate-400 py-8 text-center border-t border-emerald-700/20 text-xs font-medium mt-12">
+                        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <p>© ๒๕๖๙ ระบบคำนวณและสรุปวันลาครูระดับพรีเมียม - โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                            <p className="flex items-center gap-1.5 justify-center text-slate-500">
+                                <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                ระบบความจำปลอดภัย Local Storage ออฟไลน์สมบูรณ์
+                            </p>
+                        </div>
+                    </footer>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
