@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครู</title>
+    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลา</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Sarabun, Kanit & Inter) -->
@@ -149,14 +149,42 @@
         ];
 
         function App() {
+            // 🛡️ ระบบตรวจจับประวัติค้างส่งแอดมินเตยอัตโนมัติ (แก้ไขปัญหาเข้าระบบไม่ได้เนื่องจาก Browser Cache)
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
-                return saved ? JSON.parse(saved) : initialUsers;
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        // ถ้าในความจำสำรองไม่มีแอดมิน Toei หรือยังมีแอดมินวิโรจน์เดิม ให้ล้างความจำและอัปเดตเวอร์ชันจริงทันที
+                        const hasNewAdmin = parsed.some(u => u.email && u.email.toLowerCase() === "toei@yuwapat.ac.th");
+                        if (!hasNewAdmin) {
+                            localStorage.setItem("leave_users", JSON.stringify(initialUsers));
+                            return initialUsers;
+                        }
+                        return parsed;
+                    } catch (e) {
+                        return initialUsers;
+                    }
+                }
+                return initialUsers;
             });
 
             const [currentUser, setCurrentUser] = React.useState(() => {
                 const saved = localStorage.getItem("leave_current_user");
-                return saved ? JSON.parse(saved) : null;
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        // หากค้างบัญชีแอดมินคนเดิม ให้ดีดตัวออกอัตโนมัติเพื่อความปลอดภัย
+                        if (parsed.email && (parsed.email.toLowerCase() === "admin@yuvaphat.ac.th" || parsed.email.toLowerCase() === "admin@yuwapat.ac.th")) {
+                            localStorage.removeItem("leave_current_user");
+                            return null;
+                        }
+                        return parsed;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return null;
             });
 
             const [holidays, setHolidays] = React.useState(() => {
@@ -1435,6 +1463,7 @@
                                                                 </div>
                                                             </div>
 
+                                                            {/* ปรับแต่งปุ่มยกเลิกในกล่องด้านขวาให้สั้นกระชับเป็น "ยกเลิกใบลา" และอยู่ในกรอบสมบูรณ์แบบไม่แยกบรรทัด */}
                                                             <div className="flex items-center gap-5 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-4 lg:pt-0 flex-shrink-0">
                                                                 <div className="text-left lg:text-right">
                                                                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">ยอดหักวันลาสุทธิ</p>
@@ -1700,7 +1729,7 @@
                                                                     type="text" 
                                                                     value={u.password}
                                                                     onChange={(e) => handleUserPasswordChange(u.id, e.target.value)}
-                                                                    className="bg-[#FAF9F6] border border-slate-200 text-slate-755 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-mono font-bold w-28 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition"
+                                                                    className="bg-[#FAF9F6] border border-slate-200 text-slate-750 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-mono font-bold w-28 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition"
                                                                 />
                                                             </td>
                                                         </tr>
@@ -1879,7 +1908,7 @@
                                                     <button 
                                                         type="button"
                                                         onClick={() => setEditingTeacher({ ...editingTeacher, photo: "" })}
-                                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition"
+                                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition"
                                                     >
                                                         <i className="fa-solid fa-trash-can"></i>
                                                     </button>
@@ -2080,7 +2109,7 @@
 
                     <footer className="bg-navy-950 text-slate-400 py-8 text-center border-t border-emerald-700/20 text-xs font-medium mt-12">
                         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                            <p>© ๒๕๖๙ ระบบคำนวณและสรุปวันลาครู - โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                            <p>© ๒๕๖๙ ระบบคำนวณและสรุปวันลาครูระดับพรีเมียม - โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
                             <p className="flex items-center gap-1.5 justify-center text-slate-500">
                                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
                                 ระบบความจำปลอดภัย Local Storage ออฟไลน์สมบูรณ์
