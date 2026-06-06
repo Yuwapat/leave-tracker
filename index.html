@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบการลาของบุคลากร</title>
+    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครู</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Sarabun, Kanit & Inter) -->
@@ -217,8 +217,59 @@
                 }
             }, [formData.startDate, formData.period]);
 
-            // ==================== [ ฟังก์ชันอำนวยความสะดวกภายในโครงสร้าง React ] ====================
+            // ==================== [ ฟังก์ชันผู้ช่วยหลักสเกลระบบ ] ====================
             
+            const showToast = (message, type = "success") => {
+                setNotification({ message, type });
+                setTimeout(() => setNotification(null), 4000);
+            };
+
+            const triggerConfirm = (title, message, onConfirmCallback) => {
+                setConfirmDialog({
+                    isOpen: true,
+                    title,
+                    message,
+                    onConfirm: () => {
+                        onConfirmCallback();
+                        setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null });
+                    }
+                });
+            };
+
+            const handleImageUpload = (file, callback) => {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 120;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const base64Str = canvas.toDataURL('image/jpeg', 0.7);
+                        callback(base64Str);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+
             function getLocalDateString(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -505,7 +556,7 @@
                 const updatedLeaves = [newRequest, ...leaves];
                 setLeaves(updatedLeaves);
                 
-                // 📡 ส่งข้อมูลบันทึกเข้า Google Sheets (การแจ้งเตือน Telegram จะเกิดขึ้นจาก Apps Script ทางฝั่ง Sheet จ้ะ)
+                // 📡 ส่งข้อมูลบันทึกเข้า Google Sheets
                 syncDataToGoogleSheets({
                     action: "requestLeave",
                     ...newRequest
@@ -726,7 +777,7 @@
                 }
 
                 setUsers([...users, ...additionalUsers]);
-                showToast(`สร้างรายชื่อบุคลากรจำลองเพิ่มเติมสำเร็จ ปัจจุบันมีบุคลากรครบ 49 คนพอดี`);
+                showToast("สร้างรายชื่อบุคลากรจำลองเพิ่มเติมสำเร็จ ปัจจุบันมีบุคลากรครบ 49 คนพอดี");
             };
 
             if (!currentUser) {
@@ -1629,7 +1680,7 @@
                                                                     value={u.email || ""} 
                                                                     placeholder={`${u.id.toLowerCase()}@yuwapat.ac.th`}
                                                                     onChange={(e) => handleUserEmailChange(u.id, e.target.value)}
-                                                                    className="bg-[#FAF9F6] border border-slate-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 w-56 font-bold transition py-0.5"
+                                                                    className="bg-[#FAF9F6] border border-slate-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 w-56 font-bold transition py-0.5"
                                                                 />
                                                             </td>
                                                             <td className="py-4 px-3">
