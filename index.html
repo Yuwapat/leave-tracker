@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครู</title>
+    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครูพรีเมียม</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Sarabun, Kanit & Inter) -->
@@ -86,8 +86,8 @@
         // สวิตช์เปิด-ปิด บัญชีสาธิตตอนใช้จริง (เปลี่ยนเป็น false เมื่อต้องการซ่อนกล่องข้อมูลตัวอย่าง)
         const SHOW_DEMO_PORTAL = false; 
 
-        // การเชื่อมต่อระบบภายนอก (คุณครูนำ URL ของ Google Sheets Apps Script มาใส่เพื่อเชื่อมข้อมูลระบบได้จ้ะ)
-        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1JZjhFGq8qD1XT7arbJNqct_i4aV0Rln7XGRYnbQS9As/edit?usp=sharing"; 
+        // 🔗 การเชื่อมต่อระบบภายนอก (คุณครูนำ URL ของ Google Sheets Apps Script มาใส่เพื่อเชื่อมข้อมูลระบบได้จ้ะ)
+        const GOOGLE_SHEET_URL = ""; 
 
         // 👥 บัญชีผู้ใช้เริ่มต้นอ้างอิงตรงตามตารางข้อมูลจริงในโรงเรียนอนุบาลยุวพัฒน์
         const initialUsers = [
@@ -208,7 +208,9 @@
                     try {
                         const parsed = JSON.parse(saved);
                         const hasNewAdmin = parsed.some(u => u.email && u.email.toLowerCase() === "toei@yuwapat.ac.th");
-                        if (!hasNewAdmin) {
+                        // ตรวจสอบว่ายังมี ID ที่เป็นตัวอักษรผสม (เช่น A01, T01) ใน LocalStorage หรือไม่ หากมีให้ล้างใช้ค่าเริ่มต้นที่เป็นตัวเลขล้วน
+                        const hasLetterId = parsed.some(u => u.id && isNaN(Number(u.id)));
+                        if (!hasNewAdmin || hasLetterId) {
                             localStorage.setItem("leave_users", JSON.stringify(initialUsers));
                             return initialUsers;
                         }
@@ -864,7 +866,8 @@
                     showToast("กรุณากรอกชื่อ-นามสกุลครู", "error");
                     return;
                 }
-                const maxCurrentId = Math.max(...users.map(u => Number(u.id) || 0));
+                // คำนวณ ID ตัวเลขถัดไปโดยอัตโนมัติ (เช่น 61, 62, 63...)
+                const maxCurrentId = Math.max(0, ...users.map(u => Number(u.id) || 0));
                 const nextId = String(maxCurrentId + 1);
                 
                 const finalEmail = newTeacher.email.trim() || (newTeacher.role === "maid" || newTeacher.role === "janitor" ? `staff_${nextId}` : `teacher.${nextId}@yuwapat.ac.th`);
@@ -875,7 +878,45 @@
                 setUsers([...users, u]);
                 setNewTeacher({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "", hireDate: "" });
                 setShowAddTeacherModal(false);
-                showToast(`เพิ่มบุคลากร ${u.id} - ${u.prefix}${u.name} สำเร็จ`);
+                showToast(`เพิ่มบุคลากร รหัส ${u.id} - ${u.prefix}${u.name} สำเร็จ`);
+            };
+            const handleGenerate49Teachers = () => {
+                const thaiFirstNames = [
+                    "กิตติ", "เฉลิม", "ณัฐพงษ์", "ทรงพล", "ธนพล", "นพดล", "ประเสริฐ", "พงษ์ศักดิ์", "ยุทธนา", "วรวุฒิ",
+                    "สุรชัย", "เกรียงไกร", "จารุวรรณ", "ชลลดา", "ดวงพร", "ทิพวรรณ", "นงลักษณ์", "เบญจวรรณ", "ปัทมา", "พรทิพย์"
+                ];
+                const thaiLastNames = [
+                    "สุวรรณรัตน์", "สมบูรณ์ดี", "รักษาใจ", "ดีเสมอ", "เจริญรุ่งเรือง", "เลิศวิจิตร", "ตั้งมโนมั่น", "เกียรติขจร", "ประชานิยม"
+                ];
+                const prefixes = ["นาย", "นาง", "นางสาว"];
+
+                const currentCount = users.filter(u => u.role === "teacher").length;
+                if (currentCount >= 47) {
+                    showToast("ในระบบมีจำนวนบุคลากรครบถ้วนแล้ว (49 คน)", "info");
+                    return;
+                }
+
+                const additionalUsers = [];
+                const neededTeachersCount = 47 - currentCount;
+                let lastNumericId = Math.max(0, ...users.map(u => Number(u.id) || 0));
+                
+                for (let i = 1; i <= neededTeachersCount; i++) {
+                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                    const firstName = thaiFirstNames[Math.floor(Math.random() * thaiFirstNames.length)];
+                    const lastName = thaiLastNames[Math.floor(Math.random() * thaiLastNames.length)];
+                    const sickQuota = Math.floor(Math.random() * 11) + 20; 
+                    const personalQuota = Math.floor(Math.random() * 8) + 10; 
+                    lastNumericId++;
+                    const newId = String(lastNumericId);
+                    const email = `teacher.${newId}@yuwapat.ac.th`;
+
+                    additionalUsers.push({
+                        id: newId, prefix, name: `${firstName} ${lastName}`, role: "teacher", password: "1234", email, sickQuota, personalQuota, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-05-16"
+                    });
+                }
+
+                setUsers([...users, ...additionalUsers]);
+                showToast(`สร้างรายชื่อบุคลากรจำลองเพิ่มเติมสำเร็จ ปัจจุบันมีบุคลากรครบ 49 คนพอดี`);
             };
 
             const handleOpenEditTeacher = (teacher) => {
