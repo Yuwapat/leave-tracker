@@ -92,7 +92,7 @@
             { id: "3", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuwapat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 4, forgotTimeCount: 2, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2022-11-01" },
             { id: "4", prefix: "นางสาว", name: "อารีย์ ดีใจ", role: "teacher", password: "1234", email: "aree.d@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 10, forgotTimeCount: 9, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2025-01-15" },
             
-            // 🧹 แม่บ้านและพ่อบ้าน
+            // แม่บ้านและพ่อบ้าน
             { id: "51", prefix: "นาง", name: "สมส่วน เนตรขำ", role: "maid", password: "1234", email: "somsuan", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
             { id: "52", prefix: "น.ส.", name: "สุทิน ศรีสุข", role: "maid", password: "1234", email: "suthin", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
             { id: "53", prefix: "นาง", name: "สมใจ ทับทอง", role: "maid", password: "1234", email: "somjai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
@@ -372,7 +372,6 @@
                 return count;
             }
 
-            // Calculation function for leave days and duty fees
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", userObj = selectedTeacher) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr || !userObj) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
@@ -645,6 +644,44 @@
                 });
             };
 
+            const handleAddHoliday = (e) => {
+                e.preventDefault();
+                if (!newHoliday.date || !newHoliday.name) {
+                    showToast("กรุณากรอกข้อมูลวันหยุดให้ครบถ้วน", "error");
+                    return;
+                }
+                setHolidays([...holidays, newHoliday].sort((a,b) => a.date.localeCompare(b.date)));
+                setNewHoliday({ date: "", name: "" });
+                setShowAddHolidayModal(false);
+                showToast("เพิ่มวันหยุดปฏิทินเรียบร้อยแล้ว");
+            };
+
+            const handleDeleteHoliday = (dateStr) => {
+                triggerConfirm("ลบวันหยุด", `ต้องการนำวันหยุด ${formatThaiDate(dateStr)} ออกใช่หรือไม่?`, () => {
+                    setHolidays(holidays.filter(h => h.date !== dateStr));
+                    showToast("ลบวันหยุดเรียบร้อยแล้ว", "error");
+                });
+            };
+
+            const handleAddActivity = (e) => {
+                e.preventDefault();
+                if (!newActivity.date || !newActivity.name) {
+                    showToast("กรุณากรอกข้อมูลกิจกรรมให้ครบถ้วน", "error");
+                    return;
+                }
+                setActivities([...activities, newActivity].sort((a,b) => a.date.localeCompare(b.date)));
+                setNewActivity({ date: "", name: "", type: "special_half", session: "morning" });
+                setShowAddActivityModal(false);
+                showToast("บันทึกวันกิจกรรมเรียบร้อยแล้ว");
+            };
+
+            const handleDeleteActivity = (dateStr) => {
+                triggerConfirm("ยกเลิกกิจกรรม", `ต้องการลบกิจกรรมวันที่ ${formatThaiDate(dateStr)} ใช่หรือไม่?`, () => {
+                    setActivities(activities.filter(a => a.date !== dateStr));
+                    showToast("ลบวันกิจกรรมเรียบร้อยแล้ว", "error");
+                });
+            };
+
             const handleRequestLeaveSubmit = (e) => {
                 e.preventDefault();
                 if (!formData.startDate || !formData.reason) {
@@ -660,10 +697,6 @@
                     showToast("วันที่เลือกเป็นวันหยุดทั้งหมด ไม่จำเป็นต้องยื่นใบลา", "error");
                     return;
                 }
-
-                const currentBalance = formData.type === "personal" 
-                    ? currentTeacher.personalQuota - stats.personalUsed
-                    : currentTeacher.sickQuota - stats.sickUsed;
 
                 const newRequest = {
                     id: "L" + String(leaves.length + 1).padStart(2, '0') + "_" + Date.now().toString().slice(-4),
@@ -741,7 +774,6 @@
                     <div className="min-h-screen flex items-center justify-center bg-[#F1F5F9] p-4 relative overflow-hidden">
                         <div className="w-full max-w-md bg-white rounded-[28px] shadow-2xl overflow-hidden border border-slate-100 relative z-10">
                             <header className="luxury-gradient text-white p-8 text-center relative border-b-4 border-emerald-700">
-                                {/* 🏫 โลโก้โรงเรียนแบบโปร่งใส ไม่มีกรอบขาว */}
                                 <div className="w-20 h-20 flex items-center justify-center mx-auto mb-3">
                                     <img 
                                         src="logo.png" 
@@ -804,7 +836,6 @@
                     <header className="luxury-gradient text-white shadow-xl sticky top-0 z-30 border-b border-emerald-700/50">
                         <div className="max-w-7xl mx-auto px-4 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-3.5">
-                                {/* 🏫 โลโก้โรงเรียนบน Header */}
                                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
                                     <img 
                                         src="logo.png" 
@@ -891,7 +922,6 @@
                                             </div>
                                         )}
 
-                                        {/* ปุ่มดูประวัติตามวันที่ */}
                                         <button 
                                             onClick={() => setShowViewLogsModal(true)}
                                             className="w-full mt-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold py-2.5 px-4 rounded-xl text-xs transition border border-emerald-200 flex items-center justify-center gap-2"
@@ -904,7 +934,6 @@
                                     {/* สถิติวินัยและการใช้สิทธิ์ลากิจ/ลาป่วย */}
                                     {selectedTeacher && selectedTeacherStats && (
                                         <div className="space-y-4 text-left">
-                                            {/* การ์ดลากิจส่วนตัว */}
                                             <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 relative">
                                                 <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">ลากิจส่วนตัว</span>
                                                 <h4 className="text-4xl font-extrabold text-slate-800 mt-3">
@@ -949,7 +978,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* การ์ดลาป่วย */}
                                             <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
                                                 <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">ลาป่วยสะสม</span>
                                                 <h4 className="text-4xl font-extrabold text-slate-800 mt-3">
@@ -990,14 +1018,12 @@
 
                                 {/* ฝั่งขวา: ฟอร์มกรอกยื่นขอลา + ประวัติการลางาน */}
                                 <div className="space-y-6 lg:col-span-2">
-                                    {/* 📌 1. ฟอร์มยื่นขอลา (RESTORED FULL FORM) */}
                                     <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 text-left">
                                         <h2 className="text-base sm:text-lg font-extrabold text-slate-800 mb-5 pb-3 border-b flex items-center gap-2">
                                             <i className="fa-solid fa-paper-plane text-emerald-700"></i> บันทึกยื่นใบขอลาและตรวจผลคำนวณสะสม
                                         </h2>
 
                                         <form onSubmit={handleRequestLeaveSubmit} className="space-y-6">
-                                            {/* วันที่เริ่มต้น - วันที่สิ้นสุด */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                 <div>
                                                     <label className="block text-slate-700 text-xs font-bold mb-1.5">วันเริ่มหยุด</label>
@@ -1025,7 +1051,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* ช่วงเวลาที่ลา & ชนิดการลา */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                 <div>
                                                     <label className="block text-slate-700 text-xs font-bold mb-1.5">ช่วงเวลาที่ต้องการลา</label>
@@ -1075,7 +1100,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* เหตุผลความจำเป็น */}
                                             <div>
                                                 <label className="block text-slate-700 text-xs font-bold mb-1.5">เหตุผลความจำเป็นที่ลา</label>
                                                 <input 
@@ -1088,7 +1112,6 @@
                                                 />
                                             </div>
 
-                                            {/* AI Live Preview คำนวณวันหักและค่าเวร */}
                                             {leaveCalcResult.total > 0 && (
                                                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-inner">
                                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3 mb-3">
@@ -1126,7 +1149,6 @@
                                         </form>
                                     </div>
 
-                                    {/* 📌 2. ประวัติการลางานของตนเอง */}
                                     <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 text-left">
                                         <h2 className="text-base font-extrabold text-slate-800 mb-4 pb-3 border-b flex items-center gap-2">
                                             <i className="fa-solid fa-clock-rotate-left text-emerald-700"></i> ประวัติการยื่นใบลาของคุณครู / พนักงาน
@@ -1180,6 +1202,7 @@
                         )}
 
                         {/* ==================== 2. ฝ่ายบริหารจัดการข้อมูลบุคลากร (ADMIN) ==================== */}
+                        {}
                         {activeTab === "admin" && (
                             <div className="space-y-8 text-left">
                                 <div className="bg-white rounded-2xl p-8 shadow-md border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -1289,6 +1312,98 @@
                                                     ))}
                                                 </tbody>
                                             </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {}
+                                {adminSubTab === "calendar" && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
+                                        {/* กล่องบริหารวันหยุดราชการ */}
+                                        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                            <div className="flex justify-between items-center mb-5 border-b pb-4">
+                                                <div>
+                                                    <h3 className="font-extrabold text-slate-800 text-base">วันหยุดราชการประจำปฏิทิน ({holidays.length})</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5">วันหยุดหลักที่ไม่นำมาคิดหักวันลา</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setShowAddHolidayModal(true)}
+                                                    className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow"
+                                                >
+                                                    <i className="fa-solid fa-plus text-xs"></i> เพิ่มวันหยุด
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                                                {holidays.length === 0 ? (
+                                                    <div className="text-center py-8 text-slate-400 text-xs">ไม่มีวันหยุดในปฏิทิน</div>
+                                                ) : (
+                                                    holidays.map((h, i) => (
+                                                        <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs font-semibold">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs"><i className="fa-solid fa-calendar-day"></i></span>
+                                                                <div>
+                                                                    <p className="font-extrabold text-slate-800">{h.name}</p>
+                                                                    <p className="text-[10px] text-slate-400">📅 {formatThaiDate(h.date)}</p>
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => handleDeleteHoliday(h.date)}
+                                                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition"
+                                                                title="ลบวันหยุด"
+                                                            >
+                                                                <i className="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* กล่องบริหารกิจกรรมพิเศษโรงเรียน */}
+                                        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                                            <div className="flex justify-between items-center mb-5 border-b pb-4">
+                                                <div>
+                                                    <h3 className="font-extrabold text-slate-800 text-base">วันกิจกรรมพิเศษประจำโรงเรียน ({activities.length})</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5">วันที่มีกฎลงโทษและเพิ่มอัตราการหักวันลาพิเศษ</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setShowAddActivityModal(true)}
+                                                    className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow"
+                                                >
+                                                    <i className="fa-solid fa-plus text-xs"></i> เพิ่มกิจกรรม
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                                                {activities.length === 0 ? (
+                                                    <div className="text-center py-8 text-slate-400 text-xs">ไม่มีกิจกรรมพิเศษ</div>
+                                                ) : (
+                                                    activities.map((a, i) => (
+                                                        <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs font-semibold">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <span className="w-8 h-8 rounded-lg bg-navy-800 text-emerald-400 flex items-center justify-center font-bold text-xs"><i className="fa-solid fa-star"></i></span>
+                                                                <div>
+                                                                    <p className="font-extrabold text-slate-800">{a.name}</p>
+                                                                    <p className="text-[10px] text-slate-400">
+                                                                        📅 {formatThaiDate(a.date)} • 
+                                                                        <span className="text-emerald-700 font-bold ml-1">
+                                                                            {a.type === "meeting" ? "ประชุมพี่น้อง" : a.type === "special_full" ? "กิจกรรมตลอดวัน" : "กิจกรรมครึ่งวัน"}
+                                                                        </span>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => handleDeleteActivity(a.date)}
+                                                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition"
+                                                                title="ลบกิจกรรม"
+                                                            >
+                                                                <i className="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -1412,6 +1527,68 @@
                                         ))
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal 4: เพิ่มวันหยุดราชการ */}
+                    {showAddHolidayModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border text-left">
+                                <div className="flex justify-between items-center border-b pb-3 mb-3">
+                                    <h3 className="text-sm font-bold text-slate-800">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
+                                    <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400"><i className="fa-solid fa-xmark text-lg"></i></button>
+                                </div>
+                                <form onSubmit={handleAddHoliday} className="space-y-3">
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">วันที่หยุด</label>
+                                        <input type="date" value={newHoliday.date} onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })} className="w-full bg-slate-50 border px-3 py-2 rounded-xl text-xs font-bold" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อวันหยุด</label>
+                                        <input type="text" placeholder="เช่น วันมาฆบูชา, วันสงกรานต์" value={newHoliday.name} onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })} className="w-full bg-slate-50 border px-3 py-2 rounded-xl text-xs font-semibold" required />
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">บันทึกวันหยุด</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal 5: เพิ่มวันกิจกรรมพิเศษ */}
+                    {showAddActivityModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border text-left">
+                                <div className="flex justify-between items-center border-b pb-3 mb-3">
+                                    <h3 className="text-sm font-bold text-slate-800">เพิ่มกิจกรรมพิเศษประจำโรงเรียน</h3>
+                                    <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400"><i className="fa-solid fa-xmark text-lg"></i></button>
+                                </div>
+                                <form onSubmit={handleAddActivity} className="space-y-3">
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">วันที่จัดกิจกรรม</label>
+                                        <input type="date" value={newActivity.date} onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })} className="w-full bg-slate-50 border px-3 py-2 rounded-xl text-xs font-bold" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อกิจกรรม</label>
+                                        <input type="text" placeholder="เช่น พิธีไหว้ครู, วันวิทยาศาสตร์" value={newActivity.name} onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })} className="w-full bg-slate-50 border px-3 py-2 rounded-xl text-xs font-semibold" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ประเภทกิจกรรม</label>
+                                        <select value={newActivity.type} onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })} className="w-full bg-slate-50 border p-2.5 rounded-xl text-xs font-bold">
+                                            <option value="special_half">กิจกรรมพิเศษครึ่งวัน</option>
+                                            <option value="special_full">กิจกรรมพิเศษตลอดวัน</option>
+                                            <option value="meeting">ประชุมพบกันฉันน้องพี่</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ช่วงเวลา</label>
+                                        <select value={newActivity.session} onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })} className="w-full bg-slate-50 border p-2.5 rounded-xl text-xs font-bold">
+                                            <option value="morning">ช่วงเช้า</option>
+                                            <option value="afternoon">ช่วงบ่าย</option>
+                                            <option value="all_day">ตลอดวัน</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">บันทึกกิจกรรม</button>
+                                </form>
                             </div>
                         </div>
                     )}
