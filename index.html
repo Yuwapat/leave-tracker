@@ -1343,8 +1343,8 @@
                                                             <div className="flex items-center gap-2.5">
                                                                 <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs"><i className="fa-solid fa-calendar-day"></i></span>
                                                                 <div>
-                                                                    <p className="font-extrabold text-slate-800">{h.name}</p>
-                                                                    <p className="text-[10px] text-slate-400">📅 {formatThaiDate(h.date)}</p>
+                                                                    <p className="font-extrabold text-slate-800 text-xs sm:text-sm">{h.name}</p>
+                                                                    <p className="text-xs text-slate-500 font-semibold mt-0.5">{formatThaiDate(h.date)}</p>
                                                                 </div>
                                                             </div>
                                                             <button 
@@ -1384,9 +1384,9 @@
                                                             <div className="flex items-center gap-2.5">
                                                                 <span className="w-8 h-8 rounded-lg bg-navy-800 text-emerald-400 flex items-center justify-center font-bold text-xs"><i className="fa-solid fa-star"></i></span>
                                                                 <div>
-                                                                    <p className="font-extrabold text-slate-800">{a.name}</p>
-                                                                    <p className="text-[10px] text-slate-400">
-                                                                        📅 {formatThaiDate(a.date)} • 
+                                                                    <p className="font-extrabold text-slate-800 text-xs sm:text-sm">{a.name}</p>
+                                                                    <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                                                                        {formatThaiDate(a.date)} • 
                                                                         <span className="text-emerald-700 font-bold ml-1">
                                                                             {a.type === "meeting" ? "ประชุมพี่น้อง" : a.type === "special_full" ? "กิจกรรมตลอดวัน" : "กิจกรรมครึ่งวัน"}
                                                                         </span>
