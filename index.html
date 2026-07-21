@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครูพรีเมียม</title>
+    <title>Yuwapat Early Childhood School - ระบบตรวจสอบวันลาครู</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Sarabun, Kanit & Inter) -->
@@ -83,13 +83,13 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // สวิตช์เปิด-ปิด บัญชีสาธิตตอนใช้จริง (เปลี่ยนเป็น false เมื่อต้องการซ่อนกล่องข้อมูลตัวอย่าง)
+        // สวิตช์เปิด-ปิด บัญชีสาธิตตอนใช้จริง
         const SHOW_DEMO_PORTAL = false; 
 
-        // 🔗 การเชื่อมต่อระบบภายนอก (คุณครูนำ URL ของ Google Sheets Apps Script มาใส่เพื่อเชื่อมข้อมูลระบบได้จ้ะ)
-        const GOOGLE_SHEET_URL = ""; 
+        // การเชื่อมต่อระบบภายนอก (นำ Web App URL จาก Apps Script ที่ลงท้ายด้วย /exec มาใส่ตรงนี้นะจ๊ะ)
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
-        // 👥 บัญชีผู้ใช้เริ่มต้นอ้างอิงตรงตามตารางข้อมูลจริงในโรงเรียนอนุบาลยุวพัฒน์
+        // 👥 บัญชีผู้ใช้เริ่มต้นสำรองอ้างอิงตรงตามตารางข้อมูลจริงในโรงเรียนอนุบาลยุวพัฒน์
         const initialUsers = [
             { id: "44", prefix: "นางสาว", name: "พิมลาภัสร์ ราตรี", role: "admin", password: "1234", email: "toei@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2023-05-16" },
             { id: "1", prefix: "นางสาว", name: "กมลพร ยอดบุคคล", role: "hr", password: "1234", email: "hr@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-03-01" },
@@ -97,7 +97,7 @@
             { id: "3", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuwapat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 4, forgotTimeCount: 2, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2022-11-01" },
             { id: "4", prefix: "นางสาว", name: "อารีย์ ดีใจ", role: "teacher", password: "1234", email: "aree.d@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 10, forgotTimeCount: 9, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2025-01-15" },
             
-            // 🧹 แม่บ้านและพ่อบ้าน (ข้อมูลจริงตาม ID, Prefix, Name, Role, Password, Email ใน Google Sheets)
+            // 🧹 แม่บ้านและพ่อบ้าน
             { id: "51", prefix: "นาง", name: "สมส่วน เนตรขำ", role: "maid", password: "1234", email: "somsuan", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
             { id: "52", prefix: "น.ส.", name: "สุทิน ศรีสุข", role: "maid", password: "1234", email: "suthin", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
             { id: "53", prefix: "นาง", name: "สมใจ ทับทอง", role: "maid", password: "1234", email: "somjai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
@@ -157,7 +157,6 @@
             }
         ];
 
-        // 🧹 ฟังก์ชันคำนวณวันหยุดประจำสัปดาห์ตามคุณลักษณะเฉพาะตัว
         function isStaffWeeklyOff(user, date) {
             const dayOfWeek = date.getDay(); // 0 = อาทิตย์, 6 = เสาร์
             if (!user) return false;
@@ -171,12 +170,11 @@
             if (dayOfWeek === 0) return true;
             
             if (role === "janitor") {
-                return false; // พ่อบ้านไม่มีวันหยุดเสาร์เพิ่มพิเศษ
+                return false; 
             }
             
             if (role === "maid") {
                 if (dayOfWeek === 6) {
-                    // คำนวณลำดับสัปดาห์ของวันเสาร์ในเดือนนั้น ๆ
                     const dayOfMonth = date.getDate();
                     const satNumber = Math.ceil(dayOfMonth / 7); 
                     const name = user.name || "";
@@ -190,7 +188,6 @@
             return false;
         }
 
-        // 🔄 ฟังก์ชันแปลงค่า Role จากภาษาไทยให้เป็นคีย์ระบบสากล
         function normalizeRole(rawRole) {
             if (!rawRole) return "teacher";
             const str = String(rawRole).toLowerCase().trim();
@@ -208,7 +205,6 @@
                     try {
                         const parsed = JSON.parse(saved);
                         const hasNewAdmin = parsed.some(u => u.email && u.email.toLowerCase() === "toei@yuwapat.ac.th");
-                        // ตรวจสอบว่ายังมี ID ที่เป็นตัวอักษรผสม (เช่น A01, T01) ใน LocalStorage หรือไม่ หากมีให้ล้างใช้ค่าเริ่มต้นที่เป็นตัวเลขล้วน
                         const hasLetterId = parsed.some(u => u.id && isNaN(Number(u.id)));
                         if (!hasNewAdmin || hasLetterId) {
                             localStorage.setItem("leave_users", JSON.stringify(initialUsers));
@@ -298,86 +294,95 @@
             React.useEffect(() => { localStorage.setItem("leave_activities", JSON.stringify(activities)); }, [activities]);
             React.useEffect(() => { localStorage.setItem("leave_leaves", JSON.stringify(leaves)); }, [leaves]);
 
-            // 🌐 ฟังก์ชันดึงข้อมูลแบบเรียลไทม์ขากลับจาก Google Sheets ตอนโหลดเข้าสู่หน้าเว็บ
             React.useEffect(() => {
-                if (!GOOGLE_SHEET_URL) return;
+                if (!GOOGLE_SHEET_URL || !GOOGLE_SHEET_URL.trim()) return;
                 
+                // แจ้งเตือนหากผู้ใช้นำลิงก์หน้าแก้ไข Google Sheet มาใส่ผิด
+                if (GOOGLE_SHEET_URL.includes("docs.google.com/spreadsheets")) {
+                    showToast("⚠️ URL ที่ระบุเป็นลิงก์หน้า Google Sheet กรุณาใช้ลิงก์ Web App จาก Apps Script (ที่ลงท้ายด้วย /exec) นะจ๊ะ", "error");
+                    return;
+                }
+
                 const fetchSheetData = async () => {
                     setIsLoading(true);
                     try {
                         const response = await fetch(GOOGLE_SHEET_URL);
-                        const data = await response.json();
-                        
-                        // 1. ดึงและจับคู่ (Map) ฟิลด์ฝั่ง Users ให้อยู่ในรูปแบบ CamelCase ที่ตรงกับ React สวยงาม
-                        if (data.users && data.users.length > 0) {
-                            const mappedUsers = data.users.map(u => ({
-                                id: String(u.id || u.ID || ""),
-                                prefix: u.prefix || u.Prefix || "",
-                                name: u.name || u.Name || "",
-                                role: normalizeRole(u.role || u.Role),
-                                password: String(u.password !== undefined ? u.password : (u.Password !== undefined ? u.Password : "1234")),
-                                email: u.email || u.Email || "",
-                                sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : (u.SickQuota !== undefined ? u.SickQuota : 30))),
-                                personalQuota: Number(u.personalquota !== undefined ? u.personalquota : (u.personalQuota !== undefined ? u.personalQuota : (u.PersonalQuota !== undefined ? u.PersonalQuota : 15))),
-                                lateCount: Number(u.latecount !== undefined ? u.latecount : (u.lateCount !== undefined ? u.lateCount : (u.LateCount !== undefined ? u.LateCount : 0))),
-                                forgotTimeCount: Number(u.forgottimecount !== undefined ? u.forgottimecount : (u.forgotTimeCount !== undefined ? u.forgotTimeCount : (u.ForgotTimeCount !== undefined ? u.ForgotTimeCount : 0))),
-                                middayOutShortCount: Number(u.middayoutshortcount !== undefined ? u.middayoutshortcount : (u.middayOutShortCount !== undefined ? u.middayOutShortCount : (u.MiddayOutShortCount !== undefined ? u.MiddayOutShortCount : 0))),
-                                middayOutLongCount: Number(u.middayoutlongcount !== undefined ? u.middayoutlongcount : (u.middayOutLongCount !== undefined ? u.middayOutLongCount : (u.MiddayOutLongCount !== undefined ? u.MiddayOutLongCount : 0))),
-                                missedMeetingCount: Number(u.missedmeetingcount !== undefined ? u.missedmeetingcount : (u.missedMeetingCount !== undefined ? u.missedMeetingCount : (u.MissedMeetingCount !== undefined ? u.MissedMeetingCount : 0))),
-                                photo: u.photo || u.Photo || "",
-                                hireDate: u.hiredate || u.hireDate || u.HireDate || ""
-                            }));
-                            setUsers(mappedUsers);
+                        const textContent = await response.text();
 
-                            if (currentUser) {
-                                const currentMatched = mappedUsers.find(mu => mu.id === currentUser.id);
-                                if (currentMatched) {
-                                    setCurrentUser(currentMatched);
+                        let data;
+                        try {
+                            data = JSON.parse(textContent);
+                        } catch (jsonErr) {
+                            throw new Error("ข้อมูลตอบกลับจาก Google Sheet ไม่ใช่ JSON (รบกวนตรวจสอบสิทธิ์การ Deploy ใน Apps Script ว่าเลือกเป็น Anyone/ทุกคน หรือยังนะจ๊ะ)");
+                        }
+                        
+                        // 1. ดึงและแมป Users
+                        if (data && Array.isArray(data.users) && data.users.length > 0) {
+                            const mappedUsers = data.users.map(u => ({
+                                id: String(u.id || u.ID || "").trim(),
+                                prefix: String(u.prefix || u.Prefix || "").trim(),
+                                name: String(u.name || u.Name || "").trim(),
+                                role: normalizeRole(u.role || u.Role),
+                                password: String(u.password !== undefined ? u.password : (u.Password !== undefined ? u.Password : "1234")).trim(),
+                                email: String(u.email || u.Email || "").trim(),
+                                sickQuota: Number(u.sickquota ?? u.sickQuota ?? u.SickQuota ?? 30) || 30,
+                                personalQuota: Number(u.personalquota ?? u.personalQuota ?? u.PersonalQuota ?? 15) || 15,
+                                lateCount: Number(u.latecount ?? u.lateCount ?? u.LateCount ?? 0) || 0,
+                                forgotTimeCount: Number(u.forgottimecount ?? u.forgotTimeCount ?? u.ForgotTimeCount ?? 0) || 0,
+                                middayOutShortCount: Number(u.middayoutshortcount ?? u.middayOutShortCount ?? u.MiddayOutShortCount ?? 0) || 0,
+                                middayOutLongCount: Number(u.middayoutlongcount ?? u.middayOutLongCount ?? u.MiddayOutLongCount ?? 0) || 0,
+                                missedMeetingCount: Number(u.missedmeetingcount ?? u.missedMeetingCount ?? u.MissedMeetingCount ?? 0) || 0,
+                                photo: String(u.photo || u.Photo || "").trim(),
+                                hireDate: String(u.hiredate || u.hireDate || u.HireDate || "").trim()
+                            })).filter(u => u.id && u.name);
+
+                            if (mappedUsers.length > 0) {
+                                setUsers(mappedUsers);
+                                if (currentUser) {
+                                    const currentMatched = mappedUsers.find(mu => mu.id === currentUser.id);
+                                    if (currentMatched) {
+                                        setCurrentUser(currentMatched);
+                                    }
                                 }
                             }
                         }
 
                         // 2. ดึงประวัติการลา
-                        if (data.leaves) {
+                        if (data && Array.isArray(data.leaves)) {
                             const mappedLeaves = data.leaves.map(l => {
                                 let parsedBreakdown = [];
                                 if (l.breakdown) {
                                     try {
-                                        parsedBreakdown = JSON.parse(l.breakdown);
+                                        parsedBreakdown = typeof l.breakdown === 'string' ? JSON.parse(l.breakdown) : l.breakdown;
                                     } catch (e) {
                                         parsedBreakdown = [];
                                     }
                                 }
+                                if (!Array.isArray(parsedBreakdown)) parsedBreakdown = [];
                                 
-                                const leafObj = {
-                                    id: l.id || l.ID || "",
-                                    teacherId: String(l.teacherid || l.teacherId || l.TeacherID || ""),
-                                    startDate: l.startdate || l.startDate || l.StartDate || "",
-                                    endDate: l.enddate || l.endDate || l.EndDate || "",
-                                    type: l.type || l.Type || "",
-                                    period: l.period || l.Period || "all_day",
-                                    reason: l.reason || l.Reason || "",
-                                    totalDeducted: Number(l.totaldeducted !== undefined ? l.totaldeducted : (l.totalDeducted !== undefined ? l.totalDeducted : (l.TotalDeducted !== undefined ? l.TotalDeducted : 1))),
-                                    status: l.status || l.Status || "approved",
+                                return {
+                                    id: String(l.id || l.ID || "").trim(),
+                                    teacherId: String(l.teacherid || l.teacherId || l.TeacherID || "").trim(),
+                                    startDate: String(l.startdate || l.startDate || l.StartDate || "").trim(),
+                                    endDate: String(l.enddate || l.endDate || l.EndDate || "").trim(),
+                                    type: String(l.type || l.Type || "personal").trim(),
+                                    period: String(l.period || l.Period || "all_day").trim(),
+                                    reason: String(l.reason || l.Reason || "").trim(),
+                                    totalDeducted: Number(l.totaldeducted ?? l.totalDeducted ?? l.TotalDeducted ?? 1) || 0,
+                                    status: String(l.status || l.Status || "approved").trim(),
                                     breakdown: parsedBreakdown,
-                                    createdAt: l.createdat || l.createdAt || l.CreatedAt || "",
-                                    dutyFeeDeduction: Number(l.dutyfeededuction !== undefined ? l.dutyfeededuction : (l.dutyFeeDeduction !== undefined ? l.dutyFeeDeduction : (l.DutyFeeDeduction !== undefined ? l.DutyFeeDeduction : 0)))
+                                    createdAt: String(l.createdat || l.createdAt || l.CreatedAt || "").trim(),
+                                    dutyFeeDeduction: Number(l.dutyfeededuction ?? l.dutyFeeDeduction ?? l.DutyFeeDeduction ?? 0) || 0
                                 };
+                            }).filter(ml => ml.id && ml.teacherId);
 
-                                if (leafObj.breakdown.length === 0 && leafObj.startDate) {
-                                    const teacherObj = data.users ? data.users.find(u => String(u.id || u.ID) === leafObj.teacherId) : null;
-                                    const calc = calculateLeaveDays(leafObj.startDate, leafObj.endDate, leafObj.period, teacherObj || selectedTeacher);
-                                    leafObj.breakdown = calc.breakdown;
-                                }
-                                return leafObj;
-                            });
-                            setLeaves(mappedLeaves.filter(ml => ml.id));
+                            setLeaves(mappedLeaves);
                         }
 
                         showToast("ดึงข้อมูลล่าสุดจาก Google Sheets สำเร็จเรียบร้อยแล้วจ้ะ");
                     } catch (error) {
                         console.error("Fetch Google Sheets Error:", error);
-                        showToast("ไม่สามารถซิงก์ข้อมูลจาก Google Sheets ได้", "error");
+                        showToast(error.message || "ไม่สามารถซิงก์ข้อมูลจาก Google Sheets ได้", "error");
                     } finally {
                         setIsLoading(false);
                     }
@@ -519,7 +524,7 @@
                 const start = new Date(startDateStr);
                 const end = new Date(actualEndDateStr);
                 
-                if (end < start) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
+                if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
 
                 const breakdown = [];
                 let totalDeducted = 0;
@@ -688,17 +693,17 @@
                 
                 const sickUsed = leaves
                     .filter(l => l.teacherId === teacherId && l.status === "approved" && l.type === "sick")
-                    .reduce((sum, l) => sum + l.totalDeducted, 0);
+                    .reduce((sum, l) => sum + (Number(l.totalDeducted) || 0), 0);
                     
                 const personalDeductedFromLeaves = leaves
                     .filter(l => l.teacherId === teacherId && l.status === "approved" && l.type === "personal")
-                    .reduce((sum, l) => sum + l.totalDeducted, 0);
+                    .reduce((sum, l) => sum + (Number(l.totalDeducted) || 0), 0);
                     
-                const rawLateCount = teacherObj?.lateCount || 0;
-                const forgotTimeCount = teacherObj?.forgotTimeCount || 0;
-                const middayOutShortCount = teacherObj?.middayOutShortCount || 0;
-                const middayOutLongCount = teacherObj?.middayOutLongCount || 0;
-                const missedMeetingCount = teacherObj?.missedMeetingCount || 0;
+                const rawLateCount = Number(teacherObj?.lateCount) || 0;
+                const forgotTimeCount = Number(teacherObj?.forgotTimeCount) || 0;
+                const middayOutShortCount = Number(teacherObj?.middayOutShortCount) || 0;
+                const middayOutLongCount = Number(teacherObj?.middayOutLongCount) || 0;
+                const missedMeetingCount = Number(teacherObj?.missedMeetingCount) || 0;
 
                 const effectiveLateCount = rawLateCount + middayOutShortCount;
 
@@ -785,7 +790,6 @@
                 }
 
                 const currentTeacher = users.find(u => u.id === selectedTeacherId);
-                const stats = getTeacherStats(selectedTeacherId);
                 const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, selectedTeacher);
 
                 if (calc.total === 0) {
@@ -866,20 +870,20 @@
                     showToast("กรุณากรอกชื่อ-นามสกุลครู", "error");
                     return;
                 }
-                // คำนวณ ID ตัวเลขถัดไปโดยอัตโนมัติ (เช่น 61, 62, 63...)
                 const maxCurrentId = Math.max(0, ...users.map(u => Number(u.id) || 0));
                 const nextId = String(maxCurrentId + 1);
                 
                 const finalEmail = newTeacher.email.trim() || (newTeacher.role === "maid" || newTeacher.role === "janitor" ? `staff_${nextId}` : `teacher.${nextId}@yuwapat.ac.th`);
 
                 const u = {
-                    id: nextId, prefix: newTeacher.prefix, name: newTeacher.name, role: newTeacher.role, password: newTeacher.password || "1234", email: finalEmail, sickQuota: Number(newTeacher.sickQuota), personalQuota: Number(newTeacher.personalQuota), lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: newTeacher.hireDate || getLocalDateString(new Date())
+                    id: nextId, prefix: newTeacher.prefix, name: newTeacher.name, role: newTeacher.role, password: newTeacher.password || "1234", email: finalEmail, sickQuota: Number(newTeacher.sickQuota) || 30, personalQuota: Number(newTeacher.personalQuota) || 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: newTeacher.hireDate || getLocalDateString(new Date())
                 };
                 setUsers([...users, u]);
                 setNewTeacher({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "", hireDate: "" });
                 setShowAddTeacherModal(false);
                 showToast(`เพิ่มบุคลากร รหัส ${u.id} - ${u.prefix}${u.name} สำเร็จ`);
             };
+
             const handleGenerate49Teachers = () => {
                 const thaiFirstNames = [
                     "กิตติ", "เฉลิม", "ณัฐพงษ์", "ทรงพล", "ธนพล", "นพดล", "ประเสริฐ", "พงษ์ศักดิ์", "ยุทธนา", "วรวุฒิ",
@@ -961,7 +965,7 @@
             };
 
             const handleRoleChange = (userId, newRole) => {
-                if (userId === currentUser.id) {
+                if (userId === currentUser?.id) {
                     showToast("ไม่สามารถปรับเปลี่ยนสิทธิ์ตัวเองได้", "error");
                     return;
                 }
@@ -1357,7 +1361,7 @@
 
                                                 <div className="mt-3 pt-3 border-t border-slate-50 flex justify-between text-xs text-slate-400 font-semibold">
                                                     <span>สิทธิ์เริ่มต้น: {selectedTeacher.personalQuota} วัน</span>
-                                                    <span>ใช้ลาจริง: {selectedTeacherStats.personalDeductedFromLeaves.toFixed(1)} วัน</span>
+                                                    <span>ใช้ลาจริง: {(selectedTeacherStats.personalDeductedFromLeaves || 0).toFixed(1)} วัน</span>
                                                 </div>
                                             </div>
 
@@ -1384,13 +1388,13 @@
 
                                                 <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400 font-semibold">
                                                     <span>สิทธิ์เริ่มต้น: {selectedTeacher.sickQuota} วัน</span>
-                                                    <span>ใช้ลาป่วยรวม: {selectedTeacherStats.sickUsed.toFixed(1)} วัน</span>
+                                                    <span>ใช้ลาป่วยรวม: {(selectedTeacherStats.sickUsed || 0).toFixed(1)} วัน</span>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* 📋 ส่วนแสดงกฎเกณฑ์และระเบียบการแยกตามตำแหน่งจริง */}
+                                    {/* 📋 ส่วนแสดงกฎเกณฑ์และระเบียบการ */}
                                     <div className="bg-navy-900 text-slate-200 rounded-2xl p-6 shadow-md border border-emerald-700/20 text-left">
                                         <h3 className="font-extrabold text-sm text-emerald-100 mb-3 flex items-center gap-2 uppercase tracking-wide">
                                             <i className="fa-solid fa-circle-exclamation text-emerald-600"></i>
@@ -1535,13 +1539,13 @@
                                                         </div>
                                                         <div className="text-left sm:text-right bg-white px-4 py-2 rounded-xl border shadow-sm flex flex-col gap-1">
                                                             <p className="text-[9px] text-slate-400 font-bold uppercase">จำนวนหักวันลา / หักเงินค่าเวร</p>
-                                                            <p className="text-xl font-black text-red-650 leading-tight">หักสะสม: {leaveCalcResult.total.toFixed(2)} วัน</p>
+                                                            <p className="text-xl font-black text-red-650 leading-tight">หักสะสม: {(leaveCalcResult.total || 0).toFixed(2)} วัน</p>
                                                             <p className="text-xs font-bold text-amber-700">หักเงินค่าเวร: {leaveCalcResult.dutyFeeDeduction} บาท</p>
                                                         </div>
                                                     </div>
 
                                                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                        {leaveCalcResult.breakdown.map((day, idx) => (
+                                                        {(leaveCalcResult.breakdown || []).map((day, idx) => (
                                                             <div key={idx} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 text-[11px] shadow-sm hover:border-emerald-700/20 transition">
                                                                 <div className="flex items-center gap-2 flex-wrap font-semibold text-slate-700 text-left">
                                                                     <span>{formatThaiDate(day.date)}</span>
@@ -1553,7 +1557,7 @@
                                                                     {day.final === 0 ? (
                                                                         <span className="text-slate-400 font-medium">ยกเว้น (ไม่หัก)</span>
                                                                     ) : (
-                                                                        <span className="text-red-600 font-bold">หัก {day.final.toFixed(2)} วัน / หักค่าเวร {day.dutyFee} บ.</span>
+                                                                        <span className="text-red-600 font-bold">หัก {(day.final || 0).toFixed(2)} วัน / หักค่าเวร {day.dutyFee} บ.</span>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -1634,9 +1638,8 @@
                                                         <div className="flex items-center gap-5 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-4 lg:pt-0 flex-shrink-0">
                                                             <div className="text-left lg:text-right">
                                                                 <p className="text-xs text-slate-400 font-bold uppercase">ยอดหักวันลาสุทธิ</p>
-                                                                <p className="text-2xl sm:text-3xl font-black text-red-600">{l.totalDeducted.toFixed(2)} วัน</p>
+                                                                <p className="text-2xl sm:text-3xl font-black text-red-600">{(l.totalDeducted || 0).toFixed(2)} วัน</p>
                                                             </div>
-                                                            <button onClick={() => handleDeleteLeave(l.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-4.5 py-2.5 rounded-xl text-xs sm:text-sm transition duration-200">ยกเลิกใบลา</button>
                                                         </div>
                                                     </div>
                                                 );
@@ -1685,25 +1688,20 @@
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                {/* 1. มาสาย */}
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="inline-flex items-center gap-1 bg-slate-50 border p-1 rounded-xl">
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "lateCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">-</button>
                                                                         <span className={`font-mono text-xs w-6 ${isTeach && stats.effectiveLateCount >= 9 ? 'text-red-600 font-black' : ''}`}>{t.lateCount}</span>
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "lateCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">+</button>
                                                                     </div>
-                                                                    {isTeach && stats.effectiveLateCount >= 9 && <span className="text-[9px] text-red-655 block font-black mt-1">⚠️ บันทึกผิด</span>}
                                                                 </td>
-                                                                {/* 2. ลืมบันทึกเวลา */}
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="inline-flex items-center gap-1 bg-slate-50 border p-1 rounded-xl">
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "forgotTimeCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">-</button>
                                                                         <span className={`font-mono text-xs w-6 ${isTeach && stats.forgotTimeCount >= 9 ? 'text-red-600 font-black' : ''}`}>{t.forgotTimeCount}</span>
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "forgotTimeCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">+</button>
                                                                     </div>
-                                                                    {isTeach && stats.forgotTimeCount >= 9 && <span className="text-[9px] text-red-655 block font-black mt-1">⚠️ บันทึกผิด</span>}
                                                                 </td>
-                                                                {/* 3. ออกนอกงาน 1.01-1.30 ชม. */}
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="inline-flex items-center gap-1 bg-slate-50 border p-1 rounded-xl">
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "middayOutShortCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">-</button>
@@ -1711,7 +1709,6 @@
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "middayOutShortCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">+</button>
                                                                     </div>
                                                                 </td>
-                                                                {/* 4. ออกนอกงาน > 1.30 ชม. */}
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="inline-flex items-center gap-1 bg-slate-50 border p-1 rounded-xl">
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "middayOutLongCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">-</button>
@@ -1719,7 +1716,6 @@
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "middayOutLongCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">+</button>
                                                                     </div>
                                                                 </td>
-                                                                {/* 5. ไม่เข้าประชุมพี่น้อง */}
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="inline-flex items-center gap-1 bg-slate-50 border p-1 rounded-xl">
                                                                         <button onClick={() => handleAdjustCountSubmit(t.id, "missedMeetingCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center">-</button>
@@ -1728,10 +1724,10 @@
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-4 px-3 font-bold text-slate-800">
-                                                                    <span className={pRemaining <= 0 ? "text-[#E11D48]" : ""}>{pRemaining.toFixed(1)} / {t.personalQuota} วัน</span>
+                                                                    <span className={pRemaining <= 0 ? "text-[#E11D48]" : ""}>{(pRemaining || 0).toFixed(1)} / {t.personalQuota} วัน</span>
                                                                 </td>
                                                                 <td className="py-4 px-3 font-bold text-slate-800">
-                                                                    <span className={sRemaining <= 0 ? "text-[#E11D48]" : ""}>{sRemaining.toFixed(1)} / {t.sickQuota} วัน</span>
+                                                                    <span className={sRemaining <= 0 ? "text-[#E11D48]" : ""}>{(sRemaining || 0).toFixed(1)} / {t.sickQuota} วัน</span>
                                                                 </td>
                                                                 <td className="py-4 px-3 text-center">
                                                                     <div className="flex justify-center gap-2">
@@ -1775,9 +1771,6 @@
                                                     <div key={i} className="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs sm:text-sm">
                                                         <div>
                                                             <p className="font-extrabold text-slate-800">{a.name} ({formatThaiDate(a.date)})</p>
-                                                            <p className="text-[10px] text-emerald-800 font-bold uppercase">
-                                                                {a.type === "meeting" ? "ประชุมพี่น้อง" : a.type === "special_full" ? "กิจกรรมเต็มวัน" : "กิจกรรมครึ่งวัน"} ({a.session === "all_day" ? "ตลอดวัน" : a.session === "morning" ? "เช้า" : "บ่าย"})
-                                                            </p>
                                                         </div>
                                                         <button onClick={() => handleDeleteActivity(a.date)} className="text-red-500"><i className="fa-solid fa-circle-minus text-xl"></i></button>
                                                     </div>
@@ -1786,397 +1779,9 @@
                                         </div>
                                     </div>
                                 )}
-
-                                {adminSubTab === "roles" && currentUser?.role === "admin" && (
-                                    <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-                                        <div className="border-b pb-4 mb-5 text-left">
-                                            <h3 className="font-extrabold text-slate-800 text-base">ปรับสิทธิ์ผู้ใช้งานในระบบงานบุคคล</h3>
-                                            <p className="text-xs text-slate-400 mt-1 uppercase">แก้ไขและตั้งค่าบทบาทความปลอดภัย บัญชีและรหัสผ่านพนักงานหลังบ้าน</p>
-                                        </div>
-
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full text-xs sm:text-sm text-left">
-                                                <thead>
-                                                    <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
-                                                        <th className="py-3.5 px-3">รหัสประจำตัว</th>
-                                                        <th className="py-3.5 px-3">ชื่อพนักงาน / อีเมลหน่วยงาน</th>
-                                                        <th className="py-3.5 px-3">ระดับสิทธิ์ (Role)</th>
-                                                        <th className="py-3.5 px-3">รหัสผ่านล็อกอิน</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                                                    {users.map((u) => (
-                                                        <tr key={u.id} className="hover:bg-slate-50/40 transition">
-                                                            <td className="py-4 px-3 font-mono font-black text-slate-500 text-sm sm:text-base">{u.id}</td>
-                                                            <td className="py-4 px-3 text-left">
-                                                                <p className="text-slate-900 font-extrabold text-sm sm:text-base">{u.prefix}{u.name}</p>
-                                                                <input 
-                                                                    type="text" 
-                                                                    value={u.email || ""} 
-                                                                    placeholder="Username/Email"
-                                                                    onChange={(e) => handleUserEmailChange(u.id, e.target.value)}
-                                                                    className="bg-[#FAF9F6] border border-slate-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 w-56 font-bold transition py-0.5"
-                                                                />
-                                                            </td>
-                                                            <td className="py-4 px-3">
-                                                                <select 
-                                                                    value={u.role}
-                                                                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                                                                    disabled={u.id === currentUser?.id}
-                                                                    className="bg-slate-50 border border-slate-200 text-slate-800 px-3 py-2 rounded-xl focus:outline-none text-xs sm:text-sm font-bold cursor-pointer"
-                                                                >
-                                                                    <option value="teacher">Teacher (คุณครูทั่วไป)</option>
-                                                                    <option value="hr">HR (เจ้าหน้าที่งานบุคคล)</option>
-                                                                    <option value="admin">Admin (ผู้ดูแลระบบสูงสุด)</option>
-                                                                    <option value="maid">Maid (แม่บ้าน)</option>
-                                                                    <option value="janitor">Janitor (พ่อบ้าน)</option>
-                                                                </select>
-                                                            </td>
-                                                            <td className="py-4 px-3">
-                                                                <input 
-                                                                    type="text" 
-                                                                    value={u.password}
-                                                                    onChange={(e) => handleUserPasswordChange(u.id, e.target.value)}
-                                                                    className="bg-[#FAF9F6] border border-slate-200 text-slate-750 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-black w-28 focus:outline-none focus:ring-1 focus:ring-emerald-700"
-                                                                />
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </main>
-
-                    {/* Modals for Add/Edit Employee */}
-                    {showAddTeacherModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md border animate-fade-in relative">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
-                                <div className="flex justify-between items-center border-b pb-4 mb-5">
-                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">ลงทะเบียนสมาชิกบุคลากรใหม่</h3>
-                                    <button onClick={() => setShowAddTeacherModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-lg"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleAddTeacher} className="space-y-4">
-                                    <div className="grid grid-cols-3 gap-2 text-left">
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">คำนำหน้า</label>
-                                            <select 
-                                                value={newTeacher.prefix}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, prefix: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                            >
-                                                <option value="นาย">นาย</option>
-                                                <option value="นาง">นาง</option>
-                                                <option value="นางสาว">นางสาว</option>
-                                                <option value="น.ส.">น.ส.</option>
-                                                <option value="สิบตรี">สิบตรี</option>
-                                            </select>
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อ-นามสกุลจริง</label>
-                                            <input 
-                                                type="text" 
-                                                value={newTeacher.name}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">
-                                            {newTeacher.role === "maid" || newTeacher.role === "janitor" ? "ชื่อผู้ใช้งานเข้าสู่ระบบ (Username) *" : "อีเมลสังกัดโรงเรียน (@yuwapat.ac.th)"}
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            value={newTeacher.email}
-                                            onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
-                                            placeholder={newTeacher.role === "maid" || newTeacher.role === "janitor" ? "ตัวอย่าง: somjai" : "sommai.d@yuwapat.ac.th"}
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
-                                            required={newTeacher.role === "maid" || newTeacher.role === "janitor"}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3 text-left">
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">สิทธิ์การทำงาน</label>
-                                            <select 
-                                                value={newTeacher.role}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, role: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-700 cursor-pointer"
-                                            >
-                                                <option value="teacher">คุณครูทั่วไป (Teacher)</option>
-                                                <option value="maid">แม่บ้าน (Maid)</option>
-                                                <option value="janitor">พ่อบ้าน (Janitor)</option>
-                                                <option value="hr">ฝ่ายบุคคล (HR)</option>
-                                                <option value="admin">แอดมินสูงสุด (Admin)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">รหัสผ่านเริ่มต้น</label>
-                                            <input 
-                                                type="text" 
-                                                value={newTeacher.password}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-mono font-bold text-center"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4 text-left">
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">โควตาลากิจตั้งต้น (วัน)</label>
-                                            <input 
-                                                type="number" 
-                                                value={newTeacher.personalQuota}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, personalQuota: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">โควตาลาป่วยตั้งต้น (วัน)</label>
-                                            <input 
-                                                type="number" 
-                                                value={newTeacher.sickQuota}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, sickQuota: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl text-xs sm:text-sm transition shadow-md mt-4">
-                                        ลงทะเบียนประวัติลงฐานข้อมูล
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showEditTeacherModal && editingTeacher && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md border animate-fade-in relative">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
-                                <div className="flex justify-between items-center border-b pb-4 mb-5">
-                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">
-                                        <i className="fa-solid fa-user-pen text-emerald-700 mr-2 text-sm"></i>
-                                        แก้ไขสิทธิ์และโควตาส่วนตัว
-                                    </h3>
-                                    <button onClick={() => { setShowEditTeacherModal(false); setEditingTeacher(null); }} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleUpdateTeacher} className="space-y-4">
-                                    <div className="grid grid-cols-3 gap-2 text-left">
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">คำนำหน้า</label>
-                                            <select 
-                                                value={editingTeacher.prefix}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, prefix: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                            >
-                                                <option value="นาย">นาย</option>
-                                                <option value="นาง">นาง</option>
-                                                <option value="นางสาว">นางสาว</option>
-                                                <option value="น.ส.">น.ส.</option>
-                                                <option value="สิบตรี">สิบตรี</option>
-                                            </select>
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อและนามสกุลจริง</label>
-                                            <input 
-                                                type="text" 
-                                                value={editingTeacher.name}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 text-left">
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">สิทธิ์ลากิจเริ่มต้น (วัน)</label>
-                                            <input 
-                                                type="number" 
-                                                step="0.5"
-                                                value={editingTeacher.personalQuota}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, personalQuota: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-500 text-xs mb-1 font-bold">สิทธิ์ลาป่วยเริ่มต้น (วัน)</label>
-                                            <input 
-                                                type="number" 
-                                                step="0.5"
-                                                value={editingTeacher.sickQuota}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, sickQuota: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex gap-2.5 justify-end mt-5">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => { setShowEditTeacherModal(false); setEditingTeacher(null); }}
-                                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200"
-                                        >
-                                            ยกเลิก
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 shadow"
-                                        >
-                                            บันทึกข้อมูล
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAddHolidayModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border animate-fade-in">
-                                <div className="flex justify-between items-center border-b pb-3 mb-4">
-                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
-                                    <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleAddHolidaySubmit} className="space-y-4">
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">เลือกวันหยุด</label>
-                                        <input 
-                                            type="date" 
-                                            value={newHoliday.date}
-                                            onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-center"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่ออธิบายรายละเอียดวันหยุด</label>
-                                        <input 
-                                            type="text" 
-                                            value={newHoliday.name}
-                                            onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-                                            placeholder="วันสงกรานต์, วันเข้าพรรษา..."
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition duration-300 shadow mt-2 border border-emerald-600">
-                                        บันทึกวันหยุดปฏิทิน
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAddActivityModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border animate-fade-in">
-                                <div className="flex justify-between items-center border-b pb-3 mb-4">
-                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เพิ่มวันกิจกรรมหรือประชุมสิทธิ์พิเศษ</h3>
-                                    <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleAddActivitySubmit} className="space-y-4">
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">วันจัดกิจกรรม</label>
-                                        <input 
-                                            type="date" 
-                                            value={newActivity.date}
-                                            onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-center"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ประเภทของกิจกรรม</label>
-                                        <select 
-                                            value={newActivity.type}
-                                            onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700"
-                                        >
-                                            <option value="meeting">ประชุมพบกันฉันน้องพี่ (มีบทลงโทษลาคูณ 1.5/2.0 และลักลอบขาดหัก 1.0)</option>
-                                            <option value="special_full">กิจกรรมพิเศษตลอดทั้งวัน (ลงโทษทวีคูณ)</option>
-                                            <option value="special_half">กิจกรรมพิเศษครึ่งวัน (เช้าหรือบ่าย)</option>
-                                        </select>
-                                    </div>
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ช่วงเวลาการจัดงาน</label>
-                                        <select 
-                                            value={newActivity.session}
-                                            onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700"
-                                        >
-                                            <option value="morning">ช่วงเช้า (Morning)</option>
-                                            <option value="afternoon">ช่วงบ่าย (Afternoon)</option>
-                                            <option value="all_day">ตลอดทั้งวัน (All Day)</option>
-                                        </select>
-                                    </div>
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">ชื่อพิธีหรือรายละเอียด</label>
-                                        <input 
-                                            type="text" 
-                                            value={newActivity.name}
-                                            onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
-                                            placeholder="พิธีไหว้ครู, ประชุมพบกันฉันน้องพี่..."
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition duration-300 shadow mt-2 border border-emerald-600">
-                                        บันทึกกิจกรรมพรีเมียม
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showChangePasswordModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-sm border animate-fade-in relative">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-navy-800"></div>
-                                <div className="flex justify-between items-center border-b pb-3 mb-4">
-                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เปลี่ยนรหัสผ่านใหม่</h3>
-                                    <button onClick={() => setShowChangePasswordModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-lg"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleSelfPasswordChange} className="space-y-4">
-                                    <div className="text-left">
-                                        <label className="block text-slate-500 text-xs mb-1 font-bold">กรอกรหัสผ่านใหม่</label>
-                                        <input 
-                                            type="text" 
-                                            value={newPasswordVal}
-                                            onChange={(e) => setNewPasswordVal(e.target.value)}
-                                            placeholder="ระบุรหัสผ่านใหม่ของคุณ"
-                                            className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl text-xs sm:text-sm transition duration-300 shadow">
-                                        ยืนยันการตั้งรหัสผ่านใหม่
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
 
                     <footer className="bg-navy-950 text-slate-400 py-8 text-center border-t border-emerald-700/20 text-xs font-medium mt-12">
                         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
