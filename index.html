@@ -86,10 +86,10 @@
         // สวิตช์เปิด-ปิด บัญชีสาธิตตอนใช้จริง (เปลี่ยนเป็น false เมื่อต้องการซ่อนกล่องข้อมูลตัวอย่าง)
         const SHOW_DEMO_PORTAL = false; 
 
-        // 🔗 การเชื่อมต่อระบบภายนอก (คุณครูนำ URL ของ Google Sheets Apps Script มาใส่เพื่อเชื่อมข้อมูลระบบได้จ้ะ)
-        const GOOGLE_SHEET_URL = ""; 
+        // การเชื่อมต่อระบบภายนอก (คุณครูนำ URL ของ Google Sheets Apps Script มาใส่เพื่อเชื่อมข้อมูลระบบได้จ้ะ)
+        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1JZjhFGq8qD1XT7arbJNqct_i4aV0Rln7XGRYnbQS9As/edit?usp=sharing"; 
 
-        // 👥 บัญชีผู้ใช้เริ่มต้นสำหรับใช้งานจริง (รหัส ID เป็นตัวเลขล้วนเพื่อความเสถียร)
+        // 👥 บัญชีผู้ใช้เริ่มต้นอ้างอิงตรงตามตารางข้อมูลจริงในโรงเรียนอนุบาลยุวพัฒน์
         const initialUsers = [
             { id: "44", prefix: "นางสาว", name: "พิมลาภัสร์ ราตรี", role: "admin", password: "1234", email: "toei@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2023-05-16" },
             { id: "1", prefix: "นางสาว", name: "กมลพร ยอดบุคคล", role: "hr", password: "1234", email: "hr@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-03-01" },
@@ -97,15 +97,15 @@
             { id: "3", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuwapat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 4, forgotTimeCount: 2, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2022-11-01" },
             { id: "4", prefix: "นางสาว", name: "อารีย์ ดีใจ", role: "teacher", password: "1234", email: "aree.d@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 10, forgotTimeCount: 9, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2025-01-15" },
             
-            // 🧹 แม่บ้านและพ่อบ้าน (ใช้ Username แทนอีเมลในการเชื่อมต่อข้อมูล)
-            { id: "5", prefix: "นาง", name: "สมใจ ขยันกวาด", role: "maid", password: "1234", email: "somjai_m", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
-            { id: "6", prefix: "นาง", name: "สุทิน กวาดเรียบ", role: "maid", password: "1234", email: "suthin_k", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-02" },
-            { id: "7", prefix: "นาง", name: "สุวภัทร นวลดี", role: "maid", password: "1234", email: "suwaphat_n", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-03" },
-            { id: "8", prefix: "นาง", name: "อรทัย ถูบ้าน", role: "maid", password: "1234", email: "orathai_t", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-04" },
-            { id: "9", prefix: "นาง", name: "สำราญ ปัดฝุ่น", role: "maid", password: "1234", email: "samran_p", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-05" },
-            { id: "10", prefix: "นาง", name: "สมจิต ร่มรื่น", role: "maid", password: "1234", email: "somjit_r", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-06" },
-            { id: "11", prefix: "นาง", name: "กรกช สะอาดดี", role: "maid", password: "1234", email: "korakot_s", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-07" },
-            { id: "12", prefix: "นาย", name: "มานะ รักสะอาด", role: "janitor", password: "1234", email: "mana_r", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-15" }
+            // 🧹 แม่บ้านและพ่อบ้าน (ข้อมูลจริงตาม ID, Prefix, Name, Role, Password, Email ใน Google Sheets)
+            { id: "51", prefix: "นาง", name: "สมส่วน เนตรขำ", role: "maid", password: "1234", email: "somsuan", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "52", prefix: "น.ส.", name: "สุทิน ศรีสุข", role: "maid", password: "1234", email: "suthin", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "53", prefix: "นาง", name: "สมใจ ทับทอง", role: "maid", password: "1234", email: "somjai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "54", prefix: "น.ส.", name: "อรทัย รอบคอบ", role: "maid", password: "1234", email: "orathai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "55", prefix: "สิบตรี", name: "กรกช ทรัพย์ขำ", role: "janitor", password: "1234", email: "kodchakorn", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "56", prefix: "น.ส.", name: "สำราญ ยกศิริ", role: "maid", password: "1234", email: "samran", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "57", prefix: "น.ส.", name: "สุวภัทร หมีทอง", role: "maid", password: "1234", email: "suwapat", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" },
+            { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-10-01" }
         ];
 
         // วันหยุดปฏิทิน 2569
@@ -190,6 +190,17 @@
             return false;
         }
 
+        // 🔄 ฟังก์ชันแปลงค่า Role จากภาษาไทยให้เป็นคีย์ระบบสากล
+        function normalizeRole(rawRole) {
+            if (!rawRole) return "teacher";
+            const str = String(rawRole).toLowerCase().trim();
+            if (str.includes("admin") || str.includes("แอดมิน") || str.includes("ผู้ดูแล")) return "admin";
+            if (str.includes("hr") || str.includes("บุคคล")) return "hr";
+            if (str.includes("maid") || str.includes("แม่บ้าน")) return "maid";
+            if (str.includes("janitor") || str.includes("พ่อบ้าน")) return "janitor";
+            return "teacher";
+        }
+
         function App() {
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
@@ -203,6 +214,7 @@
                         }
                         return parsed.map(u => ({
                             ...u,
+                            role: normalizeRole(u.role),
                             forgotTimeCount: u.forgotTimeCount !== undefined ? u.forgotTimeCount : 0,
                             middayOutShortCount: u.middayOutShortCount !== undefined ? u.middayOutShortCount : 0,
                             middayOutLongCount: u.middayOutLongCount !== undefined ? u.middayOutLongCount : 0,
@@ -300,7 +312,7 @@
                                 id: String(u.id || u.ID || ""),
                                 prefix: u.prefix || u.Prefix || "",
                                 name: u.name || u.Name || "",
-                                role: (u.role || u.Role || "teacher").toLowerCase(),
+                                role: normalizeRole(u.role || u.Role),
                                 password: String(u.password !== undefined ? u.password : (u.Password !== undefined ? u.Password : "1234")),
                                 email: u.email || u.Email || "",
                                 sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : (u.SickQuota !== undefined ? u.SickQuota : 30))),
@@ -315,7 +327,6 @@
                             }));
                             setUsers(mappedUsers);
 
-                            // อัปเดตข้อมูลผู้ใช้ปัจจุบันที่กำลังล็อกอินอยู่ให้ตรงกับค่าในแผ่นงานล่าสุด
                             if (currentUser) {
                                 const currentMatched = mappedUsers.find(mu => mu.id === currentUser.id);
                                 if (currentMatched) {
@@ -324,7 +335,7 @@
                             }
                         }
 
-                        // 2. ดึงประวัติการลา ล้างค่าว่าง และซิงก์ประมวลผลวันหักวันค่อมใหม่เพื่อความแม่นยำ
+                        // 2. ดึงประวัติการลา
                         if (data.leaves) {
                             const mappedLeaves = data.leaves.map(l => {
                                 let parsedBreakdown = [];
@@ -351,7 +362,6 @@
                                     dutyFeeDeduction: Number(l.dutyfeededuction !== undefined ? l.dutyfeededuction : (l.dutyFeeDeduction !== undefined ? l.dutyFeeDeduction : (l.DutyFeeDeduction !== undefined ? l.DutyFeeDeduction : 0)))
                                 };
 
-                                // หากไม่มีรายละเอียด Breakdown แซนวิชรายวันในตาราง ให้คำนวณใหม่โดยอัตโนมัติ
                                 if (leafObj.breakdown.length === 0 && leafObj.startDate) {
                                     const teacherObj = data.users ? data.users.find(u => String(u.id || u.ID) === leafObj.teacherId) : null;
                                     const calc = calculateLeaveDays(leafObj.startDate, leafObj.endDate, leafObj.period, teacherObj || selectedTeacher);
@@ -392,8 +402,6 @@
                     setFormData(prev => ({ ...prev, endDate: prev.startDate }));
                 }
             }, [formData.startDate, formData.period]);
-
-            // ==================== [ ลำดับการประกาศฟังก์ชันผู้ช่วยและตัวแปรรันใน App อย่างเสถียร ] ====================
 
             const showToast = (message, type = "success") => {
                 setNotification({ message, type });
@@ -446,7 +454,6 @@
                 return activities.find(a => a.date === dateStr);
             }
 
-            // สิทธิ์การแสดงผลคำอธิบายระดับสิทธิ์ระบบความปลอดภัย
             function getRoleText(role) {
                 if (role === 'admin') return 'ผู้ดูแลระบบสูงสุด';
                 if (role === 'hr') return 'ฝ่ายบุคคล (HR)';
@@ -503,7 +510,6 @@
                 return count;
             }
 
-            // 🧮 ฟังก์ชันคำนวณวันหักลาสะสมแบบสมบูรณ์ตามเกณฑ์โรงเรียนยุวพัฒน์
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", userObj = selectedTeacher) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr || !userObj) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
@@ -529,7 +535,6 @@
                         const reasonLabel = isWeeklyOff ? "วันหยุดประจำสัปดาห์" : `วันหยุดราชการ (${hName})`;
                         breakdown.push({ date: dateStr, base: 0, penalty: 0, penaltyReason: reasonLabel, final: 0, dutyFee: 0 });
                     } else {
-                        // วันทำงานปกติ
                         let base = period !== "all_day" ? 0.5 : 1.0;
                         let finalDeductedForDay = base;
                         let penaltyReason = "อัตราปกติ";
@@ -538,19 +543,14 @@
 
                         const isTeacherRole = userObj.role === "teacher" || userObj.role === "admin" || userObj.role === "hr";
 
-                        // ตรวจสอบเงื่อนไขวันค่อม / ติดวันหยุด
                         if (isTeacherRole) {
-                            // 👩‍🏫 ครูและฝ่ายบริหาร:
                             if (period === "afternoon" && dayOfWeek === 5) {
-                                // ลา 0.5 วันบ่าย ติดวันเสาร์ หัก 1.5 วัน
                                 finalDeductedForDay = 1.5;
                                 penaltyReason = "ลา 0.5 วันบ่าย ติดวันเสาร์";
                             } else if (period === "morning" && dayOfWeek === 1) {
-                                // ลา 0.5 วันเช้า ติดวันอาทิตย์ หัก 1.5 วัน
                                 finalDeductedForDay = 1.5;
                                 penaltyReason = "ลา 0.5 วันเช้า ติดวันอาทิตย์";
                             } else if (period === "all_day" && (dayOfWeek === 5 || dayOfWeek === 1)) {
-                                // เช็คคลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดตามปฏิทิน -> หัก 3 วัน
                                 let hasAdjacentHoliday = false;
                                 if (dayOfWeek === 5) {
                                     const thurs = new Date(current.getTime());
@@ -571,17 +571,13 @@
                                 }
                             }
                         } else {
-                            // 🧹 แม่บ้านและพ่อบ้าน (วันหยุดประจำสัปดาห์หลักคือวันอาทิตย์):
                             if (period === "afternoon" && dayOfWeek === 6) {
-                                // ลา 0.5 วันบ่าย ติดวันอาทิตย์ หัก 1.5 วัน
                                 finalDeductedForDay = 1.5;
                                 penaltyReason = "ลา 0.5 วันบ่าย ติดวันอาทิตย์";
                             } else if (period === "morning" && dayOfWeek === 1) {
-                                // ลา 0.5 วันเช้า ติดวันอาทิตย์ หัก 1.5 วัน
                                 finalDeductedForDay = 1.5;
                                 penaltyReason = "ลา 0.5 วันเช้า ติดวันอาทิตย์";
                             } else if (period === "all_day" && (dayOfWeek === 6 || dayOfWeek === 1)) {
-                                // ลาเต็มวันติดวันอาทิตย์ และวันหยุดปฏิทิน -> หัก 3 วัน
                                 let hasAdjacentHoliday = false;
                                 if (dayOfWeek === 6) {
                                     const fri = new Date(current.getTime());
@@ -603,7 +599,6 @@
                             }
                         }
 
-                        // ตรวจสอบวันประชุม / วันกิจกรรมพิเศษ
                         const activity = getSchoolActivity(dateStr);
                         if (activity) {
                             const isMeeting = activity.type === "meeting";
@@ -637,7 +632,6 @@
                                     }
                                 }
                             } else {
-                                // แม่บ้าน / พ่อบ้าน (กิจกรรมพิเศษ)
                                 if (isSpecialFull) {
                                     if (period === "all_day") {
                                         finalDeductedForDay = 2.0;
@@ -658,7 +652,6 @@
                             }
                         }
 
-                        // กฎค่อมวันหยุดแซนวิชเต็มรูปแบบ (ลาค่อมวันหยุด หักบวกวันหยุดสะสมเพิ่มทั้งหมด)
                         if (period === "all_day") {
                             const prevNonWork = getContiguousNonWorkingBlockLength(current, -1, userObj);
                             const nextNonWork = getContiguousNonWorkingBlockLength(current, 1, userObj);
@@ -705,17 +698,11 @@
                 const middayOutLongCount = teacherObj?.middayOutLongCount || 0;
                 const missedMeetingCount = teacherObj?.missedMeetingCount || 0;
 
-                // 🚗 "ออกระหว่างวัน 1.01 - 1.30 ชม. นับเป็นการทำงานสาย 1 ครั้ง"
                 const effectiveLateCount = rawLateCount + middayOutShortCount;
 
-                // ⏰ ทุก 3 ครั้ง หักวันลากิจสะสม 1 วัน
                 const latePenalty = Math.floor(effectiveLateCount / 3);
                 const forgotTimePenalty = Math.floor(forgotTimeCount / 3);
-                
-                // 🚗 "ออกระหว่างวันตั้งแต่ 1.31 ชม. ขึ้นไป หักลากิจโดยตรงครั้งละ 0.5 วัน"
                 const middayOutPenalty = middayOutLongCount * 0.5;
-
-                // 📋 ไม่เข้าประชุมพบกันฉันน้องพี่ หัก 1 วันต่อครั้ง
                 const missedMeetingPenalty = missedMeetingCount * 1.0;
 
                 const personalUsed = personalDeductedFromLeaves + latePenalty + forgotTimePenalty + middayOutPenalty + missedMeetingPenalty;
@@ -753,7 +740,6 @@
                 if (matched && matched.password === loginPassword) {
                     setCurrentUser(matched);
                     
-                    // 🔔 ระบบจำประวัติล็อกอินในเครื่อง
                     if (rememberMe) {
                         localStorage.setItem("leave_remember_me", "true");
                         localStorage.setItem("leave_saved_id", loginId.trim());
@@ -764,7 +750,6 @@
                         localStorage.removeItem("leave_saved_password");
                     }
 
-                    // 📡 ส่งคำสั่งยิงแจ้งเตือนการเข้าใช้งานสำเร็จไปยัง Google Apps Script เข้าอีเมลแอดมินเตย
                     syncDataToGoogleSheets({
                         action: "loginNotify",
                         teacherId: matched.id,
@@ -805,10 +790,6 @@
                     showToast("วันที่เลือกเป็นวันหยุดทั้งหมด ไม่จำเป็นต้องยื่นใบลา", "error");
                     return;
                 }
-
-                const currentBalance = formData.type === "personal" 
-                    ? currentTeacher.personalQuota - stats.personalUsed
-                    : currentTeacher.sickQuota - stats.sickUsed;
 
                 const newRequest = {
                     id: "L" + String(leaves.length + 1).padStart(2, '0') + "_" + Date.now().toString().slice(-4),
@@ -883,11 +864,9 @@
                     showToast("กรุณากรอกชื่อ-นามสกุลครู", "error");
                     return;
                 }
-                // สแกนหารหัส ID ตัวเลขที่มากที่สุดในตารางปัจจุบัน แล้วบวกเพิ่มทีละ 1
                 const maxCurrentId = Math.max(...users.map(u => Number(u.id) || 0));
                 const nextId = String(maxCurrentId + 1);
                 
-                // หากเป็นครู ใช้เมลต่อท้ายย่อ ถ้าเป็นแม่บ้าน/พ่อบ้าน ใช้ Username สั้น ๆ ตายตัว
                 const finalEmail = newTeacher.email.trim() || (newTeacher.role === "maid" || newTeacher.role === "janitor" ? `staff_${nextId}` : `teacher.${nextId}@yuwapat.ac.th`);
 
                 const u = {
@@ -1024,43 +1003,6 @@
                     setActivities(activities.filter(a => a.date !== date));
                     showToast("ลบวันกิจกรรมเรียบร้อยแล้ว", "error");
                 });
-            };
-
-            const handleGenerate49Teachers = () => {
-                const thaiFirstNames = [
-                    "กิตติ", "เฉลิม", "ณัฐพงษ์", "ทรงพล", "ธนพล", "นพดล", "ประเสริฐ", "พงษ์ศักดิ์", "ยุทธนา", "วรวุฒิ",
-                    "สุรชัย", "เกรียงไกร", "จารุวรรณ", "ชลลดา", "ดวงพร", "ทิพวรรณ", "นงลักษณ์", "เบญจวรรณ", "ปัทมา", "พรทิพย์"
-                ];
-                const thaiLastNames = [
-                    "สุวรรณรัตน์", "สมบูรณ์ดี", "รักษาใจ", "ดีเสมอ", "เจริญรุ่งเรือง", "เลิศวิจิตร", "ตั้งมโนมั่น", "เกียรติขจร", "ประชานิยม"
-                ];
-                const prefixes = ["นาย", "นาง", "นางสาว"];
-
-                const currentCount = users.filter(u => u.role === "teacher").length;
-                if (currentCount >= 47) {
-                    showToast("ในระบบมีจำนวนบุคลากรครบถ้วนแล้ว (49 คน)", "info");
-                    return;
-                }
-
-                const additionalUsers = [];
-                const neededTeachersCount = 47 - currentCount;
-                
-                for (let i = 1; i <= neededTeachersCount; i++) {
-                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-                    const firstName = thaiFirstNames[Math.floor(Math.random() * thaiFirstNames.length)];
-                    const lastName = thaiLastNames[Math.floor(Math.random() * thaiLastNames.length)];
-                    const sickQuota = Math.floor(Math.random() * 11) + 20; 
-                    const personalQuota = Math.floor(Math.random() * 8) + 10; 
-                    const newId = String(100 + i);
-                    const email = `teacher.${newId.toLowerCase()}@yuwapat.ac.th`;
-
-                    additionalUsers.push({
-                        id: newId, prefix, name: `${firstName} ${lastName}`, role: "teacher", password: "1234", email, sickQuota, personalQuota, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2024-05-16"
-                    });
-                }
-
-                setUsers([...users, ...additionalUsers]);
-                showToast(`สร้างรายชื่อบุคลากรจำลองเพิ่มเติมสำเร็จ ปัจจุบันมีบุคลากรครบ 49 คนพอดี`);
             };
 
             const isTeacherRole = selectedTeacher && (selectedTeacher?.role === "teacher" || selectedTeacher?.role === "admin" || selectedTeacher?.role === "hr");
@@ -1302,7 +1244,6 @@
                                             </div>
                                         )}
 
-                                        {/* 🔐 ครูคนอื่นและแม่บ้านพ่อบ้านไม่มีสิทธิ์เปลี่ยนรหัสผ่านด้วยตนเอง (แสดงปุ่มนี้ให้เฉพาะแอดมิน Toei เท่านั้นจ้ะ) */}
                                         {selectedTeacher && selectedTeacher?.id === currentUser?.id && currentUser?.role === "admin" && (
                                             <button 
                                                 onClick={() => {
@@ -1829,9 +1770,9 @@
                                                             <td className="py-4 px-3 text-left">
                                                                 <p className="text-slate-900 font-extrabold text-sm sm:text-base">{u.prefix}{u.name}</p>
                                                                 <input 
-                                                                    type="email" 
+                                                                    type="text" 
                                                                     value={u.email || ""} 
-                                                                    placeholder={`${u.id.toLowerCase()}@yuwapat.ac.th`}
+                                                                    placeholder="Username/Email"
                                                                     onChange={(e) => handleUserEmailChange(u.id, e.target.value)}
                                                                     className="bg-[#FAF9F6] border border-slate-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 w-56 font-bold transition py-0.5"
                                                                 />
@@ -1869,6 +1810,7 @@
                         )}
                     </main>
 
+                    {/* Modals for Add/Edit Employee */}
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-md border animate-fade-in relative">
@@ -1891,6 +1833,8 @@
                                                 <option value="นาย">นาย</option>
                                                 <option value="นาง">นาง</option>
                                                 <option value="นางสาว">นางสาว</option>
+                                                <option value="น.ส.">น.ส.</option>
+                                                <option value="สิบตรี">สิบตรี</option>
                                             </select>
                                         </div>
                                         <div className="col-span-2">
@@ -1913,7 +1857,7 @@
                                             type="text" 
                                             value={newTeacher.email}
                                             onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
-                                            placeholder={newTeacher.role === "maid" || newTeacher.role === "janitor" ? "ตัวอย่าง: somjai_m" : "sommai.d@yuwapat.ac.th"}
+                                            placeholder={newTeacher.role === "maid" || newTeacher.role === "janitor" ? "ตัวอย่าง: somjai" : "sommai.d@yuwapat.ac.th"}
                                             className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
                                             required={newTeacher.role === "maid" || newTeacher.role === "janitor"}
                                         />
@@ -2001,6 +1945,8 @@
                                                 <option value="นาย">นาย</option>
                                                 <option value="นาง">นาง</option>
                                                 <option value="นางสาว">นางสาว</option>
+                                                <option value="น.ส.">น.ส.</option>
+                                                <option value="สิบตรี">สิบตรี</option>
                                             </select>
                                         </div>
                                         <div className="col-span-2">
