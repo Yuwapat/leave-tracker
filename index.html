@@ -6,10 +6,10 @@
     <title>Yuwapat Early Childhood School - ระบบบริหารจัดการวันลาและสถิติการปฏิบัติงานบุคลากร</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Noto Serif Thai, Sarabun, Kanit & Inter) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@100..900&family=Sarabun:wght@200;300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@100..900&family=Sarabun:wght@200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- React & Babel -->
@@ -69,8 +69,9 @@
 
     <div id="root"></div>
 
+    <!-- STREAMING_CHUNK:Initializing React Application logic and persistent state management... -->
     <script type="text/babel">
-        // 🔗 ใส่ลิงก์ Web App URL ของคุณครูเตยที่ได้จากการ Deploy ใน Google Apps Script ลงในเครื่องหมายอัญประกาศตรงนี้จ้ะ
+        // 🔗 ใส่ Web App URL ของคุณครูเตยที่ได้จากการ Deploy ใน Google Apps Script
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
         // 👥 รายชื่อบุคลากรตั้งต้นของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
@@ -80,7 +81,7 @@
             { id: "1", prefix: "นาย", name: "สมชาย รักเรียน", role: "teacher", password: "1234", email: "somchai.r@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
             { id: "2", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuwapat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2022-05-16" },
             
-            // 🧹 รายชื่อเจ้าหน้าที่แม่บ้าน-พ่อบ้าน (ใช้ Username ล็อกอิน)
+            // เจ้าหน้าที่พ่อบ้าน-แม่บ้าน
             { id: "51", prefix: "นาง", name: "สมส่วน เนตรขำ", role: "maid", password: "1234", email: "somsuan", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "52", prefix: "น.ส.", name: "สุทิน ศรีสุข", role: "maid", password: "1234", email: "suthin", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "53", prefix: "นาง", name: "สมใจ ทับทอง", role: "maid", password: "1234", email: "somjai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
@@ -91,7 +92,7 @@
             { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" }
         ];
 
-        // 📅 วันหยุดปฏิทินราชการ 2569
+        // วันหยุดปฏิทินราชการ
         const initialHolidays = [
             { date: "2026-01-01", name: "วันขึ้นปีใหม่" },
             { date: "2026-03-02", name: "วันมาฆบูชา" },
@@ -111,7 +112,7 @@
             { date: "2026-12-31", name: "วันสิ้นปี" }
         ];
 
-        // 🎈 กิจกรรมพิเศษของโรงเรียน
+        // กิจกรรมพิเศษของโรงเรียน
         const initialActivities = [
             { date: "2026-06-18", name: "พิธีไหว้ครูประจำปี", session: "morning" }, 
             { date: "2026-07-10", name: "ประชุมพบกันฉันท์พี่น้อง", session: "morning" }, 
@@ -120,7 +121,7 @@
             { date: "2026-12-25", name: "กิจกรรมวันคริสต์มาส", session: "morning" }
         ];
 
-        // 🔒 ล็อกสิทธิ์ถาวรให้ ID 44 (พิมลาภัสร์) เป็น admin และ ID 25 (งามจิต) เป็น hr
+        // ล็อกสิทธิ์ ID 44 เป็น admin และ ID 25 เป็น hr ถาวร
         function normalizeRole(rawRole, id = "") {
             const strId = String(id).trim();
             if (strId === "44") return "admin"; 
@@ -135,6 +136,7 @@
             return "teacher";
         }
 
+        // STREAMING_CHUNK:Defining main App component state, calculations, and effects...
         function App() {
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
@@ -181,6 +183,11 @@
             });
 
             const [leaves, setLeaves] = React.useState([]);
+            const [disciplineLogs, setDisciplineLogs] = React.useState(() => {
+                const saved = localStorage.getItem("leave_discipline_logs");
+                return saved ? JSON.parse(saved) : [];
+            });
+
             const [loginId, setLoginId] = React.useState("");
             const [loginPassword, setLoginPassword] = React.useState("");
             const [activeTab, setActiveTab] = React.useState("admin"); 
@@ -200,11 +207,18 @@
             const [showAddActivityModal, setShowAddActivityModal] = React.useState(false);
             const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "morning" });
             const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, title: "", message: "", onConfirm: null });
+            
+            // Discipline Log Modal
+            const [showAddDisciplineModal, setShowAddDisciplineModal] = React.useState(false);
+            const [disciplineForm, setDisciplineForm] = React.useState({ teacherId: "", date: "", type: "forgotTime", note: "" });
+            const [showViewDisciplineModal, setShowViewDisciplineModal] = React.useState(false);
+            const [viewDisciplineTeacher, setViewDisciplineTeacher] = React.useState(null);
 
             React.useEffect(() => { localStorage.setItem("leave_users", JSON.stringify(users)); }, [users]);
             React.useEffect(() => { localStorage.setItem("leave_current_user", currentUser ? JSON.stringify(currentUser) : ""); }, [currentUser]);
             React.useEffect(() => { localStorage.setItem("leave_holidays", JSON.stringify(holidays)); }, [holidays]);
             React.useEffect(() => { localStorage.setItem("leave_activities", JSON.stringify(activities)); }, [activities]);
+            React.useEffect(() => { localStorage.setItem("leave_discipline_logs", JSON.stringify(disciplineLogs)); }, [disciplineLogs]);
 
             // Sync with Google Sheets
             React.useEffect(() => {
@@ -229,6 +243,10 @@
                                     sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : (u.SickQuota !== undefined ? u.SickQuota : 30))),
                                     personalQuota: Number(u.personalquota !== undefined ? u.personalquota : (u.personalQuota !== undefined ? u.personalQuota : (u.PersonalQuota !== undefined ? u.PersonalQuota : 15))),
                                     lateCount: Number(u.latecount !== undefined ? u.latecount : (u.lateCount !== undefined ? u.lateCount : (u.LateCount !== undefined ? u.LateCount : 0))),
+                                    forgotTimeCount: Number(u.forgot timecount !== undefined ? u.forgotTimeCount : (u.ForgotTimeCount !== undefined ? u.ForgotTimeCount : 0))),
+                                    middayOutShortCount: Number(u.middayoutshortcount !== undefined ? u.middayOutShortCount : (u.MiddayOutShortCount !== undefined ? u.MiddayOutShortCount : 0))),
+                                    middayOutLongCount: Number(u.middayoutlongcount !== undefined ? u.middayOutLongCount : (u.MiddayOutLongCount !== undefined ? u.MiddayOutLongCount : 0))),
+                                    missedMeetingCount: Number(u.missedmeetingcount !== undefined ? u.missedMeetingCount : (u.MissedMeetingCount !== undefined ? u.MissedMeetingCount : 0))),
                                     photo: u.photo || u.Photo || "",
                                     hireDate: u.hiredate || u.hireDate || u.HireDate || ""
                                 };
@@ -237,9 +255,7 @@
 
                             if (currentUser) {
                                 const currentMatched = mappedUsers.find(mu => String(mu.id) === String(currentUser.id));
-                                if (currentMatched) {
-                                    setCurrentUser(currentMatched);
-                                }
+                                if (currentMatched) setCurrentUser(currentMatched);
                             }
                         }
 
@@ -277,7 +293,7 @@
                 fetchSheetData();
             }, []);
 
-            // 🔒 สลับแท็บอัตโนมัติเมื่อเปลี่ยนผู้ใช้งาน
+            // สลับแท็บอัตโนมัติเมื่อเปลี่ยนผู้ใช้งาน
             React.useEffect(() => {
                 if (currentUser) {
                     const userRole = normalizeRole(currentUser.role, currentUser.id);
@@ -298,6 +314,7 @@
                 }
             }, [formData.startDate, formData.period]);
 
+            // STREAMING_CHUNK:Calculating teacher leave statistics and discipline deductions...
             const getTeacherStats = (teacherId) => {
                 const teacherObj = users.find(u => String(u.id) === String(teacherId));
                 if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0, dutyFeeTotal: 0 };
@@ -315,6 +332,7 @@
                 const dutyFeeTotal = userLeaves.reduce((sum, l) => sum + (l.dutyFeeDeduction || 0), 0);
                     
                 const lateCount = teacherObj.lateCount || 0;
+                // กฎหักวันสาย: 4 ครั้ง หัก 1 วัน, ทุกๆ 3 ครั้งถัดไป หักอีก 1 วัน
                 const latePenalty = lateCount >= 4 ? Math.floor((lateCount - 1) / 3) : 0;
                 const personalUsed = personalDeductedFromLeaves + latePenalty;
                 
@@ -324,6 +342,10 @@
                     personalDeductedFromLeaves, 
                     latePenalty, 
                     lateCount,
+                    forgotTimeCount: teacherObj.forgotTimeCount || 0,
+                    middayOutShortCount: teacherObj.middayOutShortCount || 0,
+                    middayOutLongCount: teacherObj.middayOutLongCount || 0,
+                    missedMeetingCount: teacherObj.missedMeetingCount || 0,
                     dutyFeeTotal
                 };
             };
@@ -451,6 +473,23 @@
             };
             const getSchoolActivity = (dateStr) => activities.find(a => a.date === dateStr);
 
+            // ค้นหาจำนวนวันหยุดต่อเนื่องที่ติดกับวันลา (สำหรับกฎค่อมวันหยุด Sandwich Rule)
+            const getContiguousNonWorkingBlockLength = (targetDate, direction) => {
+                let current = new Date(targetDate.getTime());
+                let count = 0;
+                while (true) {
+                    current.setDate(current.getDate() + direction);
+                    const currentStr = getLocalDateString(current);
+                    if (isWeekend(current) || isSchoolHoliday(currentStr)) {
+                        count++;
+                    } else {
+                        break; 
+                    }
+                }
+                return count;
+            };
+
+            // STREAMING_CHUNK:Implementing Sandwich Rule and Leave Days calculation engine...
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day") => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
@@ -478,14 +517,66 @@
                         let penaltyReason = period !== "all_day" ? "อัตราลาครึ่งวัน" : "อัตราลาปกติ";
 
                         const schoolActivity = getSchoolActivity(dateStr);
-                        let finalDeductedForDay = base;
-
+                        let activityDeduction = 0;
+                        let hasActivity = false;
                         if (schoolActivity) {
-                            finalDeductedForDay = period !== "all_day" ? 0.75 : 1.5;
-                            penaltyReason = `วันกิจกรรมพิเศษ (${schoolActivity.name})`;
+                            hasActivity = true;
+                            activityDeduction = 1.5;
                         }
 
-                        // หักค่าเวร
+                        const prevBlock = getContiguousNonWorkingBlockLength(current, -1);
+                        const nextBlock = getContiguousNonWorkingBlockLength(current, 1);
+
+                        let adjDeduction = 1.0;
+                        let adjReason = "";
+
+                        // กฎค่อมวันหยุดทวีคูณ (Sandwich Rule) สำหรับยื่นลาเต็มวัน
+                        if (period === "all_day") {
+                            if (prevBlock > 0 && nextBlock > 0) {
+                                const totalHolidaysSandwich = prevBlock + nextBlock;
+                                adjDeduction = 1.0 + totalHolidaysSandwich;
+                                adjReason = `ลาค่อมวันหยุด (ก่อนหน้า ${prevBlock} หลัง ${nextBlock})`;
+                            } else {
+                                const maxBlock = Math.max(prevBlock, nextBlock);
+                                if (maxBlock >= 3) {
+                                    adjDeduction = 1.0 + maxBlock;
+                                    adjReason = `ติดวันหยุดยาวต่อเนื่อง (${maxBlock} วัน)`;
+                                } else if (maxBlock === 2) {
+                                    adjDeduction = 2.0;
+                                    adjReason = "ติดวันหยุดเสาร์-อาทิตย์";
+                                }
+                            }
+                        }
+
+                        let finalDeductedForDay = 1.0;
+                        
+                        if (period !== "all_day") {
+                            if (hasActivity) {
+                                finalDeductedForDay = activityDeduction * 0.5; // 0.75 วัน
+                                penaltyReason = `ตรงวันกิจกรรมพิเศษ (${schoolActivity.name}) [ลาครึ่งวัน]`;
+                            } else {
+                                finalDeductedForDay = 0.5;
+                                penaltyReason = "ลาครึ่งวันปกติ";
+                            }
+                        } else {
+                            if (hasActivity && adjDeduction > 1.0) {
+                                if (adjDeduction >= activityDeduction) {
+                                    finalDeductedForDay = adjDeduction;
+                                    penaltyReason = `${adjReason} และตรงวันกิจกรรมพิเศษ`;
+                                } else {
+                                    finalDeductedForDay = activityDeduction;
+                                    penaltyReason = `ตรงวันกิจกรรมพิเศษ (${schoolActivity.name}) [คิดเกณฑ์ 1.5 วัน]`;
+                                }
+                            } else if (adjDeduction > 1.0) {
+                                finalDeductedForDay = adjDeduction;
+                                penaltyReason = adjReason;
+                            } else if (hasActivity) {
+                                finalDeductedForDay = activityDeduction;
+                                penaltyReason = `ตรงกับวันกิจกรรมพิเศษ (${schoolActivity.name})`;
+                            }
+                        }
+
+                        // หักค่าปฏิบัติงานเวร
                         totalDutyFee += (period !== "all_day" ? 50 : 100);
 
                         breakdown.push({ date: dateStr, base: base, penalty: penalty, penaltyReason: penaltyReason, final: finalDeductedForDay });
@@ -577,6 +668,82 @@
                 );
             };
 
+            // อัปเดตสถิติวินัยสะสม
+            const handleUpdateDisciplineCount = (teacherId, field, delta) => {
+                setUsers(users.map(u => {
+                    if (String(u.id) === String(teacherId)) {
+                        const currentVal = Number(u[field] || 0);
+                        const newVal = Math.max(0, currentVal + delta);
+                        const updated = { ...u, [field]: newVal };
+
+                        // ซิงก์ไป Google Sheets
+                        if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
+                            fetch(GOOGLE_SHEET_URL, {
+                                method: 'POST',
+                                mode: 'no-cors',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: "updateCount",
+                                    teacherId: teacherId,
+                                    field: field,
+                                    count: newVal
+                                })
+                            }).catch(err => console.error("Update discipline error:", err));
+                        }
+
+                        return updated;
+                    }
+                    return u;
+                }));
+                showToast("ปรับปรุงสถิติสะสมเรียบร้อยแล้ว");
+            };
+
+            // เพิ่มประวัติลงเวลารายวันย้อนหลัง
+            const handleAddDisciplineLog = (e) => {
+                e.preventDefault();
+                if (!disciplineForm.teacherId || !disciplineForm.date) {
+                    showToast("กรุณากรอกข้อมูลวันที่และบุคลากรให้ครบถ้วน", "error");
+                    return;
+                }
+
+                const logTypeLabels = {
+                    late: "มาสาย",
+                    forgotTime: "ลืมบันทึกเวลาเข้า-ออกงาน",
+                    middayShort: "ออกนอกสถานที่ 1.01-1.30 ชม.",
+                    middayLong: "ออกนอกสถานที่ >1.30 ชม.",
+                    missedMeeting: "ขาดประชุมประจำสัปดาห์"
+                };
+
+                const newLog = {
+                    id: "LOG" + Date.now(),
+                    teacherId: disciplineForm.teacherId,
+                    date: disciplineForm.date,
+                    type: disciplineForm.type,
+                    typeName: logTypeLabels[disciplineForm.type] || disciplineForm.type,
+                    note: disciplineForm.note || "ไม่มีหมายเหตุ",
+                    createdAt: getLocalDateString(new Date())
+                };
+
+                setDisciplineLogs([newLog, ...disciplineLogs]);
+
+                // ปรับเพิ่มสถิติให้พนักงานคนนั้นด้วย
+                const fieldMapping = {
+                    late: "lateCount",
+                    forgotTime: "forgotTimeCount",
+                    middayShort: "middayOutShortCount",
+                    middayLong: "middayOutLongCount",
+                    missedMeeting: "missedMeetingCount"
+                };
+
+                if (fieldMapping[disciplineForm.type]) {
+                    handleUpdateDisciplineCount(disciplineForm.teacherId, fieldMapping[disciplineForm.type], 1);
+                }
+
+                setShowAddDisciplineModal(false);
+                setDisciplineForm({ teacherId: "", date: "", type: "forgotTime", note: "" });
+                showToast("ลงบันทึกประวัติตามวันที่เรียบร้อยแล้ว");
+            };
+
             const renderAvatar = (teacherObj, sizeClass = "w-10 h-10 text-xs") => {
                 if (teacherObj && teacherObj.photo) {
                     return (
@@ -604,6 +771,7 @@
                 );
             };
 
+            // STREAMING_CHUNK:Rendering Login view...
             if (!currentUser) {
                 return (
                     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative">
@@ -672,6 +840,7 @@
             const currentRole = normalizeRole(currentUser.role, currentUser.id);
             const isAdminOrHr = currentRole === "admin" || currentRole === "hr";
 
+            // STREAMING_CHUNK:Rendering main layout header and portal navigation...
             return (
                 <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
                     
@@ -773,6 +942,7 @@
 
                     <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
                         
+                        {/* STREAMING_CHUNK:Rendering Teacher Portal view with leave stats and discipline rules... */}
                         {activeTab === "teacher" && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 
@@ -807,12 +977,24 @@
                                                         </p>
                                                     </div>
                                                 </div>
+
+                                                <button 
+                                                    onClick={() => {
+                                                        setViewDisciplineTeacher(selectedTeacher);
+                                                        setShowViewDisciplineModal(true);
+                                                    }}
+                                                    className="w-full mt-3 bg-emerald-700/80 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
+                                                >
+                                                    <i className="fa-solid fa-calendar-check"></i>
+                                                    ดูประวัติการลงเวลาและวินัยย้อนหลัง
+                                                </button>
                                             </div>
                                         )}
                                     </div>
 
                                     {selectedTeacher && selectedTeacherStats && (
                                         <div className="space-y-4">
+                                            {/* การ์ดสถิติลากิจส่วนตัว */}
                                             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -829,10 +1011,22 @@
                                                 
                                                 <div className="mt-4 pt-3 border-t border-slate-100 text-xs space-y-1.5 text-slate-600">
                                                     <div className="flex justify-between">
-                                                        <span>สถิติเข้าปฏิบัติงานสาย:</span>
-                                                        <span className="font-bold">{selectedTeacherStats.lateCount} ครั้ง (-{selectedTeacherStats.latePenalty} วัน)</span>
+                                                        <span>1. สถิติเข้าปฏิบัติงานสาย:</span>
+                                                        <span className={`font-bold ${selectedTeacherStats.lateCount >= 4 ? 'text-red-600' : 'text-slate-800'}`}>{selectedTeacherStats.lateCount} ครั้ง (-{selectedTeacherStats.latePenalty} วัน)</span>
                                                     </div>
                                                     <div className="flex justify-between">
+                                                        <span>2. ลืมบันทึกเวลาเข้า-ออก:</span>
+                                                        <span className="font-bold">{selectedTeacherStats.forgotTimeCount} ครั้ง</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>3. ปฏิบัติงานนอกสถานที่ (&gt; 1.30 ชม.):</span>
+                                                        <span className="font-bold">{selectedTeacherStats.middayOutLongCount} ครั้ง</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>4. ขาดการประชุมประจำสัปดาห์:</span>
+                                                        <span className="font-bold">{selectedTeacherStats.missedMeetingCount} ครั้ง</span>
+                                                    </div>
+                                                    <div className="flex justify-between pt-1 border-t border-slate-100">
                                                         <span>หักสะสมค่าปฏิบัติงานเวร:</span>
                                                         <span className="font-bold text-red-600">{selectedTeacherStats.dutyFeeTotal} บาท</span>
                                                     </div>
@@ -844,6 +1038,7 @@
                                                 </div>
                                             </div>
 
+                                            {/* การ์ดสถิติลาป่วย */}
                                             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -861,6 +1056,19 @@
                                                     <span>โควตาตั้งต้น: {selectedTeacher.sickQuota} วัน</span>
                                                     <span>ใช้ลาป่วยรวม: {selectedTeacherStats.sickUsed.toFixed(1)} วัน</span>
                                                 </div>
+                                            </div>
+
+                                            {/* การ์ดสรุปกฎเกณฑ์และระเบียบการหักวันลา */}
+                                            <div className="bg-navy-900 text-slate-200 rounded-2xl p-5 shadow-sm border border-emerald-700/30 text-xs space-y-2.5">
+                                                <h3 className="font-bold text-white text-xs border-b pb-2 border-emerald-700/50 flex items-center gap-2">
+                                                    <i className="fa-solid fa-circle-info text-emerald-400"></i>
+                                                    กฎเกณฑ์และระเบียบการหักวันลา
+                                                </h3>
+                                                <p className="text-slate-300">• <strong>วันเสาร์-อาทิตย์ & วันหยุดราชการ:</strong> ไม่คิดหักวันลาปกติ</p>
+                                                <p className="text-slate-300">• <strong>กฎค่อมวันหยุด (Sandwich Rule):</strong> ลาเต็มวันติดวันหยุด จะคิดรวมวันหยุดนั้นเพิ่มเป็นยอดหักวันลา</p>
+                                                <p className="text-slate-300">• <strong>วันกิจกรรมพิเศษโรงเรียน:</strong> คิดเกณฑ์หักวันลา 1.5 วัน (ลาครึ่งวันคิด 0.75 วัน)</p>
+                                                <p className="text-slate-300">• <strong>เกณฑ์เข้างานสาย:</strong> สะสมครบ 4 ครั้ง หักลากิจ 1 วัน (และหักเพิ่ม 1 วัน ทุกๆ 3 ครั้งถัดไป)</p>
+                                                <p className="text-emerald-400 font-semibold">• <strong>การหักค่าเวร:</strong> ลาเต็มวันหัก 100 บาท, ลาครึ่งวันหัก 50 บาท</p>
                                             </div>
                                         </div>
                                     )}
@@ -968,6 +1176,16 @@
                                                         <span>หักเงินค่าปฏิบัติงานเวรประจำวัน:</span>
                                                         <span className="font-bold text-slate-700">{leaveCalculation.dutyFeeDeduction} บาท</span>
                                                     </div>
+
+                                                    <div className="pt-2 border-t border-slate-200 space-y-1">
+                                                        <p className="font-bold text-slate-600">รายละเอียดคำนวณรายวัน:</p>
+                                                        {leaveCalculation.breakdown.map((b, i) => (
+                                                            <div key={i} className="flex justify-between text-[11px] text-slate-500">
+                                                                <span>• {formatThaiDate(b.date)}:</span>
+                                                                <span className="font-bold text-slate-700">{b.final === 0 ? "ยกเว้นวันหยุด (0 วัน)" : `หัก ${b.final.toFixed(2)} วัน [${b.penaltyReason}]`}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -1031,6 +1249,7 @@
                             </div>
                         )}
 
+                        {/* STREAMING_CHUNK:Rendering Admin Management panel with full discipline counters and logging... */}
                         {activeTab === "admin" && isAdminOrHr && (
                             <div className="space-y-6 text-left">
                                 
@@ -1039,13 +1258,22 @@
                                         <h2 className="text-lg font-bold text-slate-800">ระบบบริหารจัดการข้อมูลบุคลากรและวันลา</h2>
                                         <p className="text-xs text-slate-500 mt-0.5">บทบาทสิทธิ์ปัจจุบันของคุณ: <strong className="text-emerald-700 uppercase">{currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด (ADMIN)' : 'เจ้าหน้าที่งานบุคคล (HR)'}</strong></p>
                                     </div>
-                                    <button
-                                        onClick={() => setShowAddTeacherModal(true)}
-                                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 flex items-center gap-2 shadow"
-                                    >
-                                        <i className="fa-solid fa-user-plus"></i>
-                                        เพิ่มข้อมูลบุคลากรในระบบ
-                                    </button>
+                                    <div className="flex gap-2 flex-wrap">
+                                        <button
+                                            onClick={() => setShowAddDisciplineModal(true)}
+                                            className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 flex items-center gap-2 shadow"
+                                        >
+                                            <i className="fa-solid fa-calendar-plus"></i>
+                                            บันทึกประวัติการลงเวลา
+                                        </button>
+                                        <button
+                                            onClick={() => setShowAddTeacherModal(true)}
+                                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 flex items-center gap-2 shadow"
+                                        >
+                                            <i className="fa-solid fa-user-plus"></i>
+                                            เพิ่มข้อมูลบุคลากรในระบบ
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex border-b border-slate-200 overflow-x-auto gap-2">
@@ -1082,7 +1310,7 @@
                                 </div>
 
                                 {adminSubTab === "leaves" && (
-                                    <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-sm border border-slate-100">
+                                    <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-sm border border-slate-200 border-t-0">
                                         <h3 className="font-bold text-slate-800 text-sm mb-4 border-b pb-2">รายการประวัติวันลาทั้งหมด</h3>
 
                                         {leaves.length === 0 ? (
@@ -1131,16 +1359,17 @@
                                 )}
 
                                 {adminSubTab === "teachers" && (
-                                    <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-sm border border-slate-100">
+                                    <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-sm border border-slate-200 border-t-0">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full text-xs text-left">
                                                 <thead>
                                                     <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase">
-                                                        <th className="py-2.5 px-3">รหัสประจำตัว</th>
+                                                        <th className="py-2.5 px-3">รหัส</th>
                                                         <th className="py-2.5 px-3">ชื่อ-นามสกุล / ตำแหน่ง</th>
-                                                        <th className="py-2.5 px-3">ลากิจส่วนตัว</th>
-                                                        <th className="py-2.5 px-3">ลาป่วย</th>
-                                                        <th className="py-2.5 px-3 text-center">จัดการประวัติ / สิทธิ์</th>
+                                                        <th className="py-2.5 px-3 text-center">สถิติวินัยและการเข้างาน</th>
+                                                        <th className="py-2.5 px-3">โควตาลากิจ</th>
+                                                        <th className="py-2.5 px-3">โควตาลาป่วย</th>
+                                                        <th className="py-2.5 px-3 text-center">จัดการ</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-50 font-semibold text-slate-700">
@@ -1163,20 +1392,57 @@
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-3 px-3">
+                                                                    <div className="space-y-1 min-w-[220px]">
+                                                                        <div className="flex items-center justify-between text-[11px] bg-slate-50 px-2 py-1 rounded border">
+                                                                            <span>1. มาสาย:</span>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "lateCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">-</button>
+                                                                                <span className={`font-mono font-bold px-1 ${stats.lateCount >= 4 ? 'text-red-600' : ''}`}>{stats.lateCount}</span>
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "lateCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between text-[11px] bg-slate-50 px-2 py-1 rounded border">
+                                                                            <span>2. ลืมบันทึกเวลาเข้า-ออก:</span>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "forgotTimeCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">-</button>
+                                                                                <span className="font-mono font-bold px-1">{stats.forgotTimeCount}</span>
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "forgotTimeCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between text-[11px] bg-slate-50 px-2 py-1 rounded border">
+                                                                            <span>3. นอกสถานที่ (&gt;1.30ชม.):</span>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "middayOutLongCount", -1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">-</button>
+                                                                                <span className="font-mono font-bold px-1">{stats.middayOutLongCount}</span>
+                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "middayOutLongCount", 1)} className="w-5 h-5 bg-white border rounded flex items-center justify-center text-slate-500 hover:bg-slate-100">+</button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                setViewDisciplineTeacher(t);
+                                                                                setShowViewDisciplineModal(true);
+                                                                            }}
+                                                                            className="w-full text-center text-[10px] text-emerald-700 font-bold hover:underline pt-0.5"
+                                                                        >
+                                                                            <i className="fa-solid fa-list-check mr-1"></i>ดูประวัติวันที่ย้อนหลัง
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3 px-3">
                                                                     <span className={`font-bold px-2 py-0.5 rounded ${pRemaining < 3 ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-800'}`}>
-                                                                        คงเหลือ {pRemaining.toFixed(1)} / {t.personalQuota} วัน
+                                                                        เหลือ {pRemaining.toFixed(1)} / {t.personalQuota} วัน
                                                                     </span>
                                                                 </td>
                                                                 <td className="py-3 px-3">
                                                                     <span className={`font-bold px-2 py-0.5 rounded ${sRemaining < 5 ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-800'}`}>
-                                                                        คงเหลือ {sRemaining.toFixed(1)} / {t.sickQuota} วัน
+                                                                        เหลือ {sRemaining.toFixed(1)} / {t.sickQuota} วัน
                                                                     </span>
                                                                 </td>
                                                                 <td className="py-3 px-3 text-center">
-                                                                    <div className="flex justify-center gap-1.5">
+                                                                    <div className="flex justify-center gap-1">
                                                                         <button 
                                                                             onClick={() => { setEditingTeacher({ ...t }); setShowEditTeacherModal(true); }}
-                                                                            className="text-sky-700 hover:text-sky-900 px-2 py-1 bg-sky-50 rounded font-bold"
+                                                                            className="text-sky-700 hover:text-sky-900 p-1.5 bg-sky-50 rounded font-bold"
                                                                             title="แก้ไขข้อมูล"
                                                                         >
                                                                             <i className="fa-solid fa-pen-to-square"></i>
@@ -1278,11 +1544,161 @@
                                     </div>
                                 )}
 
+                                {adminSubTab === "roles" && currentRole === "admin" && (
+                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-xs">
+                                        <h3 className="font-bold text-slate-800 text-sm mb-4 border-b pb-2">จัดการสิทธิ์ความปลอดภัยและรหัสผ่าน</h3>
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full text-left">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase">
+                                                        <th className="py-2.5 px-3">ID</th>
+                                                        <th className="py-2.5 px-3">ชื่อ-นามสกุล</th>
+                                                        <th className="py-2.5 px-3">สิทธิ์</th>
+                                                        <th className="py-2.5 px-3">รหัสผ่าน</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 font-semibold">
+                                                    {users.map(u => (
+                                                        <tr key={u.id}>
+                                                            <td className="py-2.5 px-3 font-mono text-slate-400">{u.id}</td>
+                                                            <td className="py-2.5 px-3">{u.prefix}{u.name}</td>
+                                                            <td className="py-2.5 px-3">
+                                                                <span className="font-bold uppercase text-emerald-800">{u.role}</span>
+                                                            </td>
+                                                            <td className="py-2.5 px-3 font-mono">{u.password}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
                         )}
                     </main>
 
-                    {/* 📌 Modals แสดงผลทั้งหมด */}
+                    {/* STREAMING_CHUNK:Rendering Modals for adding personnel, discipline logs, and holidays... */}
+                    {/* Modal บันทึกประวัติการลงเวลาและผิดระเบียบ */}
+                    {showAddDisciplineModal && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                                    <h3 className="text-sm font-bold text-slate-800">บันทึกประวัติการลงเวลาและสถิติวินัย</h3>
+                                    <button onClick={() => setShowAddDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleAddDisciplineLog} className="space-y-3 text-xs">
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1">เลือกบุคลากร</label>
+                                        <select 
+                                            value={disciplineForm.teacherId}
+                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, teacherId: e.target.value })}
+                                            className="w-full bg-slate-50 border px-3 py-2 rounded-xl font-bold"
+                                            required
+                                        >
+                                            <option value="">-- เลือกบุคลากร --</option>
+                                            {users.map(u => (
+                                                <option key={u.id} value={u.id}>[{u.id}] {u.prefix}{u.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1">วันที่เกิดเหตุการณ์</label>
+                                        <input 
+                                            type="date" 
+                                            value={disciplineForm.date}
+                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, date: e.target.value })}
+                                            className="w-full bg-slate-50 border px-3 py-2 rounded-xl"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1">ประเภทสถิติวินัย</label>
+                                        <select 
+                                            value={disciplineForm.type}
+                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, type: e.target.value })}
+                                            className="w-full bg-slate-50 border px-3 py-2 rounded-xl font-bold"
+                                        >
+                                            <option value="late">เข้าปฏิบัติงานสาย</option>
+                                            <option value="forgotTime">ลืมบันทึกเวลาเข้า-ออกงาน</option>
+                                            <option value="middayShort">ออกนอกสถานที่ 1.01-1.30 ชม.</option>
+                                            <option value="middayLong">ออกนอกสถานที่ &gt;1.30 ชม.</option>
+                                            <option value="missedMeeting">ขาดประชุมประจำสัปดาห์</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1">หมายเหตุเพิ่มเติม</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="ระบุสาเหตุหรือหมายเหตุ..."
+                                            value={disciplineForm.note}
+                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, note: e.target.value })}
+                                            className="w-full bg-slate-50 border px-3 py-2 rounded-xl"
+                                        />
+                                    </div>
+                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3 rounded-xl shadow mt-2">
+                                        บันทึกประวัติย้อนหลัง
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal ดูประวัติการลงเวลาของบุคลากร */}
+                    {showViewDisciplineModal && viewDisciplineTeacher && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border text-left">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                                    <h3 className="text-sm font-bold text-slate-800">
+                                        ประวัติการลงเวลาและสถิติวินัย - {viewDisciplineTeacher.prefix}{viewDisciplineTeacher.name}
+                                    </h3>
+                                    <button onClick={() => setShowViewDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3 max-h-80 overflow-y-auto text-xs pr-1">
+                                    {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).length === 0 ? (
+                                        <div className="text-center py-8 text-slate-400">
+                                            <p className="font-semibold">ไม่มีรายการบันทึกข้อบกพร่องตามวันที่</p>
+                                        </div>
+                                    ) : (
+                                        disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).map((log) => (
+                                            <div key={log.id} className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                                                <div>
+                                                    <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded text-[10px]">
+                                                        {log.typeName}
+                                                    </span>
+                                                    <p className="font-bold text-slate-800 mt-1">{formatThaiDate(log.date)}</p>
+                                                    <p className="text-[11px] text-slate-500">{log.note}</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => {
+                                                        setDisciplineLogs(disciplineLogs.filter(item => item.id !== log.id));
+                                                        showToast("ลบรายการเรียบร้อยแล้ว");
+                                                    }}
+                                                    className="text-slate-300 hover:text-red-500 p-1"
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <button 
+                                    onClick={() => setShowViewDisciplineModal(false)}
+                                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs mt-4"
+                                >
+                                    ปิดหน้าต่าง
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal เพิ่มพนักงานใหม่ */}
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left">
@@ -1299,7 +1715,6 @@
                                     const u = { ...newTeacher, id: newId, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0 };
                                     setUsers([...users, u]);
 
-                                    // อัปโหลดรูปไป Google Drive หากมีการเลือกรูป
                                     if (newTeacher.photo && GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                                         fetch(GOOGLE_SHEET_URL, {
                                             method: 'POST',
@@ -1384,6 +1799,7 @@
                         </div>
                     )}
 
+                    {/* Modal แก้ไขพนักงาน */}
                     {showEditTeacherModal && editingTeacher && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left">
@@ -1397,7 +1813,6 @@
                                     e.preventDefault();
                                     setUsers(users.map(u => u.id === editingTeacher.id ? editingTeacher : u));
 
-                                    // ส่งรูปอัปโหลดไป Google Drive
                                     if (editingTeacher.photo && editingTeacher.photo.startsWith("data:image") && GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                                         fetch(GOOGLE_SHEET_URL, {
                                             method: 'POST',
@@ -1479,6 +1894,7 @@
                         </div>
                     )}
 
+                    {/* Modal เพิ่มวันหยุด */}
                     {showAddHolidayModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border text-left">
@@ -1525,6 +1941,7 @@
                         </div>
                     )}
 
+                    {/* Modal เพิ่มกิจกรรม */}
                     {showAddActivityModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border text-left">
