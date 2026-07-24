@@ -70,10 +70,10 @@
 
     <div id="root"></div>
 
-    <!-- STREAMING_CHUNK:Initializing React application state and system user database... -->
     <script type="text/babel">
+        
         // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWwVxhG3ahBoeW5qw71ilzXTxqBav1SEOSIv1HFwZxHOr40CnkY-Q6w/exec"; 
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
         // 👥 รายชื่อบุคลากรตั้งต้นของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const initialUsers = [
@@ -89,7 +89,7 @@
             { id: "54", prefix: "น.ส.", name: "อรทัย รอบคอบ", role: "maid", password: "1234", email: "orathai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "55", prefix: "สิบตรี", name: "กรกช ทรัพย์ขำ", role: "janitor", password: "1234", email: "kodchakorn", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "56", prefix: "น.ส.", name: "สำราญ ยกศิริ", role: "maid", password: "1234", email: "samran", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
-            { id: "57", prefix: "น.ส.", name: "สุวภัทร หมีทอง", role: "maid", password: "1234", email: "suwapat", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, middayOutLongCount: 0, photo: "", hireDate: "2019-05-16" },
+            { id: "57", prefix: "น.ส.", name: "สุวภัทร หมีทอง", role: "maid", password: "1234", email: "suwapat", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" }
         ];
 
@@ -154,7 +154,6 @@
             return false;
         }
 
-        // STREAMING_CHUNK:Defining main App component logic and Google Sheets sync...
         function App() {
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
@@ -221,7 +220,7 @@
             const [showViewDisciplineModal, setShowViewDisciplineModal] = React.useState(false);
             const [viewDisciplineTeacher, setViewDisciplineTeacher] = React.useState(null);
 
-            // Role Management Search
+            // Role Search
             const [roleSearch, setRoleSearch] = React.useState("");
 
             React.useEffect(() => { localStorage.setItem("leave_users", JSON.stringify(users)); }, [users]);
@@ -448,7 +447,7 @@
                         fetch(GOOGLE_SHEET_URL, {
                             method: 'POST',
                             mode: 'no-cors',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify({
                                 action: "loginNotify",
                                 teacherId: normalizedUser.id,
@@ -636,7 +635,7 @@
                     fetch(GOOGLE_SHEET_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
                             action: "requestLeave",
                             id: newRequest.id,
@@ -669,7 +668,7 @@
                             fetch(GOOGLE_SHEET_URL, {
                                 method: 'POST',
                                 mode: 'no-cors',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ action: "deleteLeave", leaveId })
                             }).catch(err => console.warn("Sheet delete note:", err));
                         }
@@ -688,7 +687,7 @@
                             fetch(GOOGLE_SHEET_URL, {
                                 method: 'POST',
                                 mode: 'no-cors',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ action: "updateCount", teacherId: teacherId, field: field, count: newVal })
                             }).catch(err => console.warn("Update note:", err));
                         }
@@ -711,7 +710,7 @@
                             fetch(GOOGLE_SHEET_URL, {
                                 method: 'POST',
                                 mode: 'no-cors',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({
                                     action: actionType,
                                     teacherId: teacherId,
@@ -868,7 +867,6 @@
             const currentRole = normalizeRole(currentUser.role, currentUser.id);
             const isAdminOrHr = currentRole === "admin" || currentRole === "hr";
 
-            // STREAMING_CHUNK:Rendering main navbar with FontAwesome icons and action header...
             return (
                 <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
                     
@@ -972,7 +970,7 @@
 
                     <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
                         
-                        {/* STREAMING_CHUNK:Rendering Teacher View with leave quota cards and request form... */}
+                        {/* Teacher Portal Tab */}
                         {activeTab === "teacher" && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 
@@ -1300,11 +1298,10 @@
                             </div>
                         )}
 
-                        {/* STREAMING_CHUNK:Rendering Admin Management panel with redesigned discipline controls... */}
+                        {/* Admin Portal Tab */}
                         {activeTab === "admin" && isAdminOrHr && (
                             <div className="space-y-6 text-left">
                                 
-                                {/* การ์ดส่วนหัวแอดมิน - ปรับขนาดและ Padding ปุ่มกดให้สมดุลกัน 100% */}
                                 <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                     <div>
                                         <h2 className="text-lg sm:text-xl font-bold text-slate-800">ระบบบริหารจัดการข้อมูลบุคลากรและสถิติการปฏิบัติงาน</h2>
@@ -1410,7 +1407,6 @@
                                     </div>
                                 )}
 
-                                {/* ตารางรายชื่อบุคลากร - ปรับโฉมคอลัมน์สถิติวินัยให้เป็นปุ่มกดป๊อปอัป สะอาด สดใส ตัวอักษรใหญ่ชัดเจน */}
                                 {adminSubTab === "teachers" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0">
                                         <div className="overflow-x-auto">
@@ -1445,7 +1441,6 @@
                                                                     </div>
                                                                 </td>
 
-                                                                {/* ช่องสถิติวินัยแบบใหม่: ตัวอักษรใหญ่ และมีปุ่มกดเปิดป๊อปอัปปรับแต่งย้อนหลังโดยเฉพาะ */}
                                                                 <td className="py-4 px-4 text-center">
                                                                     <div className="flex flex-col items-center justify-center gap-1.5">
                                                                         <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
@@ -1582,7 +1577,6 @@
                                     </div>
                                 )}
 
-                                {/* หน้าจัดการสิทธิ์ความปลอดภัย - ปรับช่องค้นหาใช้ FontAwesome แว่นขยายสวยงาม */}
                                 {adminSubTab === "roles" && currentRole === "admin" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0 text-xs sm:text-sm">
                                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4 border-slate-100">
@@ -1591,7 +1585,6 @@
                                                 <p className="text-xs text-slate-400 mt-0.5">กำหนดบทบาท แก้ไขรหัสผ่าน และอีเมลผู้ใช้งาน เพื่อบันทึกตรงเข้าฐานข้อมูล</p>
                                             </div>
 
-                                            {/* ช่องค้นหา - ใช้ FontAwesome แทนอิโมจิ */}
                                             <div className="relative w-full sm:w-72">
                                                 <i className="fa-solid fa-magnifying-glass text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-sm"></i>
                                                 <input 
@@ -1664,7 +1657,6 @@
                         )}
                     </main>
 
-                    {/* STREAMING_CHUNK:Rendering full rule overview modal with icons... */}
                     {/* Modal แสดงระเบียบข้อบังคับวันลาเต็มรูปแบบ */}
                     {showRuleModal && (
                         <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1705,11 +1697,11 @@
                                                     วันหยุดปกติและการลาติดวันหยุด:
                                                 </h4>
                                                 <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินราชการ <strong>ไม่คิดหักวันลา</strong></p>
-                                                <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
-                                                <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ $\rightarrow$ <strong>หัก 2 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดราชการ $\rightarrow$ <strong>หัก 3 วัน</strong></p>
-                                                <p>• ลาเต็มวันค่อมวันหยุด $\rightarrow$ <strong>คิดหักบวกวันหยุดต่อเนื่องตามปฏิทินเพิ่มทั้งหมด</strong></p>
+                                                <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดราชการ <strong className="text-emerald-700">→ หัก 3 วัน</strong></p>
+                                                <p>• ลาเต็มวันค่อมวันหยุด <strong className="text-emerald-700">→ คิดหักบวกวันหยุดต่อเนื่องตามปฏิทินเพิ่มทั้งหมด</strong></p>
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -1717,10 +1709,10 @@
                                                     <i className="fa-solid fa-handshake text-emerald-700"></i>
                                                     วันประชุมพบกันฉันท์พี่น้อง & กิจกรรมพิเศษ:
                                                 </h4>
-                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุม $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ตรงกับวันประชุม $\rightarrow$ <strong>หัก 2 วัน</strong> / ไม่เข้าประชุม $\rightarrow$ <strong>หักลากิจ 1 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน $\rightarrow$ <strong>หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
-                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษครึ่งวัน $\rightarrow$ <strong>หัก 1.5 วัน</strong> (ลา 0.5 วัน หัก 1 วัน)</p>
+                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุม <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ตรงกับวันประชุม <strong className="text-emerald-700">→ หัก 2 วัน</strong> / ไม่เข้าประชุม <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
+                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษครึ่งวัน <strong className="text-emerald-700">→ หัก 1.5 วัน</strong> (ลา 0.5 วัน หัก 1 วัน)</p>
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -1728,8 +1720,8 @@
                                                     <i className="fa-solid fa-stopwatch text-emerald-700"></i>
                                                     วินัยการเข้างาน & ค่าปฏิบัติงานเวร:
                                                 </h4>
-                                                <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง $\rightarrow$ <strong>หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
-                                                <p>• ออกนอกสถานที่: 1.01-1.30 ชม. $\rightarrow$ <strong>นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. $\rightarrow$ <strong>หักลากิจ 0.5 วัน</strong></p>
+                                                <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
+                                                <p>• ออกนอกสถานที่: 1.01-1.30 ชม. <strong className="text-emerald-700">→ นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. <strong className="text-emerald-700">→ หักลากิจ 0.5 วัน</strong></p>
                                                 <p>• ค่าเวร: ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
                                                 <p>• หากสิทธิ์วันลาหมด ระบบจะแสดงข้อความสีแดง <span className="text-red-600 font-extrabold">"หักเงินเดือน (สิทธิ์เกินกำหนด)"</span></p>
                                             </div>
@@ -1753,9 +1745,9 @@
                                                     <i className="fa-solid fa-scale-balanced text-emerald-700"></i>
                                                     กฎการหักวันลาพ่อบ้าน-แม่บ้าน:
                                                 </h4>
-                                                <p>• ลา 0.5 วันบ่าย/เช้า ติดวันอาทิตย์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวันติดวันอาทิตย์ $\rightarrow$ <strong>หัก 2 วัน</strong> (ติดวันอาทิตย์ + วันหยุดปฏิทิน หัก 3 วัน)</p>
-                                                <p>• สายครบ 3 ครั้ง หรือ ลืมสแกนนิ้วครบ 3 ครั้ง $\rightarrow$ <strong>หักลากิจ 1 วัน</strong></p>
+                                                <p>• ลา 0.5 วันบ่าย/เช้า ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวันติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ติดวันอาทิตย์ + วันหยุดปฏิทิน หัก 3 วัน)</p>
+                                                <p>• สายครบ 3 ครั้ง หรือ ลืมสแกนนิ้วครบ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
                                                 <p>• ออกนอกสถานที่ 1.01-1.30 ชม. นับสาย 1 ครั้ง / &gt; 1.31 ชม. หักลากิจ 0.5 วัน</p>
                                                 <p>• สิทธิ์วันลาหมด ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"หักเงินเดือน (สิทธิ์เกินกำหนด)"</span></p>
                                             </div>
@@ -1767,14 +1759,13 @@
                                     onClick={() => setShowRuleModal(false)}
                                     className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs sm:text-sm mt-4"
                                 >
-                                    ปิดหน้าต่างระเบียบข้อบังคับ
+                                    เข้าใจแล้ว ปิดหน้าต่าง
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    {/* STREAMING_CHUNK:Rendering View & Adjust Discipline Modal with clear counters... */}
-                    {/* Modal บันทึกประวัติการลงเวลาแบบใหม่ - ใหญ่ คมชัด สะอาดตา ปรับเพิ่มลดสถิติได้ทันที */}
+                    {/* Modal บันทึกประวัติการลงเวลา */}
                     {showAddDisciplineModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
@@ -1844,7 +1835,7 @@
                         </div>
                     )}
 
-                    {/* Modal ดูประวัติการลงเวลา & ปรับสถิติสะสม (ย้ายช่องสถิติมาไว้ข้างในอย่างสวยงาม) */}
+                    {/* Modal ดูประวัติการลงเวลา & ปรับสถิติสะสม */}
                     {showViewDisciplineModal && viewDisciplineTeacher && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl border text-left flex flex-col max-h-[90vh]">
@@ -1866,7 +1857,6 @@
                                 </div>
 
                                 <div className="overflow-y-auto flex-1 space-y-6 pr-2">
-                                    {/* แผงปรับสถิติตัวเลข + / - ขนาดใหญ่ ชัดเจน อ่านง่าย */}
                                     {isAdminOrHr && (
                                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
                                             <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b pb-2">
@@ -1914,7 +1904,6 @@
                                         </div>
                                     )}
 
-                                    {/* รายการบันทึกประวัติตามวันที่ย้อนหลัง */}
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
                                             <i className="fa-solid fa-clock-rotate-left text-emerald-700"></i>
@@ -1985,7 +1974,7 @@
                                         fetch(GOOGLE_SHEET_URL, {
                                             method: 'POST',
                                             mode: 'no-cors',
-                                            headers: { 'Content-Type': 'application/json' },
+                                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                             body: JSON.stringify({
                                                 action: "uploadPhoto",
                                                 teacherId: newId,
@@ -2083,7 +2072,7 @@
                                         fetch(GOOGLE_SHEET_URL, {
                                             method: 'POST',
                                             mode: 'no-cors',
-                                            headers: { 'Content-Type': 'application/json' },
+                                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                             body: JSON.stringify({
                                                 action: "uploadPhoto",
                                                 teacherId: editingTeacher.id,
