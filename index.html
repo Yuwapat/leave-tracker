@@ -70,10 +70,10 @@
 
     <div id="root"></div>
 
-    <!-- STREAMING_CHUNK:Initializing React Application logic and persistent state management... -->
+    <!-- STREAMING_CHUNK:Initializing React application state and system user database... -->
     <script type="text/babel">
         // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWwVxhG3ahBoeW5qw71ilzXTxqBav1SEOSIv1HFwZxHOr40CnkY-Q6w/exec"; 
 
         // 👥 รายชื่อบุคลากรตั้งต้นของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const initialUsers = [
@@ -89,7 +89,7 @@
             { id: "54", prefix: "น.ส.", name: "อรทัย รอบคอบ", role: "maid", password: "1234", email: "orathai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "55", prefix: "สิบตรี", name: "กรกช ทรัพย์ขำ", role: "janitor", password: "1234", email: "kodchakorn", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "56", prefix: "น.ส.", name: "สำราญ ยกศิริ", role: "maid", password: "1234", email: "samran", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
-            { id: "57", prefix: "น.ส.", name: "สุวภัทร หมีทอง", role: "maid", password: "1234", email: "suwapat", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
+            { id: "57", prefix: "น.ส.", name: "สุวภัทร หมีทอง", role: "maid", password: "1234", email: "suwapat", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, middayOutLongCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" }
         ];
 
@@ -106,7 +106,7 @@
             { date: "2026-06-03", name: "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี" },
             { date: "2026-07-28", name: "วันเฉลิมพระชนมพรรษาพระบาทสมเด็จพระเจ้าอยู่หัว" },
             { date: "2026-08-12", name: "วันแม่แห่งชาติ" },
-            { date: "2026-10-13", name: "วันคล้ายวันสวรรคต พระบาทสมเด็จพระบรมชนกาธิเบศร มหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร" },
+            { date: "2026-10-13", name: "วันคล้ายวันสวรรคต ร.9" },
             { date: "2026-10-23", name: "วันปิยมหาราช" },
             { date: "2026-12-05", name: "วันพ่อแห่งชาติ" },
             { date: "2026-12-10", name: "วันรัฐธรรมนูญ" },
@@ -122,7 +122,6 @@
             { date: "2026-12-25", name: "กิจกรรมวันคริสต์มาสและส่งท้ายปีเก่า", session: "morning" }
         ];
 
-        // ล็อกสิทธิ์ถาวร ID 44 (admin) และ ID 25 (hr)
         function normalizeRole(rawRole, id = "") {
             const strId = String(id).trim();
             if (strId === "44") return "admin"; 
@@ -137,27 +136,25 @@
             return "teacher";
         }
 
-        // ค้นหาสัปดาห์ของวันเสาร์ในเดือน (สำหรับตารางวันหยุดแม่บ้าน)
         function getNthSaturdayOfMonth(dateObj) {
             if (dateObj.getDay() !== 6) return 0;
             const day = dateObj.getDate();
             return Math.ceil(day / 7);
         }
 
-        // เช็คว่าแม่บ้านหยุดวันเสาร์นี้หรือไม่
         function isMaidSaturdayOff(teacherId, dateObj) {
             if (dateObj.getDay() !== 6) return false;
             const nthSat = getNthSaturdayOfMonth(dateObj);
             const strId = String(teacherId);
 
-            if (nthSat === 1 && (strId === "52" || strId === "57")) return true; // สุทิน, สุวภัทร
-            if (nthSat === 2 && (strId === "53" || strId === "54")) return true; // สมใจ, อรทัย
-            if (nthSat === 3 && (strId === "56" || strId === "60")) return true; // สำราญ, สมจิต
-            if (nthSat === 4 && strId === "55") return true;                   // กรกช (ภารโรง)
+            if (nthSat === 1 && (strId === "52" || strId === "57")) return true;
+            if (nthSat === 2 && (strId === "53" || strId === "54")) return true;
+            if (nthSat === 3 && (strId === "56" || strId === "60")) return true;
+            if (nthSat === 4 && strId === "55") return true;
             return false;
         }
 
-        // STREAMING_CHUNK:Defining Thai date formatting and rule calculation logic...
+        // STREAMING_CHUNK:Defining main App component logic and Google Sheets sync...
         function App() {
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
@@ -207,7 +204,7 @@
 
             // Modals
             const [showRuleModal, setShowRuleModal] = React.useState(false);
-            const [ruleTab, setRuleTab] = React.useState("teacher"); // teacher / maid
+            const [ruleTab, setRuleTab] = React.useState("teacher");
             const [showAddTeacherModal, setShowAddTeacherModal] = React.useState(false);
             const [newTeacher, setNewTeacher] = React.useState({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "", hireDate: "" });
             const [showEditTeacherModal, setShowEditTeacherModal] = React.useState(false);
@@ -233,7 +230,7 @@
             React.useEffect(() => { localStorage.setItem("leave_activities", JSON.stringify(activities)); }, [activities]);
             React.useEffect(() => { localStorage.setItem("leave_discipline_logs", JSON.stringify(disciplineLogs)); }, [disciplineLogs]);
 
-            // Sync with Google Sheets
+            // Sync Sheets
             React.useEffect(() => {
                 if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) return;
                 
@@ -285,7 +282,6 @@
                                     try { parsedBreakdown = JSON.parse(l.breakdown); } catch (e) { parsedBreakdown = []; }
                                 }
                                 
-                                // Map Thai type back to internal identifier if needed
                                 const rawType = String(l.type || l.Type || "");
                                 const mappedType = (rawType.includes("ป่วย") || rawType === "sick") ? "sick" : "personal";
 
@@ -308,7 +304,7 @@
                             setLeaves(mappedLeaves.filter(ml => ml.id));
                         }
                     } catch (error) {
-                        console.warn("Google Sheet sync notice (using local storage mode):", error.message || error);
+                        console.warn("Google Sheet sync notice:", error.message || error);
                     }
                 };
 
@@ -511,7 +507,6 @@
             };
             const getSchoolActivity = (dateStr) => activities.find(a => a.date === dateStr);
 
-            // คำนวณวันลาละเอียดรายวันตามระเบียบโรงเรียน
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", targetUser = selectedTeacher) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr || !targetUser) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
@@ -637,7 +632,6 @@
                 setFormData({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day" });
                 showToast("ยื่นคำขอและบันทึกประวัติวันลาเรียบร้อยแล้ว");
 
-                // ส่งไปบันทึกใน Google Sheets เป็นภาษาไทยที่อ่านง่าย
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
                         method: 'POST',
@@ -805,7 +799,6 @@
                 );
             };
 
-            // STREAMING_CHUNK:Rendering full-screen login interface with responsive container...
             if (!currentUser) {
                 return (
                     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative font-['Sarabun']">
@@ -875,7 +868,7 @@
             const currentRole = normalizeRole(currentUser.role, currentUser.id);
             const isAdminOrHr = currentRole === "admin" || currentRole === "hr";
 
-            // STREAMING_CHUNK:Rendering main header navbar and user access controls...
+            // STREAMING_CHUNK:Rendering main navbar with FontAwesome icons and action header...
             return (
                 <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
                     
@@ -906,14 +899,16 @@
                                     <div className="flex bg-navy-950 p-1.5 rounded-xl border border-emerald-700/40">
                                         <button 
                                             onClick={() => setActiveTab("teacher")}
-                                            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition ${activeTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-2 ${activeTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
                                         >
+                                            <i className="fa-solid fa-user"></i>
                                             พอร์ทัลบุคลากร
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab("admin")}
-                                            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                            className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-2 ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
                                         >
+                                            <i className="fa-solid fa-user-shield"></i>
                                             บริหารจัดการทรัพยากรบุคคล (ADMIN)
                                         </button>
                                     </div>
@@ -977,7 +972,7 @@
 
                     <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
                         
-                        {/* STREAMING_CHUNK:Rendering Teacher Portal with statistics and leave request form... */}
+                        {/* STREAMING_CHUNK:Rendering Teacher View with leave quota cards and request form... */}
                         {activeTab === "teacher" && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 
@@ -1022,7 +1017,7 @@
                                                         className="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow"
                                                     >
                                                         <i className="fa-solid fa-calendar-check text-sm"></i>
-                                                        ตรวจสอบประวัติการลงเวลา
+                                                        ตรวจสอบประวัติการลงเวลา & สถิติวินัย
                                                     </button>
                                                     
                                                     <button 
@@ -1033,7 +1028,7 @@
                                                         }}
                                                         className="w-full bg-slate-800 hover:bg-slate-700 text-emerald-300 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 border border-emerald-500/40"
                                                     >
-                                                        <i className="fa-solid fa-book-bookmark text-emerald-400 text-sm"></i>
+                                                        <i className="fa-solid fa-book-open text-emerald-400 text-sm"></i>
                                                         อ่านระเบียบข้อบังคับวันลาทั้งหมด
                                                     </button>
                                                 </div>
@@ -1053,7 +1048,7 @@
                                                             <span className="text-xs sm:text-sm font-normal text-slate-400 ml-1.5">วันคงเหลือ</span>
                                                         </h4>
                                                         {(selectedTeacher.personalQuota - selectedTeacherStats.personalUsed) < 0 && (
-                                                            <p className="text-red-600 font-extrabold text-xs sm:text-sm mt-2 animate-pulse flex items-center gap-1">
+                                                            <p className="text-red-600 font-extrabold text-xs sm:text-sm mt-2 animate-pulse flex items-center gap-1.5">
                                                                 <i className="fa-solid fa-triangle-exclamation"></i>
                                                                 หักเงินเดือน (สิทธิ์เกินกำหนด)
                                                             </p>
@@ -1111,7 +1106,7 @@
                                                             <span className="text-xs sm:text-sm font-normal text-slate-400 ml-1.5">วันคงเหลือ</span>
                                                         </h4>
                                                         {(selectedTeacher.sickQuota - selectedTeacherStats.sickUsed) < 0 && (
-                                                            <p className="text-red-600 font-extrabold text-xs sm:text-sm mt-2 animate-pulse flex items-center gap-1">
+                                                            <p className="text-red-600 font-extrabold text-xs sm:text-sm mt-2 animate-pulse flex items-center gap-1.5">
                                                                 <i className="fa-solid fa-triangle-exclamation"></i>
                                                                 หักเงินเดือน (สิทธิ์เกินกำหนด)
                                                             </p>
@@ -1305,11 +1300,12 @@
                             </div>
                         )}
 
-                        {/* STREAMING_CHUNK:Rendering Admin Management panel, user directory, and discipline controls... */}
+                        {/* STREAMING_CHUNK:Rendering Admin Management panel with redesigned discipline controls... */}
                         {activeTab === "admin" && isAdminOrHr && (
                             <div className="space-y-6 text-left">
                                 
-                                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                {/* การ์ดส่วนหัวแอดมิน - ปรับขนาดและ Padding ปุ่มกดให้สมดุลกัน 100% */}
+                                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                     <div>
                                         <h2 className="text-lg sm:text-xl font-bold text-slate-800">ระบบบริหารจัดการข้อมูลบุคลากรและสถิติการปฏิบัติงาน</h2>
                                         <p className="text-xs sm:text-sm text-slate-500 mt-1">บทบาทสิทธิ์ปัจจุบันของคุณ: <strong className="text-emerald-700 uppercase">{currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด (ADMIN)' : 'เจ้าหน้าที่งานบุคคล (HR)'}</strong></p>
@@ -1317,17 +1313,17 @@
                                     <div className="flex gap-3 flex-wrap">
                                         <button
                                             onClick={() => setShowAddDisciplineModal(true)}
-                                            className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm px-4.5 py-3 rounded-xl transition duration-200 flex items-center gap-2 shadow"
+                                            className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl transition duration-200 flex items-center gap-2.5 shadow-md whitespace-nowrap"
                                         >
-                                            <i className="fa-solid fa-calendar-plus text-sm"></i>
-                                            บันทึกประวัติการลงเวลา
+                                            <i className="fa-solid fa-calendar-plus text-base"></i>
+                                            <span>บันทึกประวัติการลงเวลา</span>
                                         </button>
                                         <button
                                             onClick={() => setShowAddTeacherModal(true)}
-                                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm px-4.5 py-3 rounded-xl transition duration-200 flex items-center gap-2 shadow"
+                                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl transition duration-200 flex items-center gap-2.5 shadow-md whitespace-nowrap"
                                         >
-                                            <i className="fa-solid fa-user-plus text-sm"></i>
-                                            เพิ่มข้อมูลบุคลากรในระบบ
+                                            <i className="fa-solid fa-user-plus text-base"></i>
+                                            <span>เพิ่มข้อมูลบุคลากรในระบบ</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1414,18 +1410,19 @@
                                     </div>
                                 )}
 
+                                {/* ตารางรายชื่อบุคลากร - ปรับโฉมคอลัมน์สถิติวินัยให้เป็นปุ่มกดป๊อปอัป สะอาด สดใส ตัวอักษรใหญ่ชัดเจน */}
                                 {adminSubTab === "teachers" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full text-xs sm:text-sm text-left">
                                                 <thead>
-                                                    <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wide">
-                                                        <th className="py-3 px-3">รหัส</th>
-                                                        <th className="py-3 px-3">ชื่อ-นามสกุล / ตำแหน่ง</th>
-                                                        <th className="py-3 px-3 text-center">สถิติวินัยและการเข้างาน</th>
-                                                        <th className="py-3 px-3">โควตาลากิจ</th>
-                                                        <th className="py-3 px-3">โควตาลาป่วย</th>
-                                                        <th className="py-3 px-3 text-center">จัดการ</th>
+                                                    <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wide">
+                                                        <th className="py-3.5 px-4 text-center">รหัส ID</th>
+                                                        <th className="py-3.5 px-4">ชื่อ-นามสกุล / ตำแหน่ง</th>
+                                                        <th className="py-3.5 px-4 text-center">สถิติวินัยและการเข้างาน</th>
+                                                        <th className="py-3.5 px-4 text-center">โควตาลากิจส่วนตัว</th>
+                                                        <th className="py-3.5 px-4 text-center">โควตาลาป่วย</th>
+                                                        <th className="py-3.5 px-4 text-center">จัดการ</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
@@ -1434,74 +1431,59 @@
                                                         const pRemaining = t.personalQuota - stats.personalUsed;
                                                         const sRemaining = t.sickQuota - stats.sickUsed;
                                                         return (
-                                                            <tr key={t.id} className="hover:bg-slate-50">
-                                                                <td className="py-3.5 px-3 font-mono font-bold text-slate-500 text-sm">{t.id}</td>
-                                                                <td className="py-3.5 px-3">
+                                                            <tr key={t.id} className="hover:bg-slate-50 transition">
+                                                                <td className="py-4 px-4 font-mono font-bold text-slate-500 text-sm text-center">{t.id}</td>
+                                                                <td className="py-4 px-4">
                                                                     <div className="flex items-center gap-3">
-                                                                        {renderAvatar(t, "w-9 h-9 text-xs")}
+                                                                        {renderAvatar(t, "w-10 h-10 text-xs")}
                                                                         <div>
-                                                                            <p className="font-bold text-slate-800 text-sm sm:text-base">{t.prefix}{t.name}</p>
-                                                                            <p className="text-xs text-slate-400">
-                                                                                {t.role === 'admin' ? 'ผู้ดูแลระบบ' : t.role === 'hr' ? 'งานบุคคล' : t.role === 'teacher' ? 'ครู' : t.role === 'maid' ? 'แม่บ้าน' : 'พ่อบ้าน'}
+                                                                            <p className="font-bold text-slate-900 text-sm sm:text-base">{t.prefix}{t.name}</p>
+                                                                            <p className="text-xs text-slate-400 font-medium">
+                                                                                {t.role === 'admin' ? 'ผู้ดูแลระบบ' : t.role === 'hr' ? 'งานบุคคล' : t.role === 'teacher' ? 'ครูผู้สอน' : t.role === 'maid' ? 'แม่บ้าน' : 'พ่อบ้าน'}
                                                                             </p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-3.5 px-3">
-                                                                    <div className="space-y-1.5 min-w-[240px]">
-                                                                        <div className="flex items-center justify-between text-xs bg-slate-50 px-2.5 py-1.5 rounded-lg border">
-                                                                            <span>1. มาสาย:</span>
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "lateCount", -1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">-</button>
-                                                                                <span className={`font-mono font-bold px-1.5 ${stats.lateCount >= 9 ? 'text-red-600 font-extrabold' : ''}`}>{stats.lateCount}</span>
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "lateCount", 1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">+</button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center justify-between text-xs bg-slate-50 px-2.5 py-1.5 rounded-lg border">
-                                                                            <span>2. ลืมบันทึกเวลาเข้า-ออก:</span>
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "forgotTimeCount", -1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">-</button>
-                                                                                <span className={`font-mono font-bold px-1.5 ${stats.forgotTimeCount >= 9 ? 'text-red-600 font-extrabold' : ''}`}>{stats.forgotTimeCount}</span>
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "forgotTimeCount", 1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">+</button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center justify-between text-xs bg-slate-50 px-2.5 py-1.5 rounded-lg border">
-                                                                            <span>3. นอกสถานที่ (&gt; 1.30 ชม.):</span>
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "middayOutLongCount", -1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">-</button>
-                                                                                <span className="font-mono font-bold px-1.5">{stats.middayOutLongCount}</span>
-                                                                                <button onClick={() => handleUpdateDisciplineCount(t.id, "middayOutLongCount", 1)} className="w-6 h-6 bg-white border rounded flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">+</button>
-                                                                            </div>
+
+                                                                {/* ช่องสถิติวินัยแบบใหม่: ตัวอักษรใหญ่ และมีปุ่มกดเปิดป๊อปอัปปรับแต่งย้อนหลังโดยเฉพาะ */}
+                                                                <td className="py-4 px-4 text-center">
+                                                                    <div className="flex flex-col items-center justify-center gap-1.5">
+                                                                        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                                                                            <span>สาย: <strong className={stats.lateCount >= 9 ? "text-red-600 font-extrabold" : "text-emerald-700"}>{stats.lateCount}</strong></span>
+                                                                            <span className="text-slate-300">|</span>
+                                                                            <span>ลืมสแกน: <strong className={stats.forgotTimeCount >= 9 ? "text-red-600 font-extrabold" : "text-emerald-700"}>{stats.forgotTimeCount}</strong></span>
                                                                         </div>
                                                                         <button 
                                                                             onClick={() => {
                                                                                 setViewDisciplineTeacher(t);
                                                                                 setShowViewDisciplineModal(true);
                                                                             }}
-                                                                            className="w-full text-center text-xs text-emerald-700 font-bold hover:underline pt-1"
+                                                                            className="bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition duration-200 flex items-center gap-1.5 shadow-sm"
                                                                         >
-                                                                            <i className="fa-solid fa-list-check mr-1"></i>ดูประวัติวันที่ย้อนหลัง
+                                                                            <i className="fa-solid fa-list-check text-xs"></i>
+                                                                            <span>ลงบันทึก & ปรับสถิติ</span>
                                                                         </button>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-3.5 px-3">
-                                                                    <span className={`font-bold px-2.5 py-1 rounded-full text-xs ${pRemaining < 0 ? 'bg-red-100 text-red-800' : pRemaining < 3 ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-800'}`}>
+
+                                                                <td className="py-4 px-4 text-center">
+                                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm ${pRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : pRemaining < 3 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
                                                                         เหลือ {pRemaining.toFixed(1)} / {t.personalQuota} วัน
                                                                     </span>
                                                                 </td>
-                                                                <td className="py-3.5 px-3">
-                                                                    <span className={`font-bold px-2.5 py-1 rounded-full text-xs ${sRemaining < 0 ? 'bg-red-100 text-red-800' : sRemaining < 5 ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-800'}`}>
+                                                                <td className="py-4 px-4 text-center">
+                                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm ${sRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : sRemaining < 5 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
                                                                         เหลือ {sRemaining.toFixed(1)} / {t.sickQuota} วัน
                                                                     </span>
                                                                 </td>
-                                                                <td className="py-3.5 px-3 text-center">
-                                                                    <div className="flex justify-center gap-1.5">
+                                                                <td className="py-4 px-4 text-center">
+                                                                    <div className="flex justify-center gap-2">
                                                                         <button 
                                                                             onClick={() => { setEditingTeacher({ ...t }); setShowEditTeacherModal(true); }}
-                                                                            className="text-sky-700 hover:text-sky-900 p-2 bg-sky-50 rounded-lg font-bold"
-                                                                            title="แก้ไขข้อมูล"
+                                                                            className="text-sky-700 hover:text-sky-900 p-2 bg-sky-50 rounded-xl font-bold border border-sky-200"
+                                                                            title="แก้ไขข้อมูลบุคลากร"
                                                                         >
-                                                                            <i className="fa-solid fa-pen-to-square"></i>
+                                                                            <i className="fa-solid fa-pen-to-square text-sm"></i>
                                                                         </button>
                                                                     </div>
                                                                 </td>
@@ -1600,7 +1582,7 @@
                                     </div>
                                 )}
 
-                                {/* หน้าจัดการสิทธิ์ความปลอดภัยและบทบาทบุคลากร */}
+                                {/* หน้าจัดการสิทธิ์ความปลอดภัย - ปรับช่องค้นหาใช้ FontAwesome แว่นขยายสวยงาม */}
                                 {adminSubTab === "roles" && currentRole === "admin" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0 text-xs sm:text-sm">
                                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4 border-slate-100">
@@ -1608,13 +1590,18 @@
                                                 <h3 className="font-bold text-slate-800 text-base">จัดการสิทธิ์ความปลอดภัยและข้อมูลการเข้าสู่ระบบ</h3>
                                                 <p className="text-xs text-slate-400 mt-0.5">กำหนดบทบาท แก้ไขรหัสผ่าน และอีเมลผู้ใช้งาน เพื่อบันทึกตรงเข้าฐานข้อมูล</p>
                                             </div>
-                                            <input 
-                                                type="text" 
-                                                placeholder="🔍 ค้นหาชื่อ/รหัส..."
-                                                value={roleSearch}
-                                                onChange={(e) => setRoleSearch(e.target.value)}
-                                                className="bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-700 text-xs sm:text-sm"
-                                            />
+
+                                            {/* ช่องค้นหา - ใช้ FontAwesome แทนอิโมจิ */}
+                                            <div className="relative w-full sm:w-72">
+                                                <i className="fa-solid fa-magnifying-glass text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-sm"></i>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="ค้นหาชื่อ หรือ รหัสประจำตัว..."
+                                                    value={roleSearch}
+                                                    onChange={(e) => setRoleSearch(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-700 text-xs sm:text-sm text-slate-800"
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="overflow-x-auto">
@@ -1677,7 +1664,7 @@
                         )}
                     </main>
 
-                    {/* STREAMING_CHUNK:Rendering full official leave regulations modal... */}
+                    {/* STREAMING_CHUNK:Rendering full rule overview modal with icons... */}
                     {/* Modal แสดงระเบียบข้อบังคับวันลาเต็มรูปแบบ */}
                     {showRuleModal && (
                         <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1695,15 +1682,17 @@
                                 <div className="flex border-b border-slate-200 mb-5 gap-3">
                                     <button 
                                         onClick={() => setRuleTab("teacher")}
-                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl ${ruleTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                     >
-                                        👨‍🏫 กฎระเบียบครูผู้สอน
+                                        <i className="fa-solid fa-chalkboard-user"></i>
+                                        <span>กฎระเบียบครูผู้สอน</span>
                                     </button>
                                     <button 
                                         onClick={() => setRuleTab("maid")}
-                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl ${ruleTab === 'maid' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'maid' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                     >
-                                        🧹 กฎระเบียบพ่อบ้าน-แม่บ้าน
+                                        <i className="fa-solid fa-broom"></i>
+                                        <span>กฎระเบียบพ่อบ้าน-แม่บ้าน</span>
                                     </button>
                                 </div>
 
@@ -1711,7 +1700,10 @@
                                     {ruleTab === "teacher" ? (
                                         <div className="space-y-3.5">
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5">📅 วันหยุดปกติและการลาติดวันหยุด:</h4>
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-regular fa-calendar-check text-emerald-700"></i>
+                                                    วันหยุดปกติและการลาติดวันหยุด:
+                                                </h4>
                                                 <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินราชการ <strong>ไม่คิดหักวันลา</strong></p>
                                                 <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
                                                 <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
@@ -1721,7 +1713,10 @@
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5">🤝 วันประชุมพบกันฉันท์พี่น้อง & กิจกรรมพิเศษ:</h4>
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-solid fa-handshake text-emerald-700"></i>
+                                                    วันประชุมพบกันฉันท์พี่น้อง & กิจกรรมพิเศษ:
+                                                </h4>
                                                 <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุม $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
                                                 <p>• ลาเต็มวัน ตรงกับวันประชุม $\rightarrow$ <strong>หัก 2 วัน</strong> / ไม่เข้าประชุม $\rightarrow$ <strong>หักลากิจ 1 วัน</strong></p>
                                                 <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน $\rightarrow$ <strong>หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
@@ -1729,7 +1724,10 @@
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5">⏰ วินัยการเข้างาน & ค่าปฏิบัติงานเวร:</h4>
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-solid fa-stopwatch text-emerald-700"></i>
+                                                    วินัยการเข้างาน & ค่าปฏิบัติงานเวร:
+                                                </h4>
                                                 <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง $\rightarrow$ <strong>หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
                                                 <p>• ออกนอกสถานที่: 1.01-1.30 ชม. $\rightarrow$ <strong>นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. $\rightarrow$ <strong>หักลากิจ 0.5 วัน</strong></p>
                                                 <p>• ค่าเวร: ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
@@ -1739,7 +1737,10 @@
                                     ) : (
                                         <div className="space-y-3.5">
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5">📅 วันหยุดประจำสัปดาห์แม่บ้าน:</h4>
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-regular fa-calendar-days text-emerald-700"></i>
+                                                    วันหยุดประจำสัปดาห์แม่บ้าน:
+                                                </h4>
                                                 <p>• แม่บ้านทุกท่านได้สิทธิ์หยุดทุกวันอาทิตย์ และมีวันเสาร์หยุดประจำหมุนเวียนดังนี้:</p>
                                                 <p className="pl-3">• <strong>เสาร์ที่ 1 ของเดือน:</strong> คุณสุทิน (52), คุณสุวภัทร (57)</p>
                                                 <p className="pl-3">• <strong>เสาร์ที่ 2 ของเดือน:</strong> คุณสมใจ (53), คุณอรทัย (54)</p>
@@ -1748,7 +1749,10 @@
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5">📌 กฎการหักวันลาพ่อบ้าน-แม่บ้าน:</h4>
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-solid fa-scale-balanced text-emerald-700"></i>
+                                                    กฎการหักวันลาพ่อบ้าน-แม่บ้าน:
+                                                </h4>
                                                 <p>• ลา 0.5 วันบ่าย/เช้า ติดวันอาทิตย์ $\rightarrow$ <strong>หัก 1.5 วัน</strong></p>
                                                 <p>• ลาเต็มวันติดวันอาทิตย์ $\rightarrow$ <strong>หัก 2 วัน</strong> (ติดวันอาทิตย์ + วันหยุดปฏิทิน หัก 3 วัน)</p>
                                                 <p>• สายครบ 3 ครั้ง หรือ ลืมสแกนนิ้วครบ 3 ครั้ง $\rightarrow$ <strong>หักลากิจ 1 วัน</strong></p>
@@ -1769,13 +1773,16 @@
                         </div>
                     )}
 
-                    {/* STREAMING_CHUNK:Rendering operational modals for adding personnel, logs, and calendar items... */}
-                    {/* Modal บันทึกประวัติการลงเวลา */}
+                    {/* STREAMING_CHUNK:Rendering View & Adjust Discipline Modal with clear counters... */}
+                    {/* Modal บันทึกประวัติการลงเวลาแบบใหม่ - ใหญ่ คมชัด สะอาดตา ปรับเพิ่มลดสถิติได้ทันที */}
                     {showAddDisciplineModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
                                 <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800">บันทึกประวัติการลงเวลาและสถิติวินัย</h3>
+                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-calendar-plus text-emerald-700"></i>
+                                        บันทึกประวัติการลงเวลาและสถิติวินัย
+                                    </h3>
                                     <button onClick={() => setShowAddDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
@@ -1801,7 +1808,7 @@
                                             type="date" 
                                             value={disciplineForm.date}
                                             onChange={(e) => setDisciplineForm({ ...disciplineForm, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
                                             required
                                         />
                                     </div>
@@ -1814,7 +1821,7 @@
                                         >
                                             <option value="late">เข้าปฏิบัติงานสาย</option>
                                             <option value="forgotTime">ลืมบันทึกเวลาเข้า-ออกงาน</option>
-                                            <option value="middayShort">ออกนอกสถานที่ 1.01-1.30 ชม. (นับว่ามาสาย 1 ครั้ง)</option>
+                                            <option value="middayShort">ออกนอกสถานที่ 1.01 - 1.30 ชม. (นับว่ามาสาย 1 ครั้ง)</option>
                                             <option value="middayLong">ออกนอกสถานที่ &gt; 1.30 ชม. (หักลากิจ 0.5 วัน)</option>
                                             <option value="missedMeeting">ขาดประชุมพบกันฉันท์พี่น้อง (หักลากิจ 1 วัน)</option>
                                         </select>
@@ -1823,10 +1830,10 @@
                                         <label className="block text-slate-700 font-bold mb-1.5">หมายเหตุเพิ่มเติม</label>
                                         <input 
                                             type="text" 
-                                            placeholder="ระบุสาเหตุหรือหมายเหตุ..."
+                                            placeholder="ระบุสาเหตุหรือหมายเหตุประกอบ..."
                                             value={disciplineForm.note}
                                             onChange={(e) => setDisciplineForm({ ...disciplineForm, note: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-medium"
                                         />
                                     </div>
                                     <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3.5 rounded-xl shadow mt-2">
@@ -1837,46 +1844,114 @@
                         </div>
                     )}
 
-                    {/* Modal ดูประวัติการลงเวลา */}
+                    {/* Modal ดูประวัติการลงเวลา & ปรับสถิติสะสม (ย้ายช่องสถิติมาไว้ข้างในอย่างสวยงาม) */}
                     {showViewDisciplineModal && viewDisciplineTeacher && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-xl border text-left">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl border text-left flex flex-col max-h-[90vh]">
                                 <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800">
-                                        ประวัติการลงเวลาและสถิติวินัย - {viewDisciplineTeacher.prefix}{viewDisciplineTeacher.name}
-                                    </h3>
+                                    <div className="flex items-center gap-3">
+                                        {renderAvatar(viewDisciplineTeacher, "w-12 h-12 text-sm")}
+                                        <div>
+                                            <h3 className="text-base sm:text-lg font-bold text-slate-800">
+                                                ประวัติการลงเวลา & สถิติวินัยสะสม
+                                            </h3>
+                                            <p className="text-xs text-slate-500 font-bold">
+                                                {viewDisciplineTeacher.prefix}{viewDisciplineTeacher.name} (รหัส: {viewDisciplineTeacher.id})
+                                            </p>
+                                        </div>
+                                    </div>
                                     <button onClick={() => setShowViewDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
                                 </div>
 
-                                <div className="space-y-3 max-h-80 overflow-y-auto text-xs sm:text-sm pr-2">
-                                    {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).length === 0 ? (
-                                        <div className="text-center py-8 text-slate-400">
-                                            <p className="font-semibold">ไม่มีรายการบันทึกข้อบกพร่องตามวันที่</p>
-                                        </div>
-                                    ) : (
-                                        disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).map((log) => (
-                                            <div key={log.id} className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-                                                <div>
-                                                    <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs">
-                                                        {log.typeName}
-                                                    </span>
-                                                    <p className="font-bold text-slate-800 text-sm mt-1">{formatThaiDate(log.date)}</p>
-                                                    <p className="text-xs text-slate-500">{log.note}</p>
+                                <div className="overflow-y-auto flex-1 space-y-6 pr-2">
+                                    {/* แผงปรับสถิติตัวเลข + / - ขนาดใหญ่ ชัดเจน อ่านง่าย */}
+                                    {isAdminOrHr && (
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                                            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b pb-2">
+                                                <i className="fa-solid fa-sliders text-emerald-700"></i>
+                                                ปรับปรุงสถิติตัวเลขสะสมรายบุคคล
+                                            </h4>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">1. เข้างานสาย:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.lateCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
+                                                    </div>
                                                 </div>
-                                                <button 
-                                                    onClick={() => {
-                                                        setDisciplineLogs(disciplineLogs.filter(item => item.id !== log.id));
-                                                        showToast("ลบรายการเรียบร้อยแล้ว");
-                                                    }}
-                                                    className="text-slate-400 hover:text-red-500 p-1.5"
-                                                >
-                                                    <i className="fa-solid fa-trash-can text-sm"></i>
-                                                </button>
+
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">2. ลืมสแกนเวลา:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.forgotTimeCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">3. นอกสถานที่ (&gt; 1.30 ชม.):</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.middayOutLongCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">4. ขาดประชุมพบกัน:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.missedMeetingCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        ))
+                                        </div>
                                     )}
+
+                                    {/* รายการบันทึกประวัติตามวันที่ย้อนหลัง */}
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+                                            <i className="fa-solid fa-clock-rotate-left text-emerald-700"></i>
+                                            รายการบันทึกข้อบกพร่องตามวันที่
+                                        </h4>
+
+                                        {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).length === 0 ? (
+                                            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-200 text-slate-400">
+                                                <p className="font-semibold text-xs sm:text-sm">ไม่มีรายการบันทึกข้อบกพร่องตามวันที่ย้อนหลัง</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).map((log) => (
+                                                    <div key={log.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center text-xs sm:text-sm">
+                                                        <div>
+                                                            <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs">
+                                                                {log.typeName}
+                                                            </span>
+                                                            <p className="font-bold text-slate-800 mt-2">{formatThaiDate(log.date)}</p>
+                                                            <p className="text-xs text-slate-500 mt-0.5">{log.note}</p>
+                                                        </div>
+                                                        {isAdminOrHr && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setDisciplineLogs(disciplineLogs.filter(item => item.id !== log.id));
+                                                                    showToast("ลบรายการเรียบร้อยแล้ว");
+                                                                }}
+                                                                className="text-slate-400 hover:text-red-500 p-2 rounded-lg"
+                                                            >
+                                                                <i className="fa-solid fa-trash-can text-base"></i>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <button 
