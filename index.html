@@ -924,10 +924,25 @@
             if (!canEdit && banner) {
                 banner.className = "bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg text-sm text-rose-900 leading-relaxed shadow-sm mb-4";
                 banner.innerHTML = "<strong>ข้อจำกัดสิทธิ์การเข้าถึง:</strong> เฉพาะผู้ดูแลระบบ (Admin) ผู้บริหาร และหัวหน้าฝ่ายเท่านั้นที่มีสิทธิ์บันทึกหรือแก้ไขคะแนนย้อนหลัง บัญชีของคุณสามารถเข้าดูข้อมูลสถิติได้ในรูปแบบอ่านอย่างเดียว";
+            } else if (canEdit && banner) {
+                banner.className = "bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-r-lg text-sm text-emerald-900 leading-relaxed shadow-sm mb-4";
+                banner.innerHTML = `<strong>✅ ท่านกำลังใช้งานด้วยสิทธิ์บริหาร/จัดการระบบ (${currentUser.name}):</strong> ท่านสามารถลงคะแนนย้อนหลัง เพิ่มปีการศึกษา (2563, 2564, 2565, 2566, 2567, 2568 ฯลฯ) และบันทึกสถิติย้อนหลังของทุกโครงการได้เต็มรูปแบบ`;
             }
 
             if (activities.length === 0) {
-                container.innerHTML = `<div class="py-12 text-center text-sm text-slate-400">ยังไม่มีรายการโครงการในระบบสารสนเทศ (สามารถลงทะเบียนโครงการใหม่ได้ที่เมนู "สร้างและจัดการแบบประเมิน")</div>`;
+                container.innerHTML = `
+                    <div class="py-12 text-center space-y-4">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <p class="text-sm text-slate-600 font-bold">ขณะนี้ยังไม่มีรายการโครงการ/กิจกรรมในฐานข้อมูลระบบ</p>
+                        <p class="text-xs text-slate-400">กรุณาลงทะเบียนสร้างโครงการใหม่ก่อน เพื่อเปิดให้แอดมินและหัวหน้าฝ่ายลงคะแนนย้อนหลังรายปี</p>
+                        <button onclick="switchTab('admin-tab')" class="inline-flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition-all active:scale-95 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            <span>คลิกที่นี่เพื่อเริ่มสร้างโครงการ / กิจกรรมใหม่</span>
+                        </button>
+                    </div>
+                `;
                 return;
             }
 
