@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบบริหารจัดการวันลาและสถิติการปฏิบัติงานบุคลากร</title>
+    <title>Yuwapat Early Childhood School - ระบบบันทึกวันลาครู</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -70,19 +70,53 @@
 
     <div id="root"></div>
 
+    /* STREAMING_CHUNK:Populating official school holidays, special activities, and staff constants... */
     <script type="text/babel">
-        
         // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
-        // 👥 รายชื่อบุคลากรตั้งต้นของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
+        // 👥 รายชื่อบุคลากรจริงทั้ง ๔๘ ท่านของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const initialUsers = [
             { id: "44", prefix: "น.ส.", name: "พิมลาภัสร์ ราตรี", role: "admin", password: "1234", email: "toei@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2023-05-16" },
-            { id: "25", prefix: "นาง", name: "งามจิต เผ่าพงษ์", role: "hr", password: "1234", email: "hr@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2020-05-16" },
-            { id: "1", prefix: "นาย", name: "สมชาย รักเรียน", role: "teacher", password: "1234", email: "somchai.r@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
-            { id: "2", prefix: "นาง", name: "สมศรี มีปัญญา", role: "teacher", password: "1234", email: "somsri.m@yuwapat.ac.th", sickQuota: 25, personalQuota: 12, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2022-05-16" },
-            
-            // เจ้าหน้าที่พ่อบ้าน-แม่บ้าน
+            { id: "25", prefix: "น.ส.", name: "งามจิต ธชีโชติกุล", role: "hr", password: "1234", email: "hr@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2020-05-16" },
+            { id: "1", prefix: "นาง", name: "อุษณีย์ กัลยาณวัตร", role: "teacher", password: "1234", email: "utsanee.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "2", prefix: "น.ส.", name: "นิภาพร โพธิ์ปาน", role: "teacher", password: "1234", email: "nipaporn.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "3", prefix: "น.ส.", name: "บงกช จันทนะเปลิน", role: "teacher", password: "1234", email: "bongkot.c@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "4", prefix: "นาง", name: "พลอยไพลิน พูลธัญกิจ", role: "teacher", password: "1234", email: "ploypailin.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "5", prefix: "น.ส.", name: "ณัฐนันท์ ไวกสิกรรม", role: "teacher", password: "1234", email: "nattanan.w@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "6", prefix: "น.ส.", name: "พรอุษา วงษ์สมัคร", role: "teacher", password: "1234", email: "porntusa.w@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "7", prefix: "น.ส.", name: "ศุภมาศ อิ่มน้อย", role: "teacher", password: "1234", email: "supamas.i@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "8", prefix: "น.ส.", name: "ปวีณา แก้วแถม", role: "teacher", password: "1234", email: "paweena.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "9", prefix: "น.ส.", name: "ปรียาภัทร ธรรมนิทัศนา", role: "teacher", password: "1234", email: "preeyaphat.t@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "10", prefix: "น.ส.", name: "วรรณิศา กล่อมเกลา", role: "teacher", password: "1234", email: "wannisa.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "11", prefix: "น.ส.", name: "วณิชยา จำปาศักดิ์", role: "teacher", password: "1234", email: "wanichaya.c@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "12", prefix: "น.ส.", name: "มาลิษา ศรีวิเชียร", role: "teacher", password: "1234", email: "malisa.s@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "14", prefix: "น.ส.", name: "วิมลรัตน์ พวงจันทร์", role: "teacher", password: "1234", email: "wimonrat.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "15", prefix: "น.ส.", name: "อรพิศ บิลโภชน์", role: "teacher", password: "1234", email: "oraphit.b@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "16", prefix: "นาย", name: "จุฑาธิปกรณ์ อ่อนสุริยา", role: "teacher", password: "1234", email: "juthatipkorn.o@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "17", prefix: "นาย", name: "ตระกนต์ธีร์ ธูปบูชา", role: "teacher", password: "1234", email: "trakonthee.t@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "18", prefix: "น.ส.", name: "กรรณิการ์ สนิทผล", role: "teacher", password: "1234", email: "kannika.s@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "19", prefix: "น.ส.", name: "ธนาภร ทองคำพูล", role: "teacher", password: "1234", email: "thanaporn.t@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "20", prefix: "น.ส.", name: "พรพรรษา เสืออุดม", role: "teacher", password: "1234", email: "pornpansa.s@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "21", prefix: "น.ส.", name: "วรรฐิรักษ์ โพธิ์สุวรรณ์", role: "teacher", password: "1234", email: "wanthirak.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "22", prefix: "น.ส.", name: "ดาราณี คล้ายคลึง", role: "teacher", password: "1234", email: "daranee.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "23", prefix: "น.ส.", name: "นภัสสร คำเหม็ง", role: "teacher", password: "1234", email: "napassorn.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "24", prefix: "น.ส.", name: "เกตุสุดา โฉมศรี", role: "teacher", password: "1234", email: "ketsuda.c@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "26", prefix: "น.ส.", name: "กัลพันธ์ พิลึก", role: "teacher", password: "1234", email: "kanphan.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "27", prefix: "น.ส.", name: "วราภรณ์ ทั่งศิริ", role: "teacher", password: "1234", email: "waraporn.t@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "29", prefix: "น.ส.", name: "มิ่งขวัญ แย้มวัด", role: "teacher", password: "1234", email: "mingkhwan.y@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "30", prefix: "น.ส.", name: "ศิริรัตน์ คชสิทธิ์", role: "teacher", password: "1234", email: "sirirat.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "31", prefix: "น.ส.", name: "อลิณดา ศิริธนวัฒนกุล", role: "teacher", password: "1234", email: "alinda.s@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "33", prefix: "น.ส.", name: "วิภาดา บุญรักษา", role: "teacher", password: "1234", email: "wiphada.b@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "34", prefix: "น.ส.", name: "ศศิวรรณ ปั้นบรรจง", role: "teacher", password: "1234", email: "sasiwan.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "36", prefix: "น.ส.", name: "สุธิดา วุฒิ", role: "teacher", password: "1234", email: "suthida.w@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "38", prefix: "น.ส.", name: "ศิวพร แก้วพูลศรี", role: "teacher", password: "1234", email: "siwaporn.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "39", prefix: "น.ส.", name: "กัญยานี เลากสิกรรม", role: "teacher", password: "1234", email: "kanyanee.l@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "40", prefix: "น.ส.", name: "อัญชลี ยอดนิล", role: "teacher", password: "1234", email: "anchalee.y@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "41", prefix: "น.ส.", name: "เดือนเพ็ญ พวงศรี", role: "teacher", password: "1234", email: "duenphen.p@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "43", prefix: "น.ส.", name: "กชพร มิ่งโสภา", role: "teacher", password: "1234", email: "kotchaporn.m@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "45", prefix: "น.ส.", name: "พัณณิตา เกลี้ยงล่ำ", role: "teacher", password: "1234", email: "pannita.k@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
+            { id: "47", prefix: "น.ส.", name: "อัญชลีพร เฮียะหลง", role: "teacher", password: "1234", email: "anchaleeporn.h@yuwapat.ac.th", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2021-05-16" },
             { id: "51", prefix: "นาง", name: "สมส่วน เนตรขำ", role: "maid", password: "1234", email: "somsuan", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "52", prefix: "น.ส.", name: "สุทิน ศรีสุข", role: "maid", password: "1234", email: "suthin", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
             { id: "53", prefix: "นาง", name: "สมใจ ทับทอง", role: "maid", password: "1234", email: "somjai", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" },
@@ -93,46 +127,98 @@
             { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0, photo: "", hireDate: "2019-05-16" }
         ];
 
-        // วันหยุดปฏิทินราชการประจำปี 2569
+        // 📅 วันหยุดตามปฏิทินของโรงเรียน (1 พ.ค. 2569 - 30 เม.ย. 2570)
         const initialHolidays = [
-            { date: "2026-01-01", name: "วันขึ้นปีใหม่" },
-            { date: "2026-03-02", name: "วันมาฆบูชา" },
-            { date: "2026-04-06", name: "วันจักรี" },
-            { date: "2026-04-13", name: "วันสงกรานต์" },
-            { date: "2026-04-14", name: "วันสงกรานต์" },
-            { date: "2026-04-15", name: "วันสงกรานต์" },
-            { date: "2026-05-01", name: "วันแรงงานแห่งชาติ" },
-            { date: "2026-05-04", name: "วันฉัตรมงคล" },
-            { date: "2026-06-03", name: "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี" },
-            { date: "2026-07-28", name: "วันเฉลิมพระชนมพรรษาพระบาทสมเด็จพระเจ้าอยู่หัว" },
-            { date: "2026-08-12", name: "วันแม่แห่งชาติ" },
-            { date: "2026-10-13", name: "วันคล้ายวันสวรรคต ร.9" },
-            { date: "2026-10-23", name: "วันปิยมหาราช" },
-            { date: "2026-12-05", name: "วันพ่อแห่งชาติ" },
-            { date: "2026-12-10", name: "วันรัฐธรรมนูญ" },
-            { date: "2026-12-31", name: "วันสิ้นปี" }
+            { date: "2026-05-04", name: "วันฉัตรมงคล", session: "all_day" },
+            { date: "2026-05-11", name: "วันพืชมงคล", session: "all_day" },
+            { date: "2026-06-01", name: "หยุดชดเชยวันวิสาขบูชา", session: "all_day" },
+            { date: "2026-06-03", name: "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดาฯ พระบรมราชินี", session: "all_day" },
+            { date: "2026-06-18", name: "วันไหว้ครู (ครึ่งวันเช้า)", session: "morning" },
+            { date: "2026-07-28", name: "วันเฉลิมพระชนมพรรษาพระบาทสมเด็จพระวชิรเกล้าเจ้าอยู่หัว", session: "all_day" },
+            { date: "2026-07-29", name: "วันอาสาฬหบูชา", session: "all_day" },
+            { date: "2026-07-30", name: "วันเข้าพรรษา", session: "all_day" },
+            { date: "2026-08-12", name: "วันแม่แห่งชาติ", session: "all_day" },
+            { date: "2026-10-13", name: "วันคล้ายวันสวรรคต ร.9", session: "all_day" },
+            { date: "2026-10-23", name: "วันปิยมหาราช", session: "all_day" },
+            { date: "2026-12-07", name: "หยุดชดเชยวันพ่อแห่งชาติ", session: "all_day" },
+            { date: "2026-12-10", name: "วันรัฐธรรมนูญ", session: "all_day" },
+            { date: "2026-12-24", name: "วันคริสต์มาส", session: "all_day" },
+            { date: "2026-12-25", name: "วันคริสต์มาส", session: "all_day" },
+            { date: "2026-12-31", name: "วันสิ้นปี", session: "all_day" },
+            { date: "2027-01-01", name: "วันขึ้นปีใหม่", session: "all_day" },
+            { date: "2027-02-08", name: "วันตรุษจีน แห่กลางคืน (ปิดเรียนครึ่งวันบ่าย)", session: "afternoon" },
+            { date: "2027-02-09", name: "วันตรุษจีน แห่กลางวัน", session: "all_day" },
+            { date: "2027-02-22", name: "วันหยุดชดเชยวันมาฆบูชา", session: "all_day" },
+            { date: "2027-04-06", name: "วันจักรี", session: "all_day" },
+            { date: "2027-04-13", name: "วันสงกรานต์", session: "all_day" },
+            { date: "2027-04-14", name: "วันสงกรานต์", session: "all_day" },
+            { date: "2027-04-15", name: "วันสงกรานต์", session: "all_day" }
         ];
 
-        // กิจกรรมพิเศษของโรงเรียน
+        // 🌟 กิจกรรมพิเศษของโรงเรียน (ตลอดวัน / ครึ่งวันเช้า / ครึ่งวันบ่าย)
         const initialActivities = [
-            { date: "2026-06-18", name: "พิธีไหว้ครูประจำปีการศึกษา", session: "morning" }, 
-            { date: "2026-07-10", name: "ประชุมพบกันฉันท์พี่น้อง", session: "morning" }, 
-            { date: "2026-08-21", name: "กิจกรรมสัปดาห์วันวิทยาศาสตร์", session: "afternoon" }, 
-            { date: "2026-11-27", name: "กิจกรรมวันลอยกระทงและสืบสานประเพณีไทย", session: "afternoon" },
-            { date: "2026-12-25", name: "กิจกรรมวันคริสต์มาสและส่งท้ายปีเก่า", session: "morning" }
+            { date: "2026-05-01", name: "กิจกรรมปฐมนิเทศนักเรียนใหม่ ระดับ Sunny", session: "all_day" },
+            { date: "2026-05-18", name: "กิจกรรม Free Day Fun Play ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-07-03", name: "กิจกรรมการประชุมคณะกรรมการบริหารโรงเรียน ครั้งที่ 1", session: "morning" },
+            { date: "2026-07-13", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-14", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-15", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-16", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-17", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-20", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 1", session: "all_day" },
+            { date: "2026-07-23", name: "กิจกรรมวันเข้าพรรษา", session: "morning" },
+            { date: "2026-08-11", name: "กิจกรรมวันแม่", session: "morning" },
+            { date: "2026-08-25", name: "กิจกรรมทัศนศึกษา ระดับ Sunny ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-08-26", name: "กิจกรรมทัศนศึกษา ระดับ Sunny ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-08-27", name: "กิจกรรมทัศนศึกษา ระดับ Sunshine ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-08-28", name: "กิจกรรมทัศนศึกษา ระดับ Sunshine ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-09-07", name: "กิจกรรม Yuwapat I.Q. Kids (First Round)", session: "all_day" },
+            { date: "2026-09-08", name: "กิจกรรม Yuwapat I.Q. Kids (First Round)", session: "all_day" },
+            { date: "2026-09-09", name: "กิจกรรม Yuwapat I.Q. Kids (First Round)", session: "all_day" },
+            { date: "2026-09-18", name: "กิจกรรมทัศนศึกษา ระดับ Sunbeam ภาคเรียนที่ 1", session: "morning" },
+            { date: "2026-09-25", name: "กิจกรรมกีฬาสี", session: "morning" },
+            { date: "2026-10-01", name: "กิจกรรมคัดเลือกนักเรียน ระดับ Sunny", session: "afternoon" },
+            { date: "2026-10-08", name: "กิจกรรมปฐมนิเทศนักเรียนใหม่ ระดับ Sunrise", session: "morning" },
+            { date: "2026-11-02", name: "กิจกรรม Free Day Fun Play ภาคเรียนที่ 2", session: "morning" },
+            { date: "2026-11-23", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-11-24", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-11-25", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-11-26", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-11-27", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-11-30", name: "กิจกรรมจิบน้ำชาสานสัมพันธ์ ภาคเรียนที่ 2", session: "all_day" },
+            { date: "2026-12-04", name: "กิจกรรมวันพ่อ", session: "morning" },
+            { date: "2026-12-30", name: "กิจกรรมปีใหม่เด็ก", session: "all_day" },
+            { date: "2027-01-13", name: "กิจกรรมทัศนศึกษา ภาคเรียนที่ 2", session: "morning" },
+            { date: "2027-01-14", name: "กิจกรรมทัศนศึกษา ภาคเรียนที่ 2", session: "morning" },
+            { date: "2027-01-15", name: "กิจกรรมทัศนศึกษา ภาคเรียนที่ 2", session: "morning" },
+            { date: "2027-01-26", name: "กิจกรรม Yes Market", session: "afternoon" },
+            { date: "2027-01-29", name: "กิจกรรมวันยุวพัฒน์ และกิจกรรม Yuwapat I.Q. Kids (Final Round)", session: "all_day" },
+            { date: "2027-02-26", name: "กิจกรรมวันแห่งความภูมิใจ และ Sunbeam Camp", session: "all_day" },
+            { date: "2027-03-09", name: "กิจกรรมการประชุมคณะกรรมการบริหารโรงเรียน ครั้งที่ 2", session: "morning" },
+            { date: "2027-03-10", name: "กิจกรรมคัดเลือกนักเรียน ระดับ Sunrise", session: "morning" },
+            { date: "2027-04-30", name: "กิจกรรมปฐมนิเทศนักเรียนใหม่ ระดับ Sunny", session: "all_day" }
         ];
+
+        // ☀️ ช่วงเวลา Summer Course (หักค่าสอน 200 บาท/วัน หรือ 100 บาท/ครึ่งวัน)
+        const SUMMER_COURSES = [
+            { start: "2026-09-28", end: "2026-10-09", name: "Summer Course October 2026" },
+            { start: "2027-03-01", end: "2027-03-26", name: "Summer Course March 2027" }
+        ];
+
+        function isDateInSummer(dateStr) {
+            return SUMMER_COURSES.some(s => dateStr >= s.start && dateStr <= s.end);
+        }
 
         function normalizeRole(rawRole, id = "") {
             const strId = String(id).trim();
             if (strId === "44") return "admin"; 
             if (strId === "25") return "hr";    
-            
             if (!rawRole) return "teacher";
             const str = String(rawRole).toLowerCase().trim();
-            if (str.includes("admin") || str.includes("แอดมิน") || str.includes("ผู้ดูแล")) return "admin";
+            if (str.includes("admin") || str.includes("แอดมิน")) return "admin";
             if (str.includes("hr") || str.includes("บุคคล")) return "hr";
             if (str.includes("maid") || str.includes("แม่บ้าน")) return "maid";
-            if (str.includes("janitor") || str.includes("พ่อบ้าน") || str.includes("ภารโรง")) return "janitor";
+            if (str.includes("janitor") || str.includes("พ่อบ้าน")) return "janitor";
             return "teacher";
         }
 
@@ -154,27 +240,26 @@
             return false;
         }
 
+        /* STREAMING_CHUNK:Defining App component state and localStorage hooks... */
         function App() {
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
                 if (saved) {
                     try {
                         const parsed = JSON.parse(saved);
-                        return parsed.map(u => ({ ...u, role: normalizeRole(u.role, u.id) }));
-                    } catch (e) { return initialUsers; }
+                        if (Array.isArray(parsed) && parsed.length >= initialUsers.length) {
+                            return parsed;
+                        }
+                    } catch (e) {
+                        console.warn("User cache reset");
+                    }
                 }
                 return initialUsers;
             });
 
             const [currentUser, setCurrentUser] = React.useState(() => {
                 const saved = localStorage.getItem("leave_current_user");
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        if (parsed) return { ...parsed, role: normalizeRole(parsed.role, parsed.id) };
-                    } catch (e) { return null; }
-                }
-                return null;
+                return saved ? JSON.parse(saved) : null;
             });
 
             const [holidays, setHolidays] = React.useState(() => {
@@ -187,7 +272,11 @@
                 return saved ? JSON.parse(saved) : initialActivities;
             });
 
-            const [leaves, setLeaves] = React.useState([]);
+            const [leaves, setLeaves] = React.useState(() => {
+                const saved = localStorage.getItem("leave_leaves");
+                return saved ? JSON.parse(saved) : [];
+            });
+
             const [disciplineLogs, setDisciplineLogs] = React.useState(() => {
                 const saved = localStorage.getItem("leave_discipline_logs");
                 return saved ? JSON.parse(saved) : [];
@@ -195,10 +284,25 @@
 
             const [loginId, setLoginId] = React.useState("");
             const [loginPassword, setLoginPassword] = React.useState("");
-            const [activeTab, setActiveTab] = React.useState("admin"); 
-            const [adminSubTab, setAdminSubTab] = React.useState("leaves"); 
-            const [selectedTeacherId, setSelectedTeacherId] = React.useState("");
-            const [formData, setFormData] = React.useState({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day" });
+
+            const [activeTab, setActiveTab] = React.useState(() => {
+                return localStorage.getItem("leave_active_tab") || "admin";
+            }); 
+            const [adminSubTab, setAdminSubTab] = React.useState(() => {
+                return localStorage.getItem("leave_admin_sub_tab") || "leaves";
+            }); 
+            const [selectedTeacherId, setSelectedTeacherId] = React.useState(() => {
+                return localStorage.getItem("leave_selected_teacher_id") || "44";
+            });
+
+            const [formData, setFormData] = React.useState({ 
+                startDate: "", 
+                endDate: "", 
+                type: "personal", 
+                reason: "", 
+                period: "all_day",
+                isCovid: false 
+            });
             const [notification, setNotification] = React.useState(null);
 
             // Modals
@@ -208,10 +312,15 @@
             const [newTeacher, setNewTeacher] = React.useState({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "", hireDate: "" });
             const [showEditTeacherModal, setShowEditTeacherModal] = React.useState(false);
             const [editingTeacher, setEditingTeacher] = React.useState(null);
+            
+            // Edit Leave Modal for Admin
+            const [showEditLeaveModal, setShowEditLeaveModal] = React.useState(false);
+            const [editingLeave, setEditingLeave] = React.useState(null);
+
             const [showAddHolidayModal, setShowAddHolidayModal] = React.useState(false);
-            const [newHoliday, setNewHoliday] = React.useState({ date: "", name: "" });
+            const [newHoliday, setNewHoliday] = React.useState({ date: "", name: "", session: "all_day" });
             const [showAddActivityModal, setShowAddActivityModal] = React.useState(false);
-            const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "morning" });
+            const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "all_day" });
             const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, title: "", message: "", onConfirm: null });
             
             // Discipline Modals
@@ -227,9 +336,13 @@
             React.useEffect(() => { localStorage.setItem("leave_current_user", currentUser ? JSON.stringify(currentUser) : ""); }, [currentUser]);
             React.useEffect(() => { localStorage.setItem("leave_holidays", JSON.stringify(holidays)); }, [holidays]);
             React.useEffect(() => { localStorage.setItem("leave_activities", JSON.stringify(activities)); }, [activities]);
+            React.useEffect(() => { localStorage.setItem("leave_leaves", JSON.stringify(leaves)); }, [leaves]);
             React.useEffect(() => { localStorage.setItem("leave_discipline_logs", JSON.stringify(disciplineLogs)); }, [disciplineLogs]);
+            React.useEffect(() => { if (activeTab) localStorage.setItem("leave_active_tab", activeTab); }, [activeTab]);
+            React.useEffect(() => { if (adminSubTab) localStorage.setItem("leave_admin_sub_tab", adminSubTab); }, [adminSubTab]);
+            React.useEffect(() => { if (selectedTeacherId) localStorage.setItem("leave_selected_teacher_id", selectedTeacherId); }, [selectedTeacherId]);
 
-            // Sync Sheets
+            // Sync Google Sheets Data
             React.useEffect(() => {
                 if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) return;
                 
@@ -247,38 +360,34 @@
                         
                         if (data.users && Array.isArray(data.users) && data.users.length > 0) {
                             const mappedUsers = data.users.map(u => {
-                                const userId = String(u.id || u.ID || "");
+                                const userId = String(u.id || u.ID || u["รหัส"] || "");
                                 return {
                                     id: userId,
-                                    prefix: u.prefix || u.Prefix || "",
-                                    name: u.name || u.Name || "",
-                                    role: normalizeRole(u.role || u.Role, userId),
+                                    prefix: u.prefix || u.Prefix || u["คำนำหน้า"] || "",
+                                    name: u.name || u.Name || u["ชื่อ"] || u["ชื่อ-นามสกุล"] || "",
+                                    role: normalizeRole(u.role || u.Role || u["ตำแหน่ง"], userId),
                                     password: String(u.password !== undefined ? u.password : (u.Password !== undefined ? u.Password : "1234")),
                                     email: u.email || u.Email || "",
-                                    sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : (u.SickQuota !== undefined ? u.SickQuota : 30))),
-                                    personalQuota: Number(u.personalquota !== undefined ? u.personalquota : (u.personalQuota !== undefined ? u.PersonalQuota : (u.PersonalQuota !== undefined ? u.PersonalQuota : 15))),
-                                    lateCount: Number(u.latecount !== undefined ? u.latecount : (u.lateCount !== undefined ? u.lateCount : (u.LateCount !== undefined ? u.LateCount : 0))),
-                                    forgotTimeCount: Number(u.forgottimecount !== undefined ? u.forgottimecount : (u.forgotTimeCount !== undefined ? u.forgotTimeCount : (u.ForgotTimeCount !== undefined ? u.ForgotTimeCount : 0))),
-                                    middayOutShortCount: Number(u.middayoutshortcount !== undefined ? u.middayOutShortCount : (u.middayOutShortCount !== undefined ? u.middayOutShortCount : (u.MiddayOutShortCount !== undefined ? u.MiddayOutShortCount : 0))),
-                                    middayOutLongCount: Number(u.middayoutlongcount !== undefined ? u.middayOutLongCount : (u.middayOutLongCount !== undefined ? u.middayOutLongCount : (u.MiddayOutLongCount !== undefined ? u.MiddayOutLongCount : 0))),
-                                    missedMeetingCount: Number(u.missedmeetingcount !== undefined ? u.missedMeetingCount : (u.missedMeetingCount !== undefined ? u.missedMeetingCount : (u.MissedMeetingCount !== undefined ? u.MissedMeetingCount : 0))),
+                                    sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : 30)),
+                                    personalQuota: Number(u.personalquota !== undefined ? u.personalquota : (u.personalQuota !== undefined ? u.personalQuota : 15)),
+                                    lateCount: Number(u.latecount !== undefined ? u.latecount : (u.lateCount !== undefined ? u.lateCount : 0)),
+                                    forgotTimeCount: Number(u.forgottimecount !== undefined ? u.forgottimecount : (u.forgotTimeCount !== undefined ? u.forgotTimeCount : 0)),
+                                    middayOutShortCount: Number(u.middayoutshortcount !== undefined ? u.middayOutShortCount : 0),
+                                    middayOutLongCount: Number(u.middayoutlongcount !== undefined ? u.middayOutLongCount : 0),
+                                    missedMeetingCount: Number(u.missedmeetingcount !== undefined ? u.missedMeetingCount : 0),
                                     photo: u.photo || u.Photo || "",
-                                    hireDate: u.hiredate || u.hireDate || u.HireDate || ""
+                                    hireDate: u.hiredate || u.hireDate || ""
                                 };
-                            });
-                            setUsers(mappedUsers);
+                            }).filter(validU => validU.id && validU.name);
 
-                            if (currentUser) {
-                                const currentMatched = mappedUsers.find(mu => String(mu.id) === String(currentUser.id));
-                                if (currentMatched) setCurrentUser(currentMatched);
-                            }
+                            if (mappedUsers.length >= initialUsers.length) setUsers(mappedUsers);
                         }
 
                         if (data.leaves && Array.isArray(data.leaves)) {
                             const mappedLeaves = data.leaves.map(l => {
-                                let parsedBreakdown = [];
-                                if (l.breakdown) {
-                                    try { parsedBreakdown = JSON.parse(l.breakdown); } catch (e) { parsedBreakdown = []; }
+                                let parsedBreakdown = l.breakdown || "";
+                                if (typeof l.breakdown === "string" && l.breakdown.trim().startsWith("[")) {
+                                    try { parsedBreakdown = JSON.parse(l.breakdown); } catch (e) { parsedBreakdown = l.breakdown; }
                                 }
                                 
                                 const rawType = String(l.type || l.Type || "");
@@ -293,11 +402,12 @@
                                     type: mappedType,
                                     period: l.period || l.Period || "all_day",
                                     reason: l.reason || l.Reason || "",
-                                    totalDeducted: Number(l.totaldeducted !== undefined ? l.totaldeducted : (l.totalDeducted !== undefined ? l.totalDeducted : (l.TotalDeducted !== undefined ? l.TotalDeducted : 1))),
+                                    totalDeducted: Number(l.totaldeducted !== undefined ? l.totaldeducted : (l.totalDeducted !== undefined ? l.totalDeducted : 1)),
                                     status: l.status || l.Status || "อนุมัติแล้ว",
                                     breakdown: parsedBreakdown,
                                     createdAt: l.createdat || l.createdAt || l.CreatedAt || "",
-                                    dutyFeeDeduction: Number(l.dutyfeededuction !== undefined ? l.dutyfeededuction : (l.dutyFeeDeduction !== undefined ? l.dutyFeeDeduction : (l.DutyFeeDeduction !== undefined ? l.DutyFeeDeduction : 0)))
+                                    dutyFeeDeduction: Number(l.dutyfeededuction !== undefined ? l.dutyfeededuction : (l.dutyFeeDeduction !== undefined ? l.dutyFeeDeduction : 0)),
+                                    summerFeeDeduction: Number(l.summerfeededuction !== undefined ? l.summerfeededuction : (l.summerFeeDeduction !== undefined ? l.summerFeeDeduction : 0))
                                 };
                             });
                             setLeaves(mappedLeaves.filter(ml => ml.id));
@@ -314,9 +424,10 @@
                 if (currentUser) {
                     const userRole = normalizeRole(currentUser.role, currentUser.id);
                     if (userRole === "admin" || userRole === "hr") {
-                        const firstTeacher = users.find(u => u.role !== "admin" && u.role !== "hr") || users[0];
-                        setSelectedTeacherId(firstTeacher ? firstTeacher.id : "");
-                        setActiveTab("admin");
+                        if (!selectedTeacherId) {
+                            const firstTeacher = users.find(u => u.role !== "admin" && u.role !== "hr") || users[0];
+                            if (firstTeacher) setSelectedTeacherId(firstTeacher.id);
+                        }
                     } else {
                         setSelectedTeacherId(currentUser.id);
                         setActiveTab("teacher");
@@ -332,7 +443,7 @@
 
             const getTeacherStats = (teacherId) => {
                 const teacherObj = users.find(u => String(u.id) === String(teacherId));
-                if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0, dutyFeeTotal: 0 };
+                if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0, dutyFeeTotal: 0, summerFeeTotal: 0 };
                 
                 const userLeaves = leaves.filter(l => String(l.teacherId) === String(teacherId) && (l.status === "approved" || l.status === "อนุมัติแล้ว"));
                 
@@ -345,6 +456,7 @@
                     .reduce((sum, l) => sum + l.totalDeducted, 0);
 
                 const dutyFeeTotal = userLeaves.reduce((sum, l) => sum + (l.dutyFeeDeduction || 0), 0);
+                const summerFeeTotal = userLeaves.reduce((sum, l) => sum + (l.summerFeeDeduction || 0), 0);
                     
                 const lateCount = teacherObj.lateCount || 0;
                 const forgotScanCount = teacherObj.forgotTimeCount || 0;
@@ -370,7 +482,8 @@
                     middayOutShortCount: teacherObj.middayOutShortCount || 0,
                     middayOutLongCount: teacherObj.middayOutLongCount || 0,
                     missedMeetingCount: teacherObj.missedMeetingCount || 0,
-                    dutyFeeTotal
+                    dutyFeeTotal,
+                    summerFeeTotal
                 };
             };
 
@@ -481,42 +594,22 @@
                 return `${year}-${month}-${day}`;
             };
 
-            const isNonWorkingDay = (dateObj, targetUser) => {
-                const dateStr = getLocalDateString(dateObj);
-                const dayOfWeek = dateObj.getDay();
-
-                if (holidays.some(h => h.date === dateStr)) return true;
-
-                const userRole = normalizeRole(targetUser ? targetUser.role : "teacher", targetUser ? targetUser.id : "");
-
-                if (userRole === "maid" || userRole === "janitor") {
-                    if (dayOfWeek === 0) return true; 
-                    if (dayOfWeek === 6) { 
-                        return isMaidSaturdayOff(targetUser.id, dateObj);
-                    }
-                    return false;
-                } else {
-                    return dayOfWeek === 0 || dayOfWeek === 6;
-                }
-            };
-
-            const getHolidayName = (dateStr) => {
-                const hol = holidays.find(h => h.date === dateStr);
-                return hol ? hol.name : "";
-            };
+            const getHolidayObj = (dateStr) => holidays.find(h => h.date === dateStr);
             const getSchoolActivity = (dateStr) => activities.find(a => a.date === dateStr);
 
-            const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", targetUser = selectedTeacher) => {
+            /* STREAMING_CHUNK:Implementing leave deduction algorithms with COVID-19 rules and Summer fees... */
+            const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", targetUser = selectedTeacher, isCovid = false) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
-                if (!startDateStr || !actualEndDateStr || !targetUser) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
+                if (!startDateStr || !actualEndDateStr || !targetUser) return { total: 0, breakdown: [], dutyFeeDeduction: 0, summerFeeDeduction: 0 };
                 
                 const start = new Date(startDateStr);
                 const end = new Date(actualEndDateStr);
-                if (end < start) return { total: 0, breakdown: [], dutyFeeDeduction: 0 };
+                if (end < start) return { total: 0, breakdown: [], dutyFeeDeduction: 0, summerFeeDeduction: 0 };
 
                 const breakdown = [];
                 let totalDeducted = 0;
                 let totalDutyFee = 0;
+                let totalSummerFee = 0;
 
                 const userRole = normalizeRole(targetUser.role, targetUser.id);
                 const isMaidOrJanitor = userRole === "maid" || userRole === "janitor";
@@ -525,59 +618,97 @@
                 while (current <= end) {
                     const dateStr = getLocalDateString(current);
                     const dayOfWeek = current.getDay(); 
+                    const hol = getHolidayObj(dateStr);
+                    const isHolidayAllDay = hol && (!hol.session || hol.session === "all_day");
+                    const isHolidayHalfDay = hol && hol.session && hol.session !== "all_day";
 
-                    if (isNonWorkingDay(current, targetUser)) {
-                        const hName = getHolidayName(dateStr);
-                        const reasonLabel = hName ? `วันหยุดราชการ (${hName})` : "วันหยุดประจำสัปดาห์";
-                        breakdown.push({ date: dateStr, base: 0, penaltyReason: reasonLabel, final: 0 });
+                    // ตรวจสอบวันหยุดประจำสัปดาห์
+                    let isWeeklyOff = false;
+                    if (isMaidOrJanitor) {
+                        isWeeklyOff = (dayOfWeek === 0) || (dayOfWeek === 6 && isMaidSaturdayOff(targetUser.id, current));
+                    } else {
+                        isWeeklyOff = (dayOfWeek === 0 || dayOfWeek === 6);
+                    }
+
+                    if (isHolidayAllDay || isWeeklyOff) {
+                        const hName = hol ? hol.name : "วันหยุดประจำสัปดาห์";
+                        breakdown.push({ date: dateStr, base: 0, penaltyReason: `วันหยุด (${hName})`, final: 0 });
+                    } else if (isHolidayHalfDay && hol.session === period) {
+                        breakdown.push({ date: dateStr, base: 0, penaltyReason: `วันหยุดโรงเรียน (${hol.name})`, final: 0 });
                     } else {
                         let baseDeduction = 1.0;
                         let reason = "อัตราการลาตามเกณฑ์ปกติ";
 
                         const schoolActivity = getSchoolActivity(dateStr);
-                        const isMeetingDay = schoolActivity && (schoolActivity.name.includes("ประชุม") || schoolActivity.name.includes("ฉันท์พี่น้อง"));
+                        const isMeetingDay = schoolActivity && (schoolActivity.name.includes("ประชุม") || schoolActivity.name.includes("ฉันน้องพี่"));
 
-                        if (!isMaidOrJanitor && isMeetingDay) {
-                            if (period === "afternoon") {
-                                baseDeduction = 1.5;
-                                reason = "ตรงวันประชุมพบกันฉันท์พี่น้อง (ช่วงครึ่งวันบ่าย)";
-                            } else if (period === "all_day") {
-                                baseDeduction = 2.0;
-                                reason = "ตรงวันประชุมพบกันฉันท์พี่น้อง (เต็มวัน)";
-                            }
-                        } else if (schoolActivity) {
-                            const isActivityAllDay = schoolActivity.session === "all_day";
-                            if (period === "all_day") {
-                                baseDeduction = isActivityAllDay ? 2.0 : 1.5;
-                                reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name})`;
-                            } else {
-                                baseDeduction = isActivityAllDay ? 1.5 : 1.0;
-                                reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name}) [ครึ่งวัน]`;
-                            }
-                        } 
-                        else {
-                            if (period === "all_day") {
-                                if (dayOfWeek === 5 || dayOfWeek === 1) { 
-                                    baseDeduction = 2.0;
-                                    reason = "ลาเต็มวันติดวันหยุดเสาร์-อาทิตย์";
+                        // 🦠 กฎพิเศษ: กรณีตรวจพบเชื้อโควิด-19
+                        if (isCovid) {
+                            if (schoolActivity) {
+                                const isActivityAllDay = schoolActivity.session === "all_day";
+                                if (period === "all_day") {
+                                    baseDeduction = isActivityAllDay ? 2.0 : 1.5;
+                                    reason = `ลาป่วยโควิด-19 ตรงวันกิจกรรมพิเศษ (${schoolActivity.name})`;
                                 } else {
-                                    baseDeduction = 1.0;
-                                    reason = "เต็มวันปกติ";
+                                    baseDeduction = isActivityAllDay ? 1.5 : 1.0;
+                                    reason = `ลาป่วยโควิด-19 ตรงวันกิจกรรมพิเศษ (${schoolActivity.name}) [ครึ่งวัน]`;
                                 }
-                            } else if (period === "afternoon" && dayOfWeek === 5) { 
-                                baseDeduction = 1.5;
-                                reason = "ลาครึ่งวันบ่ายติดวันเสาร์";
-                            } else if (period === "morning" && dayOfWeek === 1) { 
-                                baseDeduction = 1.5;
-                                reason = "ลาครึ่งวันเช้าติดวันอาทิตย์";
                             } else {
-                                baseDeduction = 0.5;
-                                reason = "ลาครึ่งวันปกติ";
+                                baseDeduction = period !== "all_day" ? 0.5 : 1.0;
+                                reason = "ลาป่วยตรวจพบเชื้อโควิด-19 (ไม่คิดหักเพิ่มติดวันหยุด)";
+                            }
+                        } else {
+                            // กฎปกติ
+                            if (!isMaidOrJanitor && isMeetingDay) {
+                                if (period === "afternoon") {
+                                    baseDeduction = 1.5;
+                                    reason = "ตรงวันประชุมพบกันฉันน้องพี่ (ช่วงครึ่งวันบ่าย)";
+                                } else if (period === "all_day") {
+                                    baseDeduction = 2.0;
+                                    reason = "ตรงวันประชุมพบกันฉันน้องพี่ (เต็มวัน)";
+                                } else {
+                                    baseDeduction = 0.5;
+                                    reason = "ช่วงเช้าปกติ (มีการประชุมช่วงบ่าย)";
+                                }
+                            } else if (schoolActivity) {
+                                const isActivityAllDay = schoolActivity.session === "all_day";
+                                if (period === "all_day") {
+                                    baseDeduction = isActivityAllDay ? 2.0 : 1.5;
+                                    reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name})`;
+                                } else {
+                                    baseDeduction = isActivityAllDay ? 1.5 : 1.0;
+                                    reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name}) [ครึ่งวัน]`;
+                                }
+                            } else {
+                                if (period === "all_day") {
+                                    if (dayOfWeek === 5 || dayOfWeek === 1) { 
+                                        baseDeduction = 2.0;
+                                        reason = "ลาเต็มวันติดวันหยุดเสาร์-อาทิตย์";
+                                    } else {
+                                        baseDeduction = 1.0;
+                                        reason = "เต็มวันปกติ";
+                                    }
+                                } else if (period === "afternoon" && dayOfWeek === 5) { 
+                                    baseDeduction = 1.5;
+                                    reason = "ลาครึ่งวันบ่ายติดวันเสาร์";
+                                } else if (period === "morning" && dayOfWeek === 1) { 
+                                    baseDeduction = 1.5;
+                                    reason = "ลาครึ่งวันเช้าติดวันอาทิตย์";
+                                } else {
+                                    baseDeduction = 0.5;
+                                    reason = "ลาครึ่งวันปกติ";
+                                }
                             }
                         }
 
+                        // คำนวณค่าเวร
                         if (!isMaidOrJanitor) {
                             totalDutyFee += (period !== "all_day" ? 50 : 100);
+                        }
+
+                        // คำนวณค่าสอน Summer Course (วันละ 200 บาท / ครึ่งวัน 100 บาท)
+                        if (!isMaidOrJanitor && isDateInSummer(dateStr)) {
+                            totalSummerFee += (period !== "all_day" ? 100 : 200);
                         }
 
                         breakdown.push({ date: dateStr, base: period !== "all_day" ? 0.5 : 1.0, penaltyReason: reason, final: baseDeduction });
@@ -585,10 +716,10 @@
                     }
                     current.setDate(current.getDate() + 1);
                 }
-                return { total: totalDeducted, breakdown, dutyFeeDeduction: totalDutyFee };
+                return { total: totalDeducted, breakdown, dutyFeeDeduction: totalDutyFee, summerFeeDeduction: totalSummerFee };
             };
 
-            const leaveCalculation = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, selectedTeacher);
+            const leaveCalculation = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, selectedTeacher, formData.isCovid);
 
             const handleRequestLeave = (e) => {
                 e.preventDefault();
@@ -598,15 +729,14 @@
                 }
 
                 const targetTeacher = users.find(u => String(u.id) === String(selectedTeacherId));
-                const stats = getTeacherStats(selectedTeacherId);
-                const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, targetTeacher);
+                const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, targetTeacher, formData.isCovid);
 
                 if (calc.total === 0) {
                     showToast("วันที่เลือกเป็นวันหยุดประจำสัปดาห์หรือวันหยุดราชการ ไม่คิดหักวันลา", "error");
                     return;
                 }
 
-                const typeThaiName = formData.type === "personal" ? "ลากิจส่วนตัว" : "ลาป่วย";
+                const typeThaiName = formData.type === "personal" ? "ลากิจส่วนตัว" : (formData.isCovid ? "ลาป่วย (ตรวจพบเชื้อโควิด-19)" : "ลาป่วย");
                 const periodThaiName = formData.period === "all_day" ? "เต็มวัน" : (formData.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย");
 
                 const newRequest = {
@@ -619,16 +749,20 @@
                     typeThai: typeThaiName,
                     period: formData.period,
                     periodThai: periodThaiName,
-                    reason: formData.reason,
+                    reason: formData.reason + (formData.isCovid ? " [ตรวจพบเชื้อโควิด-19]" : ""),
                     totalDeducted: calc.total,
                     dutyFeeDeduction: calc.dutyFeeDeduction,
+                    summerFeeDeduction: calc.summerFeeDeduction,
                     status: "อนุมัติแล้ว",
                     breakdown: calc.breakdown,
                     createdAt: getLocalDateString(new Date())
                 };
 
-                setLeaves([newRequest, ...leaves]);
-                setFormData({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day" });
+                const updatedLeaves = [newRequest, ...leaves];
+                setLeaves(updatedLeaves);
+                localStorage.setItem("leave_leaves", JSON.stringify(updatedLeaves));
+
+                setFormData({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day", isCovid: false });
                 showToast("ยื่นคำขอและบันทึกประวัติวันลาเรียบร้อยแล้ว");
 
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
@@ -650,7 +784,8 @@
                             status: "อนุมัติแล้ว",
                             breakdown: newRequest.breakdown,
                             createdAt: newRequest.createdAt,
-                            dutyFeeDeduction: newRequest.dutyFeeDeduction
+                            dutyFeeDeduction: newRequest.dutyFeeDeduction,
+                            summerFeeDeduction: newRequest.summerFeeDeduction
                         })
                     }).catch(err => console.warn("Sheet save note:", err));
                 }
@@ -661,7 +796,9 @@
                     "ยืนยันการยกเลิกรายการใบขอลา",
                     "ระบบจะทำการคืนสิทธิ์วันลาให้บุคลากรโดยอัตโนมัติ",
                     () => {
-                        setLeaves(leaves.filter(l => l.id !== leaveId));
+                        const updated = leaves.filter(l => l.id !== leaveId);
+                        setLeaves(updated);
+                        localStorage.setItem("leave_leaves", JSON.stringify(updated));
                         showToast("ยกเลิกรายการและคืนสิทธิ์วันลาเรียบร้อยแล้ว");
 
                         if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
@@ -674,6 +811,51 @@
                         }
                     }
                 );
+            };
+
+            // แอดมินแก้ไขใบลาโดยตรง
+            const handleUpdateLeave = (e) => {
+                e.preventDefault();
+                if (!editingLeave) return;
+
+                const targetTeacher = users.find(u => String(u.id) === String(editingLeave.teacherId));
+                const isCovid = editingLeave.reason && editingLeave.reason.includes("โควิด");
+                const calc = calculateLeaveDays(editingLeave.startDate, editingLeave.endDate, editingLeave.period, targetTeacher, isCovid);
+
+                const updatedLeave = {
+                    ...editingLeave,
+                    totalDeducted: calc.total,
+                    dutyFeeDeduction: calc.dutyFeeDeduction,
+                    summerFeeDeduction: calc.summerFeeDeduction,
+                    breakdown: calc.breakdown
+                };
+
+                const updatedLeaves = leaves.map(l => l.id === updatedLeave.id ? updatedLeave : l);
+                setLeaves(updatedLeaves);
+                localStorage.setItem("leave_leaves", JSON.stringify(updatedLeaves));
+                setShowEditLeaveModal(false);
+                setEditingLeave(null);
+                showToast("แก้ไขข้อมูลใบลาและปรับยอดคำนวณเรียบร้อยแล้ว");
+
+                if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
+                    fetch(GOOGLE_SHEET_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "editLeave",
+                            id: updatedLeave.id,
+                            startDate: updatedLeave.startDate,
+                            endDate: updatedLeave.endDate,
+                            type: updatedLeave.type === "personal" ? "ลากิจส่วนตัว" : "ลาป่วย",
+                            period: updatedLeave.period === "all_day" ? "เต็มวัน" : (updatedLeave.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย"),
+                            reason: updatedLeave.reason,
+                            totalDeducted: updatedLeave.totalDeducted,
+                            dutyFeeDeduction: updatedLeave.dutyFeeDeduction,
+                            summerFeeDeduction: updatedLeave.summerFeeDeduction
+                        })
+                    }).catch(err => console.warn("Sheet edit note:", err));
+                }
             };
 
             const handleUpdateDisciplineCount = (teacherId, field, delta) => {
@@ -739,7 +921,7 @@
                     forgotTime: "ลืมบันทึกเวลาเข้า-ออกงาน",
                     middayShort: "ออกนอกสถานที่ 1.01 - 1.30 ชั่วโมง (นับว่ามาสาย 1 ครั้ง)",
                     middayLong: "ออกนอกสถานที่ตั้งแต่ 1.31 ชั่วโมงขึ้นไป (หักลากิจ 0.5 วัน)",
-                    missedMeeting: "ขาดการประชุมพบกันฉันท์พี่น้อง (หักลากิจ 1 วัน)"
+                    missedMeeting: "ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)"
                 };
 
                 const newLog = {
@@ -798,16 +980,17 @@
                 );
             };
 
+            /* STREAMING_CHUNK:Rendering application views, login screen, and leave forms... */
             if (!currentUser) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative font-['Sarabun']">
+                    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 font-['Sarabun']">
                         <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-                            <header className="luxury-gradient text-white p-8 text-center relative border-b-4 border-emerald-700">
-                                <div className="w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                            <header className="luxury-gradient text-white p-8 text-center border-b-4 border-emerald-700">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-3.5 bg-white/10 rounded-3xl p-2 border border-white/20 shadow-inner">
                                     <img 
                                         src="logo.png" 
                                         alt="Yuwapat Logo" 
-                                        className="w-full h-full object-contain"
+                                        className="w-full h-full object-contain drop-shadow-md"
                                         onError={(e) => {
                                             if (e.target.src.indexOf('logo.png') !== -1) {
                                                 e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
@@ -815,9 +998,9 @@
                                         }}
                                     />
                                 </div>
-                                <h2 className="text-xl font-extrabold tracking-wide text-white">Yuwapat Early Childhood School</h2>
-                                <p className="text-sm text-emerald-100 mt-1.5 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
-                                <p className="text-xs text-slate-300 mt-1">ระบบบริหารจัดการวันลาและสถิติการปฏิบัติงานบุคลากร</p>
+                                <h2 className="text-xl font-extrabold text-white">Yuwapat Early Childhood School</h2>
+                                <p className="text-sm text-emerald-100 mt-1">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                                <p className="text-xs text-slate-300 mt-1">รอบปีการศึกษา 1 พฤษภาคม 2569 – 30 เมษายน 2570</p>
                             </header>
 
                             {notification && (
@@ -828,33 +1011,33 @@
                             )}
 
                             <form onSubmit={handleLogin} className="p-8 space-y-5">
-                                <div className="space-y-1.5 text-left">
-                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold uppercase tracking-wide">อีเมลสังกัดโรงเรียน / รหัสประจำตัว</label>
+                                <div>
+                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold uppercase mb-1">อีเมลสังกัดโรงเรียน / รหัสประจำตัว</label>
                                     <input 
                                         type="text" 
-                                        placeholder="กรอกรหัสประจำตัว หรือ Username"
+                                        placeholder="กรอกรหัสประจำตัว (เช่น 44, 25, 1) หรือ Email"
                                         value={loginId}
                                         onChange={(e) => setLoginId(e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-300 text-slate-800 px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 text-sm sm:text-base font-semibold"
+                                        className="w-full bg-slate-50 border border-slate-300 text-slate-800 px-4 py-3.5 rounded-xl font-semibold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-700"
                                         required
                                     />
                                 </div>
 
-                                <div className="space-y-1.5 text-left">
-                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold uppercase tracking-wide">รหัสผ่านเข้าสู่ระบบ</label>
+                                <div>
+                                    <label className="block text-slate-700 text-xs sm:text-sm font-bold uppercase mb-1">รหัสผ่านเข้าสู่ระบบ</label>
                                     <input 
                                         type="password" 
                                         placeholder="กรอกรหัสผ่าน (เริ่มต้น 1234)"
                                         value={loginPassword}
                                         onChange={(e) => setLoginPassword(e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-300 text-slate-800 px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 text-sm sm:text-base font-semibold"
+                                        className="w-full bg-slate-50 border border-slate-300 text-slate-800 px-4 py-3.5 rounded-xl font-semibold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-700"
                                         required
                                     />
                                 </div>
 
                                 <button 
                                     type="submit"
-                                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-6 rounded-xl transition duration-200 shadow-md text-sm sm:text-base uppercase tracking-wider mt-2"
+                                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-6 rounded-xl transition duration-200 shadow-md text-sm sm:text-base uppercase tracking-wider"
                                 >
                                     เข้าสู่ระบบความปลอดภัย
                                 </button>
@@ -869,16 +1052,14 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-                    
                     <header className="luxury-gradient text-white shadow-xl sticky top-0 z-30 border-b border-emerald-700/50">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            
                             <div className="flex items-center gap-3.5">
-                                <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 bg-white/10 rounded-2xl p-1.5 border border-white/20 shadow-inner">
                                     <img 
                                         src="logo.png" 
                                         alt="Yuwapat Logo" 
-                                        className="w-full h-full object-contain"
+                                        className="w-full h-full object-contain drop-shadow"
                                         onError={(e) => {
                                             if (e.target.src.indexOf('logo.png') !== -1) {
                                                 e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
@@ -887,8 +1068,8 @@
                                     />
                                 </div>
                                 <div className="text-center sm:text-left">
-                                    <h1 className="text-lg sm:text-xl font-bold tracking-wide text-white">Yuwapat Early Childhood School</h1>
-                                    <p className="text-xs sm:text-sm text-emerald-200 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                                    <h1 className="text-lg sm:text-xl font-bold text-white">Yuwapat Early Childhood School</h1>
+                                    <p className="text-xs sm:text-sm text-emerald-200 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์ (รอบปี 1 พ.ค. 69 – 30 เม.ย. 70)</p>
                                 </div>
                             </div>
 
@@ -914,7 +1095,7 @@
 
                                 <div className="flex items-center gap-3 bg-navy-950 pl-4 pr-2 py-2 rounded-xl border border-emerald-700/40">
                                     <div className="text-right">
-                                        <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+                                        <p className="text-[11px] font-bold text-emerald-400 uppercase">
                                             {currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : currentRole === 'hr' ? 'เจ้าหน้าที่งานบุคคล' : 'ครูผู้สอน / บุคลากร'}
                                         </p>
                                         <p className="text-sm font-bold text-white">{currentUser.prefix}{currentUser.name}</p>
@@ -928,17 +1109,16 @@
                                     </button>
                                 </div>
                             </div>
-
                         </div>
                     </header>
 
                     {notification && (
                         <div className="fixed top-24 right-4 z-50 animate-bounce">
-                            <div className={`shadow-2xl rounded-2xl p-4 flex items-center gap-3 border ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
-                                <i className={`fa-solid ${notification.type === 'error' ? 'fa-circle-xmark text-red-500' : 'fa-circle-check text-emerald-600'} text-2xl`}></i>
+                            <div className="shadow-2xl rounded-2xl p-4 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800">
+                                <i className="fa-solid fa-circle-check text-emerald-600 text-2xl"></i>
                                 <div>
-                                    <p className="font-bold text-sm sm:text-base">ระบบแจ้งเตือนสารสนเทศ</p>
-                                    <p className="text-xs sm:text-sm mt-0.5">{notification.message}</p>
+                                    <p className="font-bold text-sm">ระบบแจ้งเตือนสารสนเทศ</p>
+                                    <p className="text-xs mt-0.5">{notification.message}</p>
                                 </div>
                             </div>
                         </div>
@@ -969,16 +1149,13 @@
                     )}
 
                     <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-                        
-                        {/* Teacher Portal Tab */}
                         {activeTab === "teacher" && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                
                                 <div className="space-y-6 lg:col-span-1 text-left">
                                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                                         {isAdminOrHr ? (
                                             <div className="mb-5">
-                                                <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">เลือกมุมมองบุคลากร</label>
+                                                <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">เลือกมุมมองบุคลากร (ทั้งหมด ๔๘ ท่าน)</label>
                                                 <select 
                                                     value={selectedTeacherId}
                                                     onChange={(e) => setSelectedTeacherId(e.target.value)}
@@ -986,7 +1163,7 @@
                                                 >
                                                     {users.map(u => (
                                                         <option key={u.id} value={u.id}>
-                                                            [{u.id}] {u.prefix}{u.name} ({u.role === 'teacher' ? 'ครู' : u.role === 'maid' ? 'แม่บ้าน' : u.role === 'janitor' ? 'พ่อบ้าน' : u.role})
+                                                            [{u.id}] {u.prefix}{u.name} ({u.role === 'admin' ? 'แอดมิน' : u.role === 'hr' ? 'HR' : u.role === 'teacher' ? 'ครู' : u.role === 'maid' ? 'แม่บ้าน' : 'พ่อบ้าน'})
                                                         </option>
                                                     ))}
                                                 </select>
@@ -1036,7 +1213,6 @@
 
                                     {selectedTeacher && selectedTeacherStats && (
                                         <div className="space-y-5">
-                                            {/* การ์ดลากิจส่วนตัว */}
                                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -1078,13 +1254,17 @@
                                                     </div>
                                                     {selectedTeacher.role !== 'maid' && selectedTeacher.role !== 'janitor' && (
                                                         <div className="flex justify-between">
-                                                            <span>4. ขาดประชุมพบกันฉันท์พี่น้อง:</span>
+                                                            <span>4. ขาดการประชุมพบกันฉันน้องพี่:</span>
                                                             <span className="font-bold">{selectedTeacherStats.missedMeetingCount} ครั้ง (-{selectedTeacherStats.missedMeetingPenalty} วัน)</span>
                                                         </div>
                                                     )}
                                                     <div className="flex justify-between pt-2 border-t border-slate-100">
                                                         <span>หักสะสมค่าปฏิบัติงานเวร:</span>
                                                         <span className="font-bold text-red-600">{selectedTeacherStats.dutyFeeTotal} บาท</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>หักสะสมค่าสอน Summer Course:</span>
+                                                        <span className="font-bold text-amber-700">{selectedTeacherStats.summerFeeTotal} บาท</span>
                                                     </div>
                                                 </div>
 
@@ -1094,7 +1274,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* การ์ดลาป่วย */}
                                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -1187,7 +1366,7 @@
                                                     <div className="grid grid-cols-2 gap-2.5">
                                                         <button 
                                                             type="button"
-                                                            onClick={() => setFormData({ ...formData, type: "personal" })}
+                                                            onClick={() => setFormData({ ...formData, type: "personal", isCovid: false })}
                                                             className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition ${formData.type === 'personal' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                                                         >
                                                             ลากิจส่วนตัว
@@ -1202,6 +1381,23 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {formData.type === "sick" && (
+                                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <input 
+                                                            type="checkbox"
+                                                            id="covidCheck"
+                                                            checked={formData.isCovid}
+                                                            onChange={(e) => setFormData({ ...formData, isCovid: e.target.checked })}
+                                                            className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                                                        />
+                                                        <label htmlFor="covidCheck" className="text-xs sm:text-sm font-bold text-amber-900 cursor-pointer">
+                                                            🦠 ตรวจพบเชื้อโควิด-19 (ลาป่วยติดวันหยุดไม่หักเพิ่ม หักเพิ่มเฉพาะวันกิจกรรมพิเศษ)
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div>
                                                 <label className="block text-slate-700 text-xs sm:text-sm font-bold mb-1.5">เหตุผลและความจำเป็นในการยื่นขอลา</label>
@@ -1225,16 +1421,12 @@
                                                         <span>หักเงินค่าปฏิบัติงานเวรประจำวัน:</span>
                                                         <span className="font-bold text-slate-800">{leaveCalculation.dutyFeeDeduction} บาท</span>
                                                     </div>
-
-                                                    <div className="pt-3 border-t border-slate-200 space-y-1.5">
-                                                        <p className="font-bold text-slate-700">รายละเอียดคำนวณรายวัน:</p>
-                                                        {leaveCalculation.breakdown.map((b, i) => (
-                                                            <div key={i} className="flex justify-between text-xs text-slate-600">
-                                                                <span>• {formatThaiDate(b.date)}:</span>
-                                                                <span className="font-bold text-slate-800">{b.final === 0 ? "ยกเว้นวันหยุด (0 วัน)" : `หัก ${b.final.toFixed(2)} วัน [${b.penaltyReason}]`}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                    {leaveCalculation.summerFeeDeduction > 0 && (
+                                                        <div className="flex justify-between items-center text-amber-700 font-bold bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                                                            <span>หักเงินค่าสอน Summer Course (วันละ 200 บาท):</span>
+                                                            <span>{leaveCalculation.summerFeeDeduction} บาท</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
@@ -1246,62 +1438,13 @@
                                             </button>
                                         </form>
                                     </div>
-
-                                    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
-                                        <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-5 border-b pb-4 border-slate-100 flex items-center gap-2.5">
-                                            <i className="fa-solid fa-clock-rotate-left text-emerald-700 text-lg"></i>
-                                            ประวัติการยื่นขออนุญาตลางานของบุคลากร
-                                        </h2>
-
-                                        {leaves.filter(l => String(l.teacherId) === String(selectedTeacherId)).length === 0 ? (
-                                            <div className="text-center py-12 text-slate-400">
-                                                <i className="fa-solid fa-folder-open text-4xl mb-3 opacity-30 text-emerald-700"></i>
-                                                <p className="text-xs sm:text-sm font-semibold">ยังไม่มีประวัติการยื่นลาในระบบ</p>
-                                            </div>
-                                        ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="min-w-full text-xs sm:text-sm text-left">
-                                                    <thead>
-                                                        <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wide">
-                                                            <th className="py-3 px-3">ระยะเวลา</th>
-                                                            <th className="py-3 px-3">ประเภท</th>
-                                                            <th className="py-3 px-3">ยอดหักวันลา</th>
-                                                            <th className="py-3 px-3">เหตุผล</th>
-                                                            <th className="py-3 px-3">สถานะ</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                                                        {leaves.filter(l => String(l.teacherId) === String(selectedTeacherId)).map((l) => (
-                                                            <tr key={l.id} className="hover:bg-slate-50">
-                                                                <td className="py-3.5 px-3">
-                                                                    <p className="font-bold text-slate-800">{formatThaiDate(l.startDate)}</p>
-                                                                    {l.startDate !== l.endDate && <p className="text-xs text-slate-400">ถึง {formatThaiDate(l.endDate)}</p>}
-                                                                </td>
-                                                                <td className="py-3.5 px-3">
-                                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${l.type === 'personal' || l.type === 'ลากิจส่วนตัว' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-                                                                        {l.type === "personal" ? "ลากิจส่วนตัว" : (l.type === "sick" ? "ลาป่วย" : l.type)}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-3.5 px-3 font-bold text-red-600">{l.totalDeducted.toFixed(1)} วัน</td>
-                                                                <td className="py-3.5 px-3 text-slate-600 max-w-[180px] truncate">{l.reason}</td>
-                                                                <td className="py-3.5 px-3">
-                                                                    <span className="text-emerald-700 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">อนุมัติแล้ว</span>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Admin Portal Tab */}
+                        /* STREAMING_CHUNK:Rendering full Admin Dashboard with Leave Editing capability... */
                         {activeTab === "admin" && isAdminOrHr && (
                             <div className="space-y-6 text-left">
-                                
                                 <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                     <div>
                                         <h2 className="text-lg sm:text-xl font-bold text-slate-800">ระบบบริหารจัดการข้อมูลบุคลากรและสถิติการปฏิบัติงาน</h2>
@@ -1338,7 +1481,7 @@
                                         className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition rounded-t-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'teachers' ? 'bg-white text-emerald-800 border-t-2 border-x border-emerald-700' : 'text-slate-500 hover:text-slate-800'}`}
                                     >
                                         <i className="fa-solid fa-users text-base"></i>
-                                        รายชื่อและสถิติสะสม ({users.length})
+                                        รายชื่อและสถิติสะสม ({users.length} ท่าน)
                                     </button>
                                     <button 
                                         onClick={() => setAdminSubTab("calendar")}
@@ -1361,7 +1504,6 @@
                                 {adminSubTab === "leaves" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0">
                                         <h3 className="font-bold text-slate-800 text-base mb-5 border-b pb-3">รายการประวัติวันลาทั้งหมด</h3>
-
                                         {leaves.length === 0 ? (
                                             <div className="text-center py-12 text-slate-400">
                                                 <i className="fa-solid fa-folder-open text-4xl mb-3 opacity-30 text-emerald-700"></i>
@@ -1383,20 +1525,39 @@
                                                                     </span>
                                                                 </div>
                                                                 <p className="text-slate-600 font-medium">
-                                                                    ระยะเวลา: <strong className="text-slate-800">{formatThaiDate(l.startDate)}</strong> {l.startDate !== l.endDate && `ถึง ${formatThaiDate(l.endDate)}`} | เหตุผล: {l.reason}
+                                                                    ระยะเวลา: <strong className="text-slate-800">{formatThaiDate(l.startDate)}</strong> {l.startDate !== l.endDate && `ถึง ${formatThaiDate(l.endDate)}`} | ช่วง: {l.period === "all_day" ? "เต็มวัน" : (l.period === "morning" ? "ครึ่งเช้า" : "ครึ่งบ่าย")} | เหตุผล: {l.reason}
                                                                 </p>
+                                                                {(l.dutyFeeDeduction > 0 || l.summerFeeDeduction > 0) && (
+                                                                    <p className="text-xs text-slate-500 font-semibold">
+                                                                        {l.dutyFeeDeduction > 0 && `หักค่าเวร: ${l.dutyFeeDeduction} บาท `}
+                                                                        {l.summerFeeDeduction > 0 && `| หักค่าสอน Summer: ${l.summerFeeDeduction} บาท`}
+                                                                    </p>
+                                                                )}
                                                             </div>
 
-                                                            <div className="flex items-center gap-5 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0">
+                                                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0">
                                                                 <div className="text-right">
                                                                     <p className="text-xs text-slate-400 font-bold uppercase">ยอดหักวันลา</p>
-                                                                    <p className="text-lg sm:text-xl font-extrabold text-red-600">{l.totalDeducted.toFixed(1)} วัน</p>
+                                                                    <p className="text-lg sm:text-xl font-extrabold text-red-600">{Number(l.totalDeducted || 0).toFixed(1)} วัน</p>
                                                                 </div>
                                                                 <button 
-                                                                    onClick={() => handleDeleteLeave(l.id)}
-                                                                    className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition"
+                                                                    onClick={() => {
+                                                                        setEditingLeave({ ...l });
+                                                                        setShowEditLeaveModal(true);
+                                                                    }}
+                                                                    className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5"
+                                                                    title="แก้ไขใบลา"
                                                                 >
-                                                                    <i className="fa-solid fa-trash-can mr-1.5"></i> ยกเลิกใบลา
+                                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                                    <span>แก้ไข</span>
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteLeave(l.id)}
+                                                                    className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5"
+                                                                    title="ยกเลิกใบลา"
+                                                                >
+                                                                    <i className="fa-solid fa-trash-can"></i>
+                                                                    <span>ยกเลิก</span>
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1496,8 +1657,8 @@
                                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
                                             <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
                                                 <div>
-                                                    <h3 className="font-bold text-slate-800 text-base">วันหยุดราชการประจำปฏิทิน ({holidays.length})</h3>
-                                                    <p className="text-xs text-slate-400 mt-0.5">วันหยุดหลักที่ไม่นำมาคิดหักวันลา</p>
+                                                    <h3 className="font-bold text-slate-800 text-base">วันหยุดตามปฏิทินโรงเรียน ({holidays.length})</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5">วันหยุดหลักที่ไม่นำมาคิดหักวันลา (เว้นแต่ระบุครึ่งวัน)</p>
                                                 </div>
                                                 <button 
                                                     onClick={() => setShowAddHolidayModal(true)}
@@ -1516,7 +1677,9 @@
                                                             </div>
                                                             <div>
                                                                 <p className="font-bold text-slate-800 text-sm">{h.name}</p>
-                                                                <p className="text-xs text-slate-400">{formatThaiDate(h.date)}</p>
+                                                                <p className="text-xs text-slate-400">
+                                                                    {formatThaiDate(h.date)} &bull; <span className="text-emerald-700 font-bold">{h.session === 'afternoon' ? 'ครึ่งวันบ่าย' : (h.session === 'morning' ? 'ครึ่งวันเช้า' : 'ตลอดวัน')}</span>
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         <button 
@@ -1536,8 +1699,8 @@
                                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
                                             <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
                                                 <div>
-                                                    <h3 className="font-bold text-slate-800 text-base">วันกิจกรรมพิเศษประจำโรงเรียน ({activities.length})</h3>
-                                                    <p className="text-xs text-slate-400 mt-0.5">วันที่กำหนดเกณฑ์ลงโทษหักวันลาพิเศษ</p>
+                                                    <h3 className="font-bold text-slate-800 text-base">กิจกรรมพิเศษของโรงเรียน ({activities.length})</h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5">วันที่กำหนดเกณฑ์หักวันลาพิเศษ</p>
                                                 </div>
                                                 <button 
                                                     onClick={() => setShowAddActivityModal(true)}
@@ -1557,7 +1720,7 @@
                                                             <div>
                                                                 <p className="font-bold text-slate-800 text-sm">{a.name}</p>
                                                                 <p className="text-xs text-slate-400">
-                                                                    {formatThaiDate(a.date)} &bull; <span className="text-emerald-700 font-bold">{a.session === 'morning' ? 'ครึ่งเช้า' : 'ครึ่งบ่าย'}</span>
+                                                                    {formatThaiDate(a.date)} &bull; <span className="text-emerald-700 font-bold">{a.session === 'morning' ? 'ครึ่งวันเช้า' : (a.session === 'afternoon' ? 'ครึ่งวันบ่าย' : 'ตลอดวัน')}</span>
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1652,10 +1815,93 @@
                                         </div>
                                     </div>
                                 )}
-
                             </div>
                         )}
                     </main>
+
+                    /* STREAMING_CHUNK:Rendering Modals including Admin Leave Editing modal... */
+                    {/* Modal แก้ไขใบลาสำหรับ Admin */}
+                    {showEditLeaveModal && editingLeave && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-pen-to-square text-emerald-700"></i>
+                                        แก้ไขข้อมูลใบลา (รหัสใบลา: {editingLeave.id})
+                                    </h3>
+                                    <button onClick={() => { setShowEditLeaveModal(false); setEditingLeave(null); }} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleUpdateLeave} className="space-y-4 text-xs sm:text-sm">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">วันที่เริ่มลา</label>
+                                            <input 
+                                                type="date" 
+                                                value={editingLeave.startDate}
+                                                onChange={(e) => setEditingLeave({ ...editingLeave, startDate: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">สิ้นสุดวันที่</label>
+                                            <input 
+                                                type="date" 
+                                                value={editingLeave.period !== "all_day" ? editingLeave.startDate : editingLeave.endDate}
+                                                onChange={(e) => setEditingLeave({ ...editingLeave, endDate: e.target.value })}
+                                                disabled={editingLeave.period !== "all_day"}
+                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
+                                                required={editingLeave.period === "all_day"}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลา</label>
+                                            <select 
+                                                value={editingLeave.period}
+                                                onChange={(e) => setEditingLeave({ ...editingLeave, period: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
+                                            >
+                                                <option value="all_day">เต็มวัน (1.0)</option>
+                                                <option value="morning">ครึ่งเช้า (0.5)</option>
+                                                <option value="afternoon">ครึ่งบ่าย (0.5)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">ประเภทการลา</label>
+                                            <select 
+                                                value={editingLeave.type}
+                                                onChange={(e) => setEditingLeave({ ...editingLeave, type: e.target.value })}
+                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
+                                            >
+                                                <option value="personal">ลากิจส่วนตัว</option>
+                                                <option value="sick">ลาป่วย</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">เหตุผลการลา</label>
+                                        <input 
+                                            type="text" 
+                                            value={editingLeave.reason}
+                                            onChange={(e) => setEditingLeave({ ...editingLeave, reason: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
+                                            required
+                                        />
+                                    </div>
+
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
+                                        บันทึกการแก้ไขและคำนวณยอดใหม่
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Modal แสดงระเบียบข้อบังคับวันลาเต็มรูปแบบ */}
                     {showRuleModal && (
@@ -1696,21 +1942,21 @@
                                                     <i className="fa-regular fa-calendar-check text-emerald-700"></i>
                                                     วันหยุดปกติและการลาติดวันหยุด:
                                                 </h4>
-                                                <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินราชการ <strong>ไม่คิดหักวันลา</strong></p>
+                                                <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินของโรงเรียน <strong>ไม่คิดหักวันลา</strong></p>
                                                 <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
                                                 <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
                                                 <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong></p>
                                                 <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดราชการ <strong className="text-emerald-700">→ หัก 3 วัน</strong></p>
-                                                <p>• ลาเต็มวันค่อมวันหยุด <strong className="text-emerald-700">→ คิดหักบวกวันหยุดต่อเนื่องตามปฏิทินเพิ่มทั้งหมด</strong></p>
+                                                <p>• <strong>พิเศษสำหรับโควิด-19:</strong> ตรวจพบเชื้อโควิด ลาติดวันหยุดตามปฏิทินโรงเรียน หรือเสาร์-อาทิตย์ <strong className="text-emerald-700">→ ไม่หักวันลาเพิ่ม (คิด 1.0 วันปกติ)</strong> หักเพิ่มเฉพาะที่ลาติดวันกิจกรรมพิเศษ</p>
                                             </div>
 
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                                                 <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
                                                     <i className="fa-solid fa-handshake text-emerald-700"></i>
-                                                    วันประชุมพบกันฉันท์พี่น้อง & กิจกรรมพิเศษ:
+                                                    วันประชุมพบกันฉันน้องพี่ & กิจกรรมพิเศษ:
                                                 </h4>
-                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุม <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ตรงกับวันประชุม <strong className="text-emerald-700">→ หัก 2 วัน</strong> / ไม่เข้าประชุม <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
+                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 2 วัน</strong> / ไม่เข้าประชุม <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
                                                 <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
                                                 <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษครึ่งวัน <strong className="text-emerald-700">→ หัก 1.5 วัน</strong> (ลา 0.5 วัน หัก 1 วัน)</p>
                                             </div>
@@ -1718,12 +1964,12 @@
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                                                 <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
                                                     <i className="fa-solid fa-stopwatch text-emerald-700"></i>
-                                                    วินัยการเข้างาน & ค่าปฏิบัติงานเวร:
+                                                    วินัยการเข้างาน, ค่าเวร & ค่าสอน Summer Course:
                                                 </h4>
                                                 <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
                                                 <p>• ออกนอกสถานที่: 1.01-1.30 ชม. <strong className="text-emerald-700">→ นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. <strong className="text-emerald-700">→ หักลากิจ 0.5 วัน</strong></p>
-                                                <p>• ค่าเวร: ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
-                                                <p>• หากสิทธิ์วันลาหมด ระบบจะแสดงข้อความสีแดง <span className="text-red-600 font-extrabold">"หักเงินเดือน (สิทธิ์เกินกำหนด)"</span></p>
+                                                <p>• <strong>ค่าเวร:</strong> ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
+                                                <p>• <strong>ค่าสอน Summer Course:</strong> ลาช่วง 28 ก.ย. - 9 ต.ค. 69 หรือ 1 - 26 มี.ค. 70 <strong className="text-amber-700 font-bold">→ หักค่าสอนวันละ 200 บาท (ครึ่งวัน 100 บาท)</strong></p>
                                             </div>
                                         </div>
                                     ) : (
@@ -1738,18 +1984,6 @@
                                                 <p className="pl-3">• <strong>เสาร์ที่ 2 ของเดือน:</strong> คุณสมใจ (53), คุณอรทัย (54)</p>
                                                 <p className="pl-3">• <strong>เสาร์ที่ 3 ของเดือน:</strong> คุณสำราญ (56), คุณสมจิต (60)</p>
                                                 <p className="pl-3">• <strong>เสาร์ที่ 4 ของเดือน:</strong> คุณกรกช (55)</p>
-                                            </div>
-
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
-                                                    <i className="fa-solid fa-scale-balanced text-emerald-700"></i>
-                                                    กฎการหักวันลาพ่อบ้าน-แม่บ้าน:
-                                                </h4>
-                                                <p>• ลา 0.5 วันบ่าย/เช้า ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวันติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ติดวันอาทิตย์ + วันหยุดปฏิทิน หัก 3 วัน)</p>
-                                                <p>• สายครบ 3 ครั้ง หรือ ลืมสแกนนิ้วครบ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
-                                                <p>• ออกนอกสถานที่ 1.01-1.30 ชม. นับสาย 1 ครั้ง / &gt; 1.31 ชม. หักลากิจ 0.5 วัน</p>
-                                                <p>• สิทธิ์วันลาหมด ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"หักเงินเดือน (สิทธิ์เกินกำหนด)"</span></p>
                                             </div>
                                         </div>
                                     )}
@@ -1814,7 +2048,7 @@
                                             <option value="forgotTime">ลืมบันทึกเวลาเข้า-ออกงาน</option>
                                             <option value="middayShort">ออกนอกสถานที่ 1.01 - 1.30 ชม. (นับว่ามาสาย 1 ครั้ง)</option>
                                             <option value="middayLong">ออกนอกสถานที่ &gt; 1.30 ชม. (หักลากิจ 0.5 วัน)</option>
-                                            <option value="missedMeeting">ขาดประชุมพบกันฉันท์พี่น้อง (หักลากิจ 1 วัน)</option>
+                                            <option value="missedMeeting">ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)</option>
                                         </select>
                                     </div>
                                     <div>
@@ -1893,7 +2127,7 @@
                                                 </div>
 
                                                 <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">4. ขาดประชุมพบกัน:</span>
+                                                    <span className="font-bold text-slate-700">4. ขาดการประชุมพบกัน:</span>
                                                     <div className="flex items-center gap-2">
                                                         <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
                                                         <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.missedMeetingCount || 0}</span>
@@ -2154,7 +2388,7 @@
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
                                 <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
+                                    <h3 className="text-base font-bold text-slate-800">เพิ่มวันหยุดตามปฏิทินโรงเรียน</h3>
                                     <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
@@ -2163,7 +2397,7 @@
                                     e.preventDefault();
                                     if (!newHoliday.date || !newHoliday.name) return;
                                     setHolidays([...holidays, newHoliday]);
-                                    setNewHoliday({ date: "", name: "" });
+                                    setNewHoliday({ date: "", name: "", session: "all_day" });
                                     setShowAddHolidayModal(false);
                                     showToast("เพิ่มวันหยุดเรียบร้อยแล้ว");
                                 }} className="space-y-4 text-xs sm:text-sm">
@@ -2178,15 +2412,27 @@
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อวันหยุดราชการ</label>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อวันหยุด</label>
                                         <input 
                                             type="text" 
-                                            placeholder="วันสงกรานต์, วันเข้าพรรษา..."
+                                            placeholder="วันสงกรานต์, วันตรุษจีน..."
                                             value={newHoliday.name}
                                             onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
                                             className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
                                             required
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาหยุด</label>
+                                        <select 
+                                            value={newHoliday.session}
+                                            onChange={(e) => setNewHoliday({ ...newHoliday, session: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"
+                                        >
+                                            <option value="all_day">ตลอดวัน (เต็มวัน)</option>
+                                            <option value="morning">ครึ่งวันเช้า</option>
+                                            <option value="afternoon">ครึ่งวันบ่าย</option>
+                                        </select>
                                     </div>
                                     <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">
                                         บันทึกวันหยุด
@@ -2210,7 +2456,7 @@
                                     e.preventDefault();
                                     if (!newActivity.date || !newActivity.name) return;
                                     setActivities([...activities, newActivity]);
-                                    setNewActivity({ date: "", name: "", session: "morning" });
+                                    setNewActivity({ date: "", name: "", session: "all_day" });
                                     setShowAddActivityModal(false);
                                     showToast("บันทึกวันกิจกรรมเรียบร้อยแล้ว");
                                 }} className="space-y-4 text-xs sm:text-sm">
@@ -2228,7 +2474,7 @@
                                         <label className="block text-slate-700 font-bold mb-1.5">ชื่อกิจกรรมประจำโรงเรียน</label>
                                         <input 
                                             type="text" 
-                                            placeholder="พิธีไหว้ครู, กิจกรรมวันสัปดาห์วิทยาศาสตร์..."
+                                            placeholder="พิธีไหว้ครู, กิจกรรมกีฬาสี..."
                                             value={newActivity.name}
                                             onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
                                             className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
@@ -2242,6 +2488,7 @@
                                             onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })}
                                             className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"
                                         >
+                                            <option value="all_day">ตลอดวัน</option>
                                             <option value="morning">ครึ่งวันเช้า</option>
                                             <option value="afternoon">ครึ่งวันบ่าย</option>
                                         </select>
@@ -2257,13 +2504,12 @@
                     <footer className="bg-navy-950 text-slate-400 py-8 text-center text-xs sm:text-sm mt-12 border-t border-emerald-700/30">
                         <p>© ๒๕๖๙ ระบบบริหารจัดการวันลาและสถิติการปฏิบัติงาน - โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
                     </footer>
-
                 </div>
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<App/>);
     </script>
 </body>
 </html>
