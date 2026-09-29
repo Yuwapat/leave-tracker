@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuwapat Early Childhood School - ระบบบันทึกวันลาครู</title>
+    <title>Yuwapat Early Childhood School - ระบบบันทึกวันลาครูพรีเมียม</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -15,6 +15,16 @@
     <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script>
+        // Suppress Babel code generator styling deoptimization notes for large inline bundles
+        const _origConsoleError = console.error;
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('BABEL') && args[0].includes('500KB')) {
+                return;
+            }
+            _origConsoleError.apply(console, args);
+        };
+    </script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
@@ -48,8 +58,8 @@
             color: #1E293B;
         }
         ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
             background: #F1F5F9;
@@ -70,8 +80,7 @@
 
     <div id="root"></div>
 
-    /* STREAMING_CHUNK:Populating official school holidays, special activities, and staff constants... */
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react" data-compact="true">
         // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
@@ -224,8 +233,7 @@
 
         function getNthSaturdayOfMonth(dateObj) {
             if (dateObj.getDay() !== 6) return 0;
-            const day = dateObj.getDate();
-            return Math.ceil(day / 7);
+            return Math.ceil(dateObj.getDate() / 7);
         }
 
         function isMaidSaturdayOff(teacherId, dateObj) {
@@ -240,8 +248,9 @@
             return false;
         }
 
-        /* STREAMING_CHUNK:Defining App component state and localStorage hooks... */
         function App() {
+            const CALENDAR_VERSION = "2569_2570_v3";
+
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
                 if (saved) {
@@ -263,13 +272,24 @@
             });
 
             const [holidays, setHolidays] = React.useState(() => {
+                const version = localStorage.getItem("leave_calendar_ver");
                 const saved = localStorage.getItem("leave_holidays");
-                return saved ? JSON.parse(saved) : initialHolidays;
+                if (version === CALENDAR_VERSION && saved) {
+                    try { return JSON.parse(saved); } catch (e) {}
+                }
+                localStorage.setItem("leave_calendar_ver", CALENDAR_VERSION);
+                localStorage.setItem("leave_holidays", JSON.stringify(initialHolidays));
+                return initialHolidays;
             });
 
             const [activities, setActivities] = React.useState(() => {
+                const version = localStorage.getItem("leave_calendar_ver");
                 const saved = localStorage.getItem("leave_activities");
-                return saved ? JSON.parse(saved) : initialActivities;
+                if (version === CALENDAR_VERSION && saved) {
+                    try { return JSON.parse(saved); } catch (e) {}
+                }
+                localStorage.setItem("leave_activities", JSON.stringify(initialActivities));
+                return initialActivities;
             });
 
             const [leaves, setLeaves] = React.useState(() => {
@@ -313,14 +333,22 @@
             const [showEditTeacherModal, setShowEditTeacherModal] = React.useState(false);
             const [editingTeacher, setEditingTeacher] = React.useState(null);
             
-            // Edit Leave Modal for Admin
+            // Edit Leave Modal for Admin/HR
             const [showEditLeaveModal, setShowEditLeaveModal] = React.useState(false);
             const [editingLeave, setEditingLeave] = React.useState(null);
 
+            // Holiday Modals (Add & Edit)
             const [showAddHolidayModal, setShowAddHolidayModal] = React.useState(false);
             const [newHoliday, setNewHoliday] = React.useState({ date: "", name: "", session: "all_day" });
+            const [showEditHolidayModal, setShowEditHolidayModal] = React.useState(false);
+            const [editingHoliday, setEditingHoliday] = React.useState(null);
+
+            // Activity Modals (Add & Edit)
             const [showAddActivityModal, setShowAddActivityModal] = React.useState(false);
             const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "all_day" });
+            const [showEditActivityModal, setShowEditActivityModal] = React.useState(false);
+            const [editingActivity, setEditingActivity] = React.useState(null);
+
             const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, title: "", message: "", onConfirm: null });
             
             // Discipline Modals
@@ -342,7 +370,6 @@
             React.useEffect(() => { if (adminSubTab) localStorage.setItem("leave_admin_sub_tab", adminSubTab); }, [adminSubTab]);
             React.useEffect(() => { if (selectedTeacherId) localStorage.setItem("leave_selected_teacher_id", selectedTeacherId); }, [selectedTeacherId]);
 
-            // Sync Google Sheets Data
             React.useEffect(() => {
                 if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) return;
                 
@@ -597,7 +624,6 @@
             const getHolidayObj = (dateStr) => holidays.find(h => h.date === dateStr);
             const getSchoolActivity = (dateStr) => activities.find(a => a.date === dateStr);
 
-            /* STREAMING_CHUNK:Implementing leave deduction algorithms with COVID-19 rules and Summer fees... */
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", targetUser = selectedTeacher, isCovid = false) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr || !targetUser) return { total: 0, breakdown: [], dutyFeeDeduction: 0, summerFeeDeduction: 0 };
@@ -622,7 +648,6 @@
                     const isHolidayAllDay = hol && (!hol.session || hol.session === "all_day");
                     const isHolidayHalfDay = hol && hol.session && hol.session !== "all_day";
 
-                    // ตรวจสอบวันหยุดประจำสัปดาห์
                     let isWeeklyOff = false;
                     if (isMaidOrJanitor) {
                         isWeeklyOff = (dayOfWeek === 0) || (dayOfWeek === 6 && isMaidSaturdayOff(targetUser.id, current));
@@ -642,7 +667,6 @@
                         const schoolActivity = getSchoolActivity(dateStr);
                         const isMeetingDay = schoolActivity && (schoolActivity.name.includes("ประชุม") || schoolActivity.name.includes("ฉันน้องพี่"));
 
-                        // 🦠 กฎพิเศษ: กรณีตรวจพบเชื้อโควิด-19
                         if (isCovid) {
                             if (schoolActivity) {
                                 const isActivityAllDay = schoolActivity.session === "all_day";
@@ -658,7 +682,6 @@
                                 reason = "ลาป่วยตรวจพบเชื้อโควิด-19 (ไม่คิดหักเพิ่มติดวันหยุด)";
                             }
                         } else {
-                            // กฎปกติ
                             if (!isMaidOrJanitor && isMeetingDay) {
                                 if (period === "afternoon") {
                                     baseDeduction = 1.5;
@@ -701,12 +724,10 @@
                             }
                         }
 
-                        // คำนวณค่าเวร
                         if (!isMaidOrJanitor) {
                             totalDutyFee += (period !== "all_day" ? 50 : 100);
                         }
 
-                        // คำนวณค่าสอน Summer Course (วันละ 200 บาท / ครึ่งวัน 100 บาท)
                         if (!isMaidOrJanitor && isDateInSummer(dateStr)) {
                             totalSummerFee += (period !== "all_day" ? 100 : 200);
                         }
@@ -813,7 +834,6 @@
                 );
             };
 
-            // แอดมินแก้ไขใบลาโดยตรง
             const handleUpdateLeave = (e) => {
                 e.preventDefault();
                 if (!editingLeave) return;
@@ -980,7 +1000,6 @@
                 );
             };
 
-            /* STREAMING_CHUNK:Rendering application views, login screen, and leave forms... */
             if (!currentUser) {
                 return (
                     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 font-['Sarabun']">
@@ -1088,7 +1107,7 @@
                                             className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-2 ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
                                         >
                                             <i className="fa-solid fa-user-shield"></i>
-                                            บริหารจัดการทรัพยากรบุคคล (ADMIN)
+                                            บริหารจัดการทรัพยากรบุคคล (ADMIN / HR)
                                         </button>
                                     </div>
                                 )}
@@ -1096,7 +1115,7 @@
                                 <div className="flex items-center gap-3 bg-navy-950 pl-4 pr-2 py-2 rounded-xl border border-emerald-700/40">
                                     <div className="text-right">
                                         <p className="text-[11px] font-bold text-emerald-400 uppercase">
-                                            {currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : currentRole === 'hr' ? 'เจ้าหน้าที่งานบุคคล' : 'ครูผู้สอน / บุคลากร'}
+                                            {currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : currentRole === 'hr' ? 'เจ้าหน้าที่งานบุคคล (HR)' : 'ครูผู้สอน / บุคลากร'}
                                         </p>
                                         <p className="text-sm font-bold text-white">{currentUser.prefix}{currentUser.name}</p>
                                     </div>
@@ -1148,6 +1167,7 @@
                         </div>
                     )}
 
+                    {}
                     <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
                         {activeTab === "teacher" && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1302,6 +1322,7 @@
                                     )}
                                 </div>
 
+                                {}
                                 <div className="space-y-6 lg:col-span-2 text-left">
                                     <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
                                         <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-5 border-b pb-4 border-slate-100 flex items-center gap-2.5">
@@ -1442,7 +1463,7 @@
                             </div>
                         )}
 
-                        /* STREAMING_CHUNK:Rendering full Admin Dashboard with Leave Editing capability... */
+                        {}
                         {activeTab === "admin" && isAdminOrHr && (
                             <div className="space-y-6 text-left">
                                 <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -1490,7 +1511,7 @@
                                         <i className="fa-solid fa-calendar-days text-base"></i>
                                         ปฏิทินวันหยุด & กิจกรรม
                                     </button>
-                                    {currentRole === "admin" && (
+                                    {isAdminOrHr && (
                                         <button 
                                             onClick={() => setAdminSubTab("roles")}
                                             className={`px-5 py-3.5 font-bold text-xs sm:text-sm transition rounded-t-xl flex items-center gap-2 whitespace-nowrap ${adminSubTab === 'roles' ? 'bg-white text-emerald-800 border-t-2 border-x border-emerald-700' : 'text-slate-500 hover:text-slate-800'}`}
@@ -1568,6 +1589,7 @@
                                     </div>
                                 )}
 
+                                {}
                                 {adminSubTab === "teachers" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0">
                                         <div className="overflow-x-auto">
@@ -1652,8 +1674,10 @@
                                     </div>
                                 )}
 
+                                {}
                                 {adminSubTab === "calendar" && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-xs sm:text-sm">
+                                        {/* กล่องวันหยุดตามปฏิทินโรงเรียน พร้อมปุ่มแก้ไข */}
                                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
                                             <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
                                                 <div>
@@ -1682,20 +1706,36 @@
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => {
-                                                                setHolidays(holidays.filter(item => item.date !== h.date));
-                                                                showToast("ลบวันหยุดเรียบร้อยแล้ว");
-                                                            }} 
-                                                            className="text-slate-400 hover:text-red-500 p-1.5"
-                                                        >
-                                                            <i className="fa-solid fa-trash-can text-sm"></i>
-                                                        </button>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setEditingHoliday({ ...h, originalDate: h.date });
+                                                                    setShowEditHolidayModal(true);
+                                                                }}
+                                                                className="text-sky-600 hover:text-sky-800 p-2 rounded-lg hover:bg-sky-50 transition"
+                                                                title="แก้ไขวันหยุด"
+                                                            >
+                                                                <i className="fa-solid fa-pen-to-square text-sm"></i>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    const updated = holidays.filter(item => item.date !== h.date);
+                                                                    setHolidays(updated);
+                                                                    localStorage.setItem("leave_holidays", JSON.stringify(updated));
+                                                                    showToast("ลบวันหยุดเรียบร้อยแล้ว");
+                                                                }} 
+                                                                className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition"
+                                                                title="ลบวันหยุด"
+                                                            >
+                                                                <i className="fa-solid fa-trash-can text-sm"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
+                                        {/* กล่องกิจกรรมพิเศษของโรงเรียน พร้อมปุ่มแก้ไข */}
                                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
                                             <div className="flex justify-between items-center mb-5 border-b pb-4 border-slate-100">
                                                 <div>
@@ -1724,15 +1764,30 @@
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => {
-                                                                setActivities(activities.filter(item => item.date !== a.date));
-                                                                showToast("ลบกิจกรรมเรียบร้อยแล้ว");
-                                                            }} 
-                                                            className="text-slate-400 hover:text-red-500 p-1.5"
-                                                        >
-                                                            <i className="fa-solid fa-trash-can text-sm"></i>
-                                                        </button>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setEditingActivity({ ...a, originalDate: a.date });
+                                                                    setShowEditActivityModal(true);
+                                                                }}
+                                                                className="text-sky-600 hover:text-sky-800 p-2 rounded-lg hover:bg-sky-50 transition"
+                                                                title="แก้ไขกิจกรรม"
+                                                            >
+                                                                <i className="fa-solid fa-pen-to-square text-sm"></i>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    const updated = activities.filter(item => item.date !== a.date);
+                                                                    setActivities(updated);
+                                                                    localStorage.setItem("leave_activities", JSON.stringify(updated));
+                                                                    showToast("ลบกิจกรรมเรียบร้อยแล้ว");
+                                                                }} 
+                                                                className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition"
+                                                                title="ลบกิจกรรม"
+                                                            >
+                                                                <i className="fa-solid fa-trash-can text-sm"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -1740,7 +1795,8 @@
                                     </div>
                                 )}
 
-                                {adminSubTab === "roles" && currentRole === "admin" && (
+                                {}
+                                {adminSubTab === "roles" && isAdminOrHr && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0 text-xs sm:text-sm">
                                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4 border-slate-100">
                                             <div>
@@ -1819,8 +1875,8 @@
                         )}
                     </main>
 
-                    /* STREAMING_CHUNK:Rendering Modals including Admin Leave Editing modal... */
-                    {/* Modal แก้ไขใบลาสำหรับ Admin */}
+                    {}
+                    {/* Modal แก้ไขใบลาสำหรับ Admin / HR */}
                     {showEditLeaveModal && editingLeave && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
@@ -1903,7 +1959,125 @@
                         </div>
                     )}
 
-                    {/* Modal แสดงระเบียบข้อบังคับวันลาเต็มรูปแบบ */}
+                    {/* Modal แก้ไขวันหยุดตามปฏิทินโรงเรียน */}
+                    {showEditHolidayModal && editingHoliday && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base font-bold text-slate-800">แก้ไขวันหยุดตามปฏิทินโรงเรียน</h3>
+                                    <button onClick={() => { setShowEditHolidayModal(false); setEditingHoliday(null); }} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const updated = holidays.map(h => h.date === editingHoliday.originalDate ? { date: editingHoliday.date, name: editingHoliday.name, session: editingHoliday.session } : h);
+                                    setHolidays(updated);
+                                    localStorage.setItem("leave_holidays", JSON.stringify(updated));
+                                    setShowEditHolidayModal(false);
+                                    setEditingHoliday(null);
+                                    showToast("แก้ไขวันหยุดเรียบร้อยแล้ว");
+                                }} className="space-y-4 text-xs sm:text-sm">
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่</label>
+                                        <input 
+                                            type="date" 
+                                            value={editingHoliday.date}
+                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, date: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อวันหยุด</label>
+                                        <input 
+                                            type="text" 
+                                            value={editingHoliday.name}
+                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, name: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-semibold"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาหยุด</label>
+                                        <select 
+                                            value={editingHoliday.session}
+                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, session: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"
+                                        >
+                                            <option value="all_day">ตลอดวัน (เต็มวัน)</option>
+                                            <option value="morning">ครึ่งวันเช้า</option>
+                                            <option value="afternoon">ครึ่งวันบ่าย</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
+                                        บันทึกการแก้ไขวันหยุด
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal แก้ไขกิจกรรมพิเศษของโรงเรียน */}
+                    {showEditActivityModal && editingActivity && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base font-bold text-slate-800">แก้ไขกิจกรรมพิเศษของโรงเรียน</h3>
+                                    <button onClick={() => { setShowEditActivityModal(false); setEditingActivity(null); }} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const updated = activities.map(a => a.date === editingActivity.originalDate ? { date: editingActivity.date, name: editingActivity.name, session: editingActivity.session } : a);
+                                    setActivities(updated);
+                                    localStorage.setItem("leave_activities", JSON.stringify(updated));
+                                    setShowEditActivityModal(false);
+                                    setEditingActivity(null);
+                                    showToast("แก้ไขกิจกรรมเรียบร้อยแล้ว");
+                                }} className="space-y-4 text-xs sm:text-sm">
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่จัดกิจกรรม</label>
+                                        <input 
+                                            type="date" 
+                                            value={editingActivity.date}
+                                            onChange={(e) => setEditingActivity({ ...editingActivity, date: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อกิจกรรมประจำโรงเรียน</label>
+                                        <input 
+                                            type="text" 
+                                            value={editingActivity.name}
+                                            onChange={(e) => setEditingActivity({ ...editingActivity, name: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-semibold"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาจัดกิจกรรม</label>
+                                        <select 
+                                            value={editingActivity.session}
+                                            onChange={(e) => setEditingActivity({ ...editingActivity, session: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"
+                                        >
+                                            <option value="all_day">ตลอดวัน</option>
+                                            <option value="morning">ครึ่งวันเช้า</option>
+                                            <option value="afternoon">ครึ่งวันบ่าย</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
+                                        บันทึกการแก้ไขกิจกรรม
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {}
                     {showRuleModal && (
                         <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-3xl border text-left max-h-[90vh] flex flex-col">
@@ -1999,7 +2173,7 @@
                         </div>
                     )}
 
-                    {/* Modal บันทึกประวัติการลงเวลา */}
+                    {}
                     {showAddDisciplineModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
@@ -2069,7 +2243,6 @@
                         </div>
                     )}
 
-                    {/* Modal ดูประวัติการลงเวลา & ปรับสถิติสะสม */}
                     {showViewDisciplineModal && viewDisciplineTeacher && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl border text-left flex flex-col max-h-[90vh]">
@@ -2187,7 +2360,7 @@
                         </div>
                     )}
 
-                    {/* Modal เพิ่มพนักงานใหม่ */}
+                    {}
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
@@ -2288,7 +2461,6 @@
                         </div>
                     )}
 
-                    {/* Modal แก้ไขพนักงาน */}
                     {showEditTeacherModal && editingTeacher && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
@@ -2383,7 +2555,6 @@
                         </div>
                     )}
 
-                    {/* Modal เพิ่มวันหยุด */}
                     {showAddHolidayModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
@@ -2396,7 +2567,9 @@
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
                                     if (!newHoliday.date || !newHoliday.name) return;
-                                    setHolidays([...holidays, newHoliday]);
+                                    const updated = [...holidays, newHoliday];
+                                    setHolidays(updated);
+                                    localStorage.setItem("leave_holidays", JSON.stringify(updated));
                                     setNewHoliday({ date: "", name: "", session: "all_day" });
                                     setShowAddHolidayModal(false);
                                     showToast("เพิ่มวันหยุดเรียบร้อยแล้ว");
@@ -2407,7 +2580,7 @@
                                             type="date" 
                                             value={newHoliday.date}
                                             onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
                                             required
                                         />
                                     </div>
@@ -2418,7 +2591,7 @@
                                             placeholder="วันสงกรานต์, วันตรุษจีน..."
                                             value={newHoliday.name}
                                             onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-semibold"
                                             required
                                         />
                                     </div>
@@ -2434,7 +2607,7 @@
                                             <option value="afternoon">ครึ่งวันบ่าย</option>
                                         </select>
                                     </div>
-                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
                                         บันทึกวันหยุด
                                     </button>
                                 </form>
@@ -2442,7 +2615,6 @@
                         </div>
                     )}
 
-                    {/* Modal เพิ่มกิจกรรม */}
                     {showAddActivityModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
@@ -2455,7 +2627,9 @@
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
                                     if (!newActivity.date || !newActivity.name) return;
-                                    setActivities([...activities, newActivity]);
+                                    const updated = [...activities, newActivity];
+                                    setActivities(updated);
+                                    localStorage.setItem("leave_activities", JSON.stringify(updated));
                                     setNewActivity({ date: "", name: "", session: "all_day" });
                                     setShowAddActivityModal(false);
                                     showToast("บันทึกวันกิจกรรมเรียบร้อยแล้ว");
@@ -2466,7 +2640,7 @@
                                             type="date" 
                                             value={newActivity.date}
                                             onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
                                             required
                                         />
                                     </div>
@@ -2477,7 +2651,7 @@
                                             placeholder="พิธีไหว้ครู, กิจกรรมกีฬาสี..."
                                             value={newActivity.name}
                                             onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
+                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-semibold"
                                             required
                                         />
                                     </div>
@@ -2493,7 +2667,7 @@
                                             <option value="afternoon">ครึ่งวันบ่าย</option>
                                         </select>
                                     </div>
-                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3.5 rounded-xl shadow mt-2">
+                                    <button type="submit" className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
                                         บันทึกวันกิจกรรม
                                     </button>
                                 </form>
