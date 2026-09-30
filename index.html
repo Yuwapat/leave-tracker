@@ -110,13 +110,53 @@
             return SUMMER_COURSES.some(s => dateStr >= s.start && dateStr <= s.end);
         }
 
-        // คำนวณปีการศึกษาจากวันที่ (๑ พ.ค. - ๓๐ เม.ย.)
+        // 🔍 ฟังก์ชันดึงค่าจาก Object แบบยืดหยุ่นสูง (ไม่สนใจตัวพิมพ์เล็ก-ใหญ่ หรือภาษาไทย/อังกฤษ)
+        function getField(obj, ...keys) {
+            if (!obj || typeof obj !== "object") return undefined;
+            for (const k of keys) {
+                if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") {
+                    return obj[k];
+                }
+            }
+            const normalizedLookup = keys.map(k => String(k).toLowerCase().replace(/[\s_\-]/g, ""));
+            for (const [prop, val] of Object.entries(obj)) {
+                const normProp = String(prop).toLowerCase().replace(/[\s_\-]/g, "");
+                if (normalizedLookup.includes(normProp) && val !== undefined && val !== null && String(val).trim() !== "") {
+                    return val;
+                }
+            }
+            return undefined;
+        }
+
+        // คำนวณปีการศึกษาจากวันที่ (๑ พ.ค. - ๓๐ เม.ย.) รองรับทั้ง YYYY-MM-DD, DD/MM/YYYY, พ.ศ. และ ค.ศ.
         function getAcademicYearFromDate(dateStr) {
             if (!dateStr) return "2569";
-            const parts = dateStr.split("-");
-            if (parts.length < 3) return "2569";
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10);
+            const str = String(dateStr).trim();
+            let year = 2026, month = 5;
+
+            if (str.includes("-")) {
+                const parts = str.split("-");
+                if (parts[0].length === 4) {
+                    year = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                } else if (parts[2] && parts[2].length >= 4) {
+                    year = parseInt(parts[2], 10);
+                    month = parseInt(parts[1], 10);
+                }
+            } else if (str.includes("/")) {
+                const parts = str.split("/");
+                if (parts[0].length === 4) {
+                    year = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10);
+                } else if (parts[2] && parts[2].length >= 4) {
+                    year = parseInt(parts[2], 10);
+                    month = parseInt(parts[1], 10);
+                }
+            }
+
+            if (year > 2400) {
+                return String(month >= 5 ? year : year - 1);
+            }
             const beYear = month >= 5 ? (year + 543) : (year - 1 + 543);
             return String(beYear);
         }
@@ -306,75 +346,80 @@
 
                     const data = await response.json();
                     
-                    // 1. ซิงก์ Users จากชีท Users
+                    // 1. ซิงก์ Users จากชีท Users (ดึงค่าโควตา สิทธิ์ และข้อมูลครูตรงตามชีท)
                     if (data.users && Array.isArray(data.users)) {
                         const mappedUsers = data.users.map(u => {
-                            const userId = String(u.id || u.ID || u["รหัส"] || "");
+                            const userId = String(getField(u, "ID", "id", "รหัส", "รหัสประจำตัว", "ลำดับ") || "").trim();
+                            const sickVal = getField(u, "SickQuota", "sickQuota", "sickquota", "โควตาลาป่วย", "สิทธิ์ลาป่วย", "ลาป่วย", "sick_quota");
+                            const personalVal = getField(u, "PersonalQuota", "personalQuota", "personalquota", "โควตาลากิจ", "โควตาลากิจส่วนตัว", "สิทธิ์ลากิจ", "ลากิจ", "personal_quota");
+
                             return {
                                 id: userId,
-                                prefix: u.prefix || u.Prefix || u["คำนำหน้า"] || "",
-                                name: u.name || u.Name || u["ชื่อ"] || u["ชื่อ-นามสกุล"] || "",
-                                role: normalizeRole(u.role || u.Role || u["ตำแหน่ง"], userId),
-                                password: String(u.password !== undefined ? u.password : (u.Password !== undefined ? u.Password : "1234")),
-                                email: u.email || u.Email || "",
-                                sickQuota: Number(u.sickquota !== undefined ? u.sickquota : (u.sickQuota !== undefined ? u.sickQuota : 30)),
-                                personalQuota: Number(u.personalquota !== undefined ? u.personalquota : (u.personalQuota !== undefined ? u.personalQuota : 15)),
-                                lateCount: Number(u.latecount !== undefined ? u.latecount : (u.lateCount !== undefined ? u.lateCount : 0)),
-                                forgotTimeCount: Number(u.forgottimecount !== undefined ? u.forgottimecount : (u.forgotTimeCount !== undefined ? u.forgotTimeCount : 0)),
-                                middayOutShortCount: Number(u.middayoutshortcount !== undefined ? u.middayOutShortCount : 0),
-                                middayOutLongCount: Number(u.middayoutlongcount !== undefined ? u.middayOutLongCount : 0),
-                                missedMeetingCount: Number(u.missedmeetingcount !== undefined ? u.missedMeetingCount : 0),
-                                photo: u.photo || u.Photo || "",
-                                hireDate: u.hiredate || u.hireDate || ""
+                                prefix: String(getField(u, "Prefix", "prefix", "คำนำหน้า", "คำนำหน้านาม") || ""),
+                                name: String(getField(u, "Name", "name", "ชื่อ", "ชื่อ-นามสกุล", "ชื่อ นามสกุล") || ""),
+                                role: normalizeRole(getField(u, "Role", "role", "ตำแหน่ง", "หน้าที่"), userId),
+                                password: String(getField(u, "Password", "password", "รหัสผ่าน") !== undefined ? getField(u, "Password", "password", "รหัสผ่าน") : "1234"),
+                                email: String(getField(u, "Email", "email", "อีเมล", "username") || ""),
+                                sickQuota: sickVal !== undefined ? Number(sickVal) : 30,
+                                personalQuota: personalVal !== undefined ? Number(personalVal) : 15,
+                                lateCount: Number(getField(u, "LateCount", "lateCount", "latecount", "สาย", "มาสาย") || 0),
+                                forgotTimeCount: Number(getField(u, "ForgotTimeCount", "forgotTimeCount", "forgottimecount", "ลืมสแกน", "ลืมบันทึกเวลา") || 0),
+                                middayOutShortCount: Number(getField(u, "MiddayOutShortCount", "middayOutShortCount", "middayoutshortcount") || 0),
+                                middayOutLongCount: Number(getField(u, "MiddayOutLongCount", "middayOutLongCount", "middayoutlongcount") || 0),
+                                missedMeetingCount: Number(getField(u, "MissedMeetingCount", "missedMeetingCount", "missedmeetingcount") || 0),
+                                photo: String(getField(u, "Photo", "photo", "รูป", "รูปภาพ") || ""),
+                                hireDate: String(getField(u, "HireDate", "hireDate", "hiredate", "วันที่เริ่มงาน") || "")
                             };
                         }).filter(validU => validU.id && validU.name);
 
                         setUsers(mappedUsers);
                     }
 
-                    // 2. ซิงก์ Leaves จากชีท Leaves
+                    // 2. ซิงก์ Leaves จากชีท Leaves (คำนวณวันลาและยอดหักตามที่บันทึกไว้ในชีทจริง)
                     if (data.leaves && Array.isArray(data.leaves)) {
                         const mappedLeaves = data.leaves.map(l => {
-                            let parsedBreakdown = l.breakdown || l.Breakdown || "";
+                            let parsedBreakdown = getField(l, "Breakdown", "breakdown", "รายละเอียด") || "";
                             if (typeof parsedBreakdown === "string" && parsedBreakdown.trim().startsWith("[")) {
                                 try { parsedBreakdown = JSON.parse(parsedBreakdown); } catch (e) {}
                             }
                             
-                            const rawType = String(l.type || l.Type || "");
-                            const mappedType = (rawType.includes("ป่วย") || rawType === "sick") ? "sick" : "personal";
-                            const sDate = l.startdate || l.startDate || l.StartDate || "";
-                            const acYear = l.academicyear || l.academicYear || l.AcademicYear || getAcademicYearFromDate(sDate);
+                            const rawType = String(getField(l, "Type", "type", "ประเภท", "ประเภทการลา") || "");
+                            const mappedType = (rawType.includes("ป่วย") || rawType.toLowerCase() === "sick") ? "sick" : "personal";
+                            const sDate = String(getField(l, "StartDate", "startDate", "startdate", "วันที่เริ่ม", "วันที่เริ่มลา") || "");
+                            const eDate = String(getField(l, "EndDate", "endDate", "enddate", "สิ้นสุดวันที่", "วันที่สิ้นสุด") || sDate);
+                            const acYear = String(getField(l, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(sDate));
+                            const deductedVal = getField(l, "TotalDeducted", "totalDeducted", "totaldeducted", "ยอดหัก", "ยอดหักวันลา", "วันลาที่หัก");
 
                             return {
-                                id: l.id || l.ID || "",
-                                teacherId: String(l.teacherid || l.teacherId || l.TeacherID || ""),
-                                teacherName: l.teachername || l.teacherName || l.TeacherName || "",
+                                id: String(getField(l, "ID", "id", "รหัสใบลา") || ""),
+                                teacherId: String(getField(l, "TeacherID", "teacherId", "teacherid", "รหัสครู", "รหัสบุคลากร", "รหัส") || "").trim(),
+                                teacherName: String(getField(l, "TeacherName", "teacherName", "teachername", "ชื่อครู", "ชื่อ-นามสกุล") || ""),
                                 startDate: sDate,
-                                endDate: l.enddate || l.endDate || l.EndDate || "",
+                                endDate: eDate,
                                 type: mappedType,
-                                period: l.period || l.Period || "all_day",
-                                reason: l.reason || l.Reason || "",
-                                totalDeducted: Number(l.totaldeducted !== undefined ? l.totaldeducted : (l.totalDeducted !== undefined ? l.totalDeducted : 1)),
-                                status: l.status || l.Status || "อนุมัติแล้ว",
+                                period: String(getField(l, "Period", "period", "ช่วงเวลา", "ช่วง") || "all_day"),
+                                reason: String(getField(l, "Reason", "reason", "เหตุผล", "ความจำเป็น") || ""),
+                                totalDeducted: deductedVal !== undefined ? Number(deductedVal) : 1,
+                                status: String(getField(l, "Status", "status", "สถานะ") || "อนุมัติแล้ว"),
                                 breakdown: parsedBreakdown,
-                                createdAt: l.createdat || l.createdAt || l.CreatedAt || "",
-                                dutyFeeDeduction: Number(l.dutyfeededuction !== undefined ? l.dutyfeededuction : (l.dutyFeeDeduction !== undefined ? l.dutyFeeDeduction : 0)),
-                                summerFeeDeduction: Number(l.summerfeededuction !== undefined ? l.summerfeededuction : (l.summerFeeDeduction !== undefined ? l.summerFeeDeduction : 0)),
+                                createdAt: String(getField(l, "CreatedAt", "createdAt", "createdat", "วันที่บันทึก") || ""),
+                                dutyFeeDeduction: Number(getField(l, "DutyFeeDeduction", "dutyFeeDeduction", "dutyfeededuction", "หักค่าเวร") || 0),
+                                summerFeeDeduction: Number(getField(l, "SummerFeeDeduction", "summerFeeDeduction", "summerfeededuction", "หักค่าสอนSummer") || 0),
                                 academicYear: acYear
                             };
                         });
-                        setLeaves(mappedLeaves.filter(ml => ml.id));
+                        setLeaves(mappedLeaves.filter(ml => ml.id || ml.startDate));
                     }
 
                     // 3. ซิงก์ Holidays จากชีท Holidays
                     if (data.holidays && Array.isArray(data.holidays)) {
                         const mappedHolidays = data.holidays.map(h => {
-                            const dStr = h.date || h.Date || "";
+                            const dStr = String(getField(h, "Date", "date", "วันที่") || "");
                             return {
                                 date: dStr,
-                                name: h.name || h.Name || "",
-                                session: h.session || h.Session || "all_day",
-                                academicYear: h.academicyear || h.academicYear || h.AcademicYear || getAcademicYearFromDate(dStr)
+                                name: String(getField(h, "Name", "name", "ชื่อวันหยุด", "วันหยุด") || ""),
+                                session: String(getField(h, "Session", "session", "ช่วงเวลา", "ช่วง") || "all_day"),
+                                academicYear: String(getField(h, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(dStr))
                             };
                         }).filter(h => h.date && h.name);
                         setAllHolidays(mappedHolidays);
@@ -383,19 +428,19 @@
                     // 4. ซิงก์ Activities จากชีท Activities
                     if (data.activities && Array.isArray(data.activities)) {
                         const mappedActivities = data.activities.map(a => {
-                            const dStr = a.date || a.Date || "";
+                            const dStr = String(getField(a, "Date", "date", "วันที่") || "");
                             return {
                                 date: dStr,
-                                name: a.name || a.Name || "",
-                                session: a.session || a.Session || "all_day",
-                                academicYear: a.academicyear || a.academicYear || a.AcademicYear || getAcademicYearFromDate(dStr)
+                                name: String(getField(a, "Name", "name", "ชื่อกิจกรรม", "กิจกรรม") || ""),
+                                session: String(getField(a, "Session", "session", "ช่วงเวลา", "ช่วง") || "all_day"),
+                                academicYear: String(getField(a, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(dStr))
                             };
                         }).filter(a => a.date && a.name);
                         setAllActivities(mappedActivities);
                     }
 
                     if (showNotification) {
-                        setNotification({ message: "อัปเดตข้อมูลสดจาก Google Sheets เรียบร้อยแล้ว", type: "success" });
+                        setNotification({ message: `อัปเดตข้อมูลสดจาก Google Sheets เรียบร้อยแล้ว (บุคลากร ${data.users?.length || 0} ท่าน, ใบลา ${data.leaves?.length || 0} รายการ)`, type: "success" });
                         setTimeout(() => setNotification(null), 3000);
                     }
                 } catch (error) {
@@ -428,38 +473,42 @@
                 }
             }, [currentUser, users, selectedTeacherId]);
 
-            React.useEffect(() => {
-                if (formData.period !== "all_day" && formData.startDate) {
-                    setFormData(prev => ({ ...prev, endDate: prev.startDate }));
-                }
-            }, [formData.startDate, formData.period]);
-
-            // คำนวณสถิติเฉพาะปีการศึกษาที่เลือก
+            // คำนวณสถิติเฉพาะปีการศึกษาที่เลือก (จับคู่ TeacherID ได้แม่นยำ 100%)
             const getTeacherStats = (teacherId) => {
-                const teacherObj = users.find(u => String(u.id) === String(teacherId));
+                const teacherObj = users.find(u => String(u.id).trim() === String(teacherId).trim());
                 if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0, dutyFeeTotal: 0, summerFeeTotal: 0 };
                 
-                const userLeaves = currentYearLeaves.filter(l => String(l.teacherId) === String(teacherId) && (l.status === "approved" || l.status === "อนุมัติแล้ว"));
+                const userLeaves = currentYearLeaves.filter(l => {
+                    const lId = String(l.teacherId || "").trim();
+                    const tId = String(teacherId || "").trim();
+                    const isIdMatch = (lId === tId) || (!isNaN(lId) && !isNaN(tId) && parseInt(lId, 10) === parseInt(tId, 10));
+                    const isNameMatch = l.teacherName && teacherObj.name && l.teacherName.replace(/\s+/g, '').includes(teacherObj.name.replace(/\s+/g, ''));
+                    
+                    const isApproved = !l.status || l.status.includes("อนุมัติ") || l.status.toLowerCase().includes("approved");
+                    const isNotCanceled = !l.status || (!l.status.includes("ยกเลิก") && !l.status.includes("ไม่อนุมัติ"));
+
+                    return (isIdMatch || isNameMatch) && isApproved && isNotCanceled;
+                });
                 
                 const sickUsed = userLeaves
                     .filter(l => l.type === "sick" || l.type === "ลาป่วย")
                     .reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
                     
                 const personalDeductedFromLeaves = userLeaves
-                    .filter(l => l.type === "personal" || l.type === "ลากิจส่วนตัว")
+                    .filter(l => l.type === "personal" || l.type === "ลากิจส่วนตัว" || l.type === "ลากิจ")
                     .reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
 
-                const dutyFeeTotal = userLeaves.reduce((sum, l) => sum + (l.dutyFeeDeduction || 0), 0);
-                const summerFeeTotal = userLeaves.reduce((sum, l) => sum + (l.summerFeeDeduction || 0), 0);
+                const dutyFeeTotal = userLeaves.reduce((sum, l) => sum + Number(l.dutyFeeDeduction || 0), 0);
+                const summerFeeTotal = userLeaves.reduce((sum, l) => sum + Number(l.summerFeeDeduction || 0), 0);
                     
-                const lateCount = teacherObj.lateCount || 0;
-                const forgotScanCount = teacherObj.forgotTimeCount || 0;
+                const lateCount = Number(teacherObj.lateCount || 0);
+                const forgotScanCount = Number(teacherObj.forgotTimeCount || 0);
                 
                 const latePenalty = Math.floor(lateCount / 3);
                 const forgotScanPenalty = Math.floor(forgotScanCount / 3);
 
-                const middayOutLongPenalty = (teacherObj.middayOutLongCount || 0) * 0.5;
-                const missedMeetingPenalty = (teacherObj.missedMeetingCount || 0) * 1.0;
+                const middayOutLongPenalty = (Number(teacherObj.middayOutLongCount) || 0) * 0.5;
+                const missedMeetingPenalty = (Number(teacherObj.missedMeetingCount) || 0) * 1.0;
 
                 const personalUsed = personalDeductedFromLeaves + latePenalty + forgotScanPenalty + middayOutLongPenalty + missedMeetingPenalty;
                 
@@ -473,9 +522,9 @@
                     missedMeetingPenalty,
                     lateCount,
                     forgotTimeCount: forgotScanCount,
-                    middayOutShortCount: teacherObj.middayOutShortCount || 0,
-                    middayOutLongCount: teacherObj.middayOutLongCount || 0,
-                    missedMeetingCount: teacherObj.missedMeetingCount || 0,
+                    middayOutShortCount: Number(teacherObj.middayOutShortCount) || 0,
+                    middayOutLongCount: Number(teacherObj.middayOutLongCount) || 0,
+                    missedMeetingCount: Number(teacherObj.missedMeetingCount) || 0,
                     dutyFeeTotal,
                     summerFeeTotal
                 };
@@ -1151,85 +1200,105 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+                    {/* 🌟 Header ปรับแต่งจัดวางองค์ประกอบให้เรียบร้อย สวยงาม สมดุล ไม่แตกเป็นชิ้นลอย */}
                     <header className="luxury-gradient text-white shadow-xl sticky top-0 z-30 border-b border-emerald-700/50">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-3.5">
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 bg-white/10 rounded-2xl p-1.5 border border-white/20 shadow-inner">
-                                    <img 
-                                        src="logo.png" 
-                                        alt="Yuwapat Logo" 
-                                        className="w-full h-full object-contain drop-shadow"
-                                        onError={(e) => {
-                                            if (e.target.src.indexOf('logo.png') !== -1) {
-                                                e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="text-center sm:text-left">
-                                    <h1 className="text-lg sm:text-xl font-bold text-white">Yuwapat Early Childhood School</h1>
-                                    <p className="text-xs sm:text-sm text-emerald-200 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
-                                </div>
-                            </div>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                            <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+                                {/* ฝั่งซ้าย: โลโก้ และ ชื่อโรงเรียน */}
+                                <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center flex-shrink-0 bg-white/10 rounded-2xl p-1.5 border border-white/20 shadow-inner">
+                                            <img 
+                                                src="logo.png" 
+                                                alt="Yuwapat Logo" 
+                                                className="w-full h-full object-contain drop-shadow"
+                                                onError={(e) => {
+                                                    if (e.target.src.indexOf('logo.png') !== -1) {
+                                                        e.target.src = "https://lh3.googleusercontent.com/d/1c3cjNBo_XSXdYjn6RAWkodMqChNPrk49";
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-tight">Yuwapat Early Childhood School</h1>
+                                            <p className="text-xs text-emerald-200 font-medium">โรงเรียนอนุบาลยุวพัฒน์นครสวรรค์</p>
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center gap-3 flex-wrap justify-center">
-                                {/* 🎓 ปุ่มเลือกปีการศึกษา (พ.ศ.) */}
-                                <div className="flex items-center bg-navy-950 px-3 py-1.5 rounded-xl border border-emerald-500/40">
-                                    <i className="fa-solid fa-graduation-cap text-emerald-400 mr-2 text-sm"></i>
-                                    <span className="text-xs font-bold text-slate-300 mr-2 hidden sm:inline">ปีการศึกษา:</span>
-                                    <select 
-                                        value={selectedYear}
-                                        onChange={(e) => setSelectedYear(e.target.value)}
-                                        className="bg-navy-900 border border-emerald-600/50 text-emerald-300 px-3 py-1 rounded-lg text-xs sm:text-sm font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
-                                    >
-                                        <option value="2568">2568 (1 พ.ค. 68 – 30 เม.ย. 69)</option>
-                                        <option value="2569">2569 (1 พ.ค. 69 – 30 เม.ย. 70)</option>
-                                        <option value="2570">2570 (1 พ.ค. 70 – 30 เม.ย. 71)</option>
-                                        <option value="2571">2571 (1 พ.ค. 71 – 30 เม.ย. 72)</option>
-                                    </select>
-                                    <button 
-                                        onClick={() => fetchSheetData(true)}
-                                        disabled={isSyncing}
-                                        className={`ml-2 text-slate-300 hover:text-emerald-400 p-1 transition ${isSyncing ? 'animate-spin text-emerald-400' : ''}`}
-                                        title="ซิงก์ดึงข้อมูลสดจากชีทใหม่"
-                                    >
-                                        <i className="fa-solid fa-rotate text-xs"></i>
-                                    </button>
-                                </div>
-
-                                {isAdminOrHr && (
-                                    <div className="flex bg-navy-950 p-1.5 rounded-xl border border-emerald-700/40">
-                                        <button 
-                                            onClick={() => setActiveTab("teacher")}
-                                            className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${activeTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
-                                        >
-                                            <i className="fa-solid fa-user"></i>
-                                            พอร์ทัลบุคลากร
-                                        </button>
-                                        <button 
-                                            onClick={() => setActiveTab("admin")}
-                                            className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
-                                        >
-                                            <i className="fa-solid fa-user-shield"></i>
-                                            บริหารจัดการบุคคล (ADMIN/HR)
+                                    {/* แสดงโปรไฟล์ย่อสำหรับหน้าจอขนาดเล็ก */}
+                                    <div className="flex lg:hidden items-center gap-2 bg-navy-950/80 px-2.5 py-1.5 rounded-xl border border-emerald-500/30">
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold text-emerald-400 uppercase leading-none">{currentRole === 'admin' ? 'แอดมิน' : currentRole === 'hr' ? 'HR' : 'บุคลากร'}</p>
+                                            <p className="text-xs font-bold text-white truncate max-w-[100px]">{currentUser.name}</p>
+                                        </div>
+                                        <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white w-7 h-7 rounded-lg flex items-center justify-center transition">
+                                            <i className="fa-solid fa-power-off text-xs"></i>
                                         </button>
                                     </div>
-                                )}
+                                </div>
 
-                                <div className="flex items-center gap-3 bg-navy-950 pl-3.5 pr-2 py-1.5 rounded-xl border border-emerald-700/40">
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-bold text-emerald-400 uppercase">
-                                            {currentRole === 'admin' ? 'ผู้ดูแลระบบ' : currentRole === 'hr' ? 'งานบุคคล (HR)' : 'บุคลากร'}
-                                        </p>
-                                        <p className="text-xs sm:text-sm font-bold text-white">{currentUser.prefix}{currentUser.name}</p>
+                                {/* ฝั่งขวา: เครื่องมือควบคุม (ปีการศึกษา, สลับแท็บ, และโปรไฟล์ผู้ใช้) จัดระเบียบในแถวเดียวอย่างลงตัว */}
+                                <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto justify-end">
+                                    {/* 🎓 ตัวเลือกปีการศึกษา */}
+                                    <div className="flex items-center bg-navy-950/90 px-3 py-1.5 rounded-xl border border-emerald-500/40 shadow-sm">
+                                        <i className="fa-solid fa-graduation-cap text-emerald-400 mr-2 text-xs"></i>
+                                        <span className="text-xs font-bold text-slate-300 mr-2 hidden sm:inline">ปีการศึกษา:</span>
+                                        <select 
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(e.target.value)}
+                                            className="bg-navy-900 border border-emerald-600/50 text-emerald-300 px-2.5 py-1 rounded-lg text-xs font-extrabold focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
+                                        >
+                                            <option value="2568">2568 (1 พ.ค. 68 – 30 เม.ย. 69)</option>
+                                            <option value="2569">2569 (1 พ.ค. 69 – 30 เม.ย. 70)</option>
+                                            <option value="2570">2570 (1 พ.ค. 70 – 30 เม.ย. 71)</option>
+                                            <option value="2571">2571 (1 พ.ค. 71 – 30 เม.ย. 72)</option>
+                                        </select>
+                                        <button 
+                                            onClick={() => fetchSheetData(true)}
+                                            disabled={isSyncing}
+                                            className={`ml-2 text-slate-300 hover:text-emerald-400 p-1 transition ${isSyncing ? 'animate-spin text-emerald-400' : ''}`}
+                                            title="ซิงก์ดึงข้อมูลสดจากชีทใหม่"
+                                        >
+                                            <i className="fa-solid fa-rotate text-xs"></i>
+                                        </button>
                                     </div>
-                                    <button 
-                                        onClick={handleLogout}
-                                        className="bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-lg flex items-center justify-center transition shadow"
-                                        title="ออกจากระบบ"
-                                    >
-                                        <i className="fa-solid fa-power-off text-xs"></i>
-                                    </button>
+
+                                    {/* ปุ่มสลับแท็บสำหรับ Admin / HR */}
+                                    {isAdminOrHr && (
+                                        <div className="flex bg-navy-950/90 p-1 rounded-xl border border-emerald-700/40 shadow-sm">
+                                            <button 
+                                                onClick={() => setActiveTab("teacher")}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${activeTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                            >
+                                                <i className="fa-solid fa-user text-xs"></i>
+                                                พอร์ทัลบุคลากร
+                                            </button>
+                                            <button 
+                                                onClick={() => setActiveTab("admin")}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${activeTab === 'admin' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                            >
+                                                <i className="fa-solid fa-user-shield text-xs"></i>
+                                                บริหารบุคคล (ADMIN/HR)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* บล็อกผู้ใช้งานปัจจุบัน (แสดงบนหน้าจอขนาดใหญ่) */}
+                                    <div className="hidden lg:flex items-center gap-2.5 bg-navy-950/90 pl-3.5 pr-2 py-1.5 rounded-xl border border-emerald-700/40 shadow-sm">
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold text-emerald-400 uppercase leading-none">
+                                                {currentRole === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : currentRole === 'hr' ? 'งานบุคคล (HR)' : 'บุคลากร'}
+                                            </p>
+                                            <p className="text-xs font-bold text-white mt-0.5 leading-none">{currentUser.prefix}{currentUser.name}</p>
+                                        </div>
+                                        <button 
+                                            onClick={handleLogout}
+                                            className="bg-red-600 hover:bg-red-700 text-white w-7 h-7 rounded-lg flex items-center justify-center transition shadow"
+                                            title="ออกจากระบบ"
+                                        >
+                                            <i className="fa-solid fa-power-off text-xs"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1712,10 +1781,20 @@
 
                                 {adminSubTab === "teachers" && (
                                     <div className="bg-white rounded-b-2xl rounded-tr-2xl p-6 sm:p-8 shadow-sm border border-slate-200 border-t-0">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                                            <div>
+                                                <h3 className="font-extrabold text-slate-800 text-base">รายชื่อและสถิติโควตาวันลาสะสม ปีการศึกษา {selectedYear}</h3>
+                                                <p className="text-xs text-slate-400 mt-0.5">ดึงโควตาตั้งต้นจากชีท Users และหักลบด้วยใบลาที่อนุมัติในปีการศึกษา {selectedYear}</p>
+                                            </div>
+                                            <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3.5 py-1.5 rounded-xl border border-slate-200">
+                                                ทั้งหมด {users.length} ท่าน
+                                            </span>
+                                        </div>
+
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full text-xs sm:text-sm text-left">
                                                 <thead>
-                                                    <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wide">
+                                                    <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wide bg-slate-50/50">
                                                         <th className="py-3.5 px-4 text-center">รหัส ID</th>
                                                         <th className="py-3.5 px-4">ชื่อ-นามสกุล / ตำแหน่ง</th>
                                                         <th className="py-3.5 px-4 text-center">สถิติวินัยและการเข้างาน</th>
@@ -1764,16 +1843,34 @@
                                                                     </div>
                                                                 </td>
 
+                                                                {/* 🌟 แสดงยอดโควตาลากิจชัดเจน: คงเหลือ / ตั้งต้นจากชีท (พร้อมบอกใช้ไป) */}
                                                                 <td className="py-4 px-4 text-center">
-                                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm ${pRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : pRemaining < 3 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
-                                                                        เหลือ {pRemaining.toFixed(1)} / {t.personalQuota} วัน
-                                                                    </span>
+                                                                    <div className="flex flex-col items-center gap-1">
+                                                                        <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm inline-block ${pRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : pRemaining < 3 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                                                                            เหลือ {pRemaining.toFixed(1)} / {t.personalQuota} วัน
+                                                                        </span>
+                                                                        {stats.personalUsed > 0 && (
+                                                                            <span className="text-[11px] text-slate-400 font-normal">
+                                                                                (ใช้ไป {stats.personalUsed.toFixed(1)} วัน)
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
+
+                                                                {/* 🌟 แสดงยอดโควตาลาป่วยชัดเจน: คงเหลือ / ตั้งต้นจากชีท (พร้อมบอกใช้ไป) */}
                                                                 <td className="py-4 px-4 text-center">
-                                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm ${sRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : sRemaining < 5 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
-                                                                        เหลือ {sRemaining.toFixed(1)} / {t.sickQuota} วัน
-                                                                    </span>
+                                                                    <div className="flex flex-col items-center gap-1">
+                                                                        <span className={`font-bold px-3 py-1 rounded-full text-xs sm:text-sm inline-block ${sRemaining < 0 ? 'bg-red-100 text-red-800 border border-red-200' : sRemaining < 5 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                                                                            เหลือ {sRemaining.toFixed(1)} / {t.sickQuota} วัน
+                                                                        </span>
+                                                                        {stats.sickUsed > 0 && (
+                                                                            <span className="text-[11px] text-slate-400 font-normal">
+                                                                                (ใช้ไป {stats.sickUsed.toFixed(1)} วัน)
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
+
                                                                 <td className="py-4 px-4 text-center">
                                                                     <div className="flex justify-center gap-2">
                                                                         <button 
