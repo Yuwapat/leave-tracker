@@ -28,9 +28,9 @@
         }
         const _silenceKeywords = ['[BABEL]', 'deoptimised', '500KB'];
         ['error', 'warn'].forEach(method => {
-            const originalMethod = console[method];
+             originalMethod = console[method];
             console[method] = function(...args) {
-                const combined = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg || ''))).join(' ');
+                 combined = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg || ''))).join(' ');
                 if (_silenceKeywords.some(keyword => combined.includes(keyword))) return;
                 originalMethod.apply(console, args);
             };
@@ -80,7 +80,7 @@
 
     <script type="text/babel" data-presets="react">
         // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWwVxhG3ahBoeW5qw71ilzXTxqBav1SEOSIv1HFwZxHOr40CnkY-Q6w/exec"; 
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
         // 👥 รายชื่อบุคลากรฐานสำรอง (เพื่อความเสถียร 100% แม้เครื่องใหม่ที่เพิ่งเปิดยังโหลดชีทไม่เสร็จ)
         const FALLBACK_USERS = [
@@ -242,9 +242,13 @@
                 return FALLBACK_USERS;
             });
 
+            // ⚡ ระบบจดจำผู้ใช้: โหลด Session จาก Local Storage ถ้ามีอยู่แล้วให้ข้ามหน้าล็อกอินทันที
             const [currentUser, setCurrentUser] = React.useState(() => {
-                const saved = localStorage.getItem("leave_current_user");
-                return saved ? JSON.parse(saved) : null;
+                const savedUser = localStorage.getItem("leave_remembered_user");
+                if (savedUser) {
+                    try { return JSON.parse(savedUser); } catch(e) { return null; }
+                }
+                return null;
             });
 
             const [allHolidays, setAllHolidays] = React.useState(() => {
@@ -268,9 +272,10 @@
             });
 
             const [isSyncing, setIsSyncing] = React.useState(false);
-            const [syncStatus, setSyncStatus] = React.useState("idle"); // 'idle' | 'success' | 'error'
+            const [syncStatus, setSyncStatus] = React.useState("idle");
             const [loginId, setLoginId] = React.useState("");
             const [loginPassword, setLoginPassword] = React.useState("");
+            const [rememberMe, setRememberMe] = React.useState(false); // สถานะ Checkbox จำรหัสผ่าน
 
             const [activeTab, setActiveTab] = React.useState(() => {
                 return localStorage.getItem("leave_active_tab") || "teacher";
@@ -330,7 +335,6 @@
             // ซิงก์ LocalStorage
             React.useEffect(() => { localStorage.setItem("leave_academic_year", selectedYear); }, [selectedYear]);
             React.useEffect(() => { localStorage.setItem("leave_users", JSON.stringify(users)); }, [users]);
-            React.useEffect(() => { localStorage.setItem("leave_current_user", currentUser ? JSON.stringify(currentUser) : ""); }, [currentUser]);
             React.useEffect(() => { localStorage.setItem("leave_holidays_all", JSON.stringify(allHolidays)); }, [allHolidays]);
             React.useEffect(() => { localStorage.setItem("leave_activities_all", JSON.stringify(allActivities)); }, [allActivities]);
             React.useEffect(() => { localStorage.setItem("leave_leaves", JSON.stringify(leaves)); }, [leaves]);
@@ -496,8 +500,19 @@
                 }
             }, []);
 
+            // อัปเดตข้อมูล Session แบบเรียลไทม์: หากข้อมูล User ในระบบมีการเปลี่ยนแปลง (เช่น แอดมินเปลี่ยน Role) จะปรับอัปเดตลง Session ด้วย
             React.useEffect(() => {
+                // 1. ดึงข้อมูลทันทีเมื่อเปิดหน้าเว็บไซต์ครั้งแรก
                 fetchSheetData(false);
+
+                // 2. 🔄 ระบบ Auto-Sync: แอบดึงข้อมูลใหม่จาก Google Sheets ทุกๆ 30 วินาที
+                const pollingInterval = setInterval(() => {
+                    // ใส่ false เพื่อให้มันดึงข้อมูลเงียบๆ เบื้องหลัง ไม่ต้องมีแจ้งเตือนสีเขียวเด้งกวนใจคุณครู
+                    fetchSheetData(false);
+                }, 30000); // 30000 มิลลิวินาที = 30 วินาที (ปรับตัวเลขนี้ได้ตามต้องการ)
+
+                // 3. ทำลายตัวจับเวลาเมื่อปิดหน้าเว็บ ป้องกันระบบค้าง
+                return () => clearInterval(pollingInterval);
             }, [fetchSheetData]);
 
             React.useEffect(() => {
@@ -638,6 +653,12 @@
                 if (matched && matched.password === loginPassword) {
                     const normalizedUser = { ...matched, role: normalizeRole(matched.role, matched.id) };
                     setCurrentUser(normalizedUser);
+                    
+                    // หากผู้ใช้ติ๊ก Checkbox ให้เก็บข้อมูลผู้ใช้ลง Local Storage ไว้ถาวร (จนกว่าจะ Logout)
+                    if (rememberMe) {
+                        localStorage.setItem("leave_remembered_user", JSON.stringify(normalizedUser));
+                    }
+
                     showToast(`ยินดีต้อนรับ ${normalizedUser.prefix}${normalizedUser.name}`);
                     setLoginId("");
                     setLoginPassword("");
@@ -663,7 +684,10 @@
 
             const handleLogout = () => {
                 setCurrentUser(null);
-                showToast("ออกจากระบบเรียบร้อยแล้ว");
+                // ล้างแคชการจำรหัสผ่านทิ้งทั้งหมด
+                localStorage.removeItem("leave_remembered_user");
+                setRememberMe(false);
+                showToast("ออกจากระบบและล้างความจำบัญชีเรียบร้อยแล้ว");
             };
 
             const formatThaiDate = (dateStr) => {
@@ -1213,9 +1237,22 @@
                                     />
                                 </div>
 
+                                <div className="flex items-center gap-2 mt-2">
+                                    <input 
+                                        type="checkbox" 
+                                        id="rememberMe" 
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer"
+                                    />
+                                    <label htmlFor="rememberMe" className="text-sm font-bold text-slate-600 cursor-pointer select-none">
+                                        จดจำการเข้าสู่ระบบในเครื่องนี้ (Auto-login)
+                                    </label>
+                                </div>
+
                                 <button 
                                     type="submit"
-                                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-6 rounded-xl transition duration-200 shadow-md text-sm sm:text-base uppercase tracking-wider"
+                                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 px-6 rounded-xl transition duration-200 shadow-md text-sm sm:text-base uppercase tracking-wider mt-4"
                                 >
                                     เข้าสู่ระบบความปลอดภัย
                                 </button>
@@ -1476,7 +1513,7 @@
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span>3. ออกนอกสถานที่ (&gt; 1.30 ชม.):</span>
+                                                        <span>3. ออกนอกสถานที่ (> 1.30 ชม.):</span>
                                                         <span className="font-bold">{selectedTeacherStats.middayOutLongCount} ครั้ง (-{selectedTeacherStats.middayOutLongPenalty} วัน)</span>
                                                     </div>
                                                     {selectedTeacher.role !== 'maid' && selectedTeacher.role !== 'janitor' && (
@@ -2248,10 +2285,10 @@
                     )}
 
                     {showAddHolidayModal && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800">เพิ่มวันหยุดตามปฏิทินโรงเรียน</h3>
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-[24px] shadow-2xl p-6 sm:p-8 w-full max-w-md border animate-fade-in">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-800 uppercase tracking-wide text-left">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
                                     <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400 hover:text-slate-600">
                                         <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
@@ -2735,7 +2772,7 @@
                                                 </div>
 
                                                 <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">3. นอกสถานที่ (&gt; 1.30 ชม.):</span>
+                                                    <span className="font-bold text-slate-700">3. นอกสถานที่ (> 1.30 ชม.):</span>
                                                     <div className="flex items-center gap-2">
                                                         <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
                                                         <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.middayOutLongCount || 0}</span>
@@ -2857,7 +2894,7 @@
                                                         });
                                                     }
                                                 }}
-                                                className="w-full text-xs text-slate-500"
+                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
                                             />
                                         </div>
                                     </div>
@@ -2954,7 +2991,7 @@
                                                         });
                                                     }
                                                 }}
-                                                className="w-full text-xs text-slate-500"
+                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
                                             />
                                         </div>
                                     </div>
