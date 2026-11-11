@@ -12,49 +12,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@300;400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- React & Babel -->
+    <!-- React & Babel CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <script>
-        // ปิด Babel Deoptimised Warning 500KB
-        if (window.Babel) {
-            const _origTransform = window.Babel.transform;
-            window.Babel.transform = function(code, options) {
-                options = Object.assign({}, options, { compact: false, minified: false });
-                return _origTransform.call(this, code, options);
-            };
-        }
-        const _silenceKeywords = ['[BABEL]', 'deoptimised', '500KB'];
-        ['error', 'warn'].forEach(method => {
-            const originalMethod = console[method];
-            console[method] = function(...args) {
-                const combined = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg || ''))).join(' ');
-                if (_silenceKeywords.some(keyword => combined.includes(keyword))) return;
-                originalMethod.apply(console, args);
-            };
-        });
-    </script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        navy: {
-                            800: '#1A2E4C',
-                            900: '#0F1E36',
-                            950: '#091322',
-                        },
-                        emerald: {
-                            50: '#F0FDF4',
-                            100: '#DCFCE7',
-                            200: '#BBF7D0',
-                            600: '#10B981',
-                            700: '#0D5C3A',
-                            800: '#0A462C',
-                        }
+                        navy: { 800: '#1A2E4C', 900: '#0F1E36', 950: '#091322' },
+                        emerald: { 50: '#F0FDF4', 100: '#DCFCE7', 200: '#BBF7D0', 600: '#10B981', 700: '#0D5C3A', 800: '#0A462C' }
                     }
                 }
             }
@@ -62,11 +31,7 @@
     </script>
 
     <style>
-        body {
-            font-family: 'Sarabun', 'Noto Serif Thai', 'Kanit', sans-serif;
-            background-color: #F8FAFC;
-            color: #1E293B;
-        }
+        body { font-family: 'Sarabun', 'Noto Serif Thai', 'Kanit', sans-serif; background-color: #F8FAFC; color: #1E293B; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #F1F5F9; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 6px; }
@@ -75,14 +40,11 @@
     </style>
 </head>
 <body>
-
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react">
-        // 🔗 ลิงก์ Google Apps Script Web App ของโรงเรียนอนุบาลยุวพัฒน์นครสวรรค์
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
-        // 👥 รายชื่อบุคลากรฐานสำรอง (เพื่อความเสถียร 100% แม้เครื่องใหม่ที่เพิ่งเปิดยังโหลดชีทไม่เสร็จ)
         const FALLBACK_USERS = [
             { id: "44", prefix: "น.ส.", name: "พิมลาภัสร์ ราตรี", role: "admin", password: "1234", email: "toei@yuwapat.ac.th", sickQuota: 30, personalQuota: 15 },
             { id: "25", prefix: "น.ส.", name: "งามจิต ธชีโชติกุล", role: "hr", password: "1234", email: "hr@yuwapat.ac.th", sickQuota: 30, personalQuota: 15 },
@@ -134,7 +96,6 @@
             { id: "60", prefix: "นาง", name: "สมจิต ชาติพล", role: "maid", password: "1234", email: "somjit", sickQuota: 30, personalQuota: 15 }
         ];
 
-        // ☀️ ช่วงเวลา Summer Course
         const SUMMER_COURSES = [
             { start: "2026-09-28", end: "2026-10-09", name: "Summer Course October 2026" },
             { start: "2027-03-01", end: "2027-03-26", name: "Summer Course March 2027" }
@@ -144,13 +105,10 @@
             return SUMMER_COURSES.some(s => dateStr >= s.start && dateStr <= s.end);
         }
 
-        // ฟังก์ชันค้นหาฟิลด์แบบยืดหยุ่นสูง (Case & Language insensitive)
         function getField(obj, ...keys) {
             if (!obj || typeof obj !== "object") return undefined;
             for (const k of keys) {
-                if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") {
-                    return obj[k];
-                }
+                if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") return obj[k];
             }
             const normalizedLookup = keys.map(k => String(k).toLowerCase().replace(/[\s_\-]/g, ""));
             for (const [prop, val] of Object.entries(obj)) {
@@ -162,43 +120,27 @@
             return undefined;
         }
 
-        // คำนวณปีการศึกษาจากวันที่ (๑ พ.ค. - ๓๐ เม.ย.)
         function getAcademicYearFromDate(dateStr) {
             if (!dateStr) return "2569";
             const str = String(dateStr).trim();
             let year = 2026, month = 5;
-
             if (str.includes("-")) {
                 const parts = str.split("-");
-                if (parts[0].length === 4) {
-                    year = parseInt(parts[0], 10);
-                    month = parseInt(parts[1], 10);
-                } else if (parts[2] && parts[2].length >= 4) {
-                    year = parseInt(parts[2], 10);
-                    month = parseInt(parts[1], 10);
-                }
+                if (parts[0].length === 4) { year = parseInt(parts[0], 10); month = parseInt(parts[1], 10); }
+                else if (parts[2] && parts[2].length >= 4) { year = parseInt(parts[2], 10); month = parseInt(parts[1], 10); }
             } else if (str.includes("/")) {
                 const parts = str.split("/");
-                if (parts[0].length === 4) {
-                    year = parseInt(parts[0], 10);
-                    month = parseInt(parts[1], 10);
-                } else if (parts[2] && parts[2].length >= 4) {
-                    year = parseInt(parts[2], 10);
-                    month = parseInt(parts[1], 10);
-                }
+                if (parts[0].length === 4) { year = parseInt(parts[0], 10); month = parseInt(parts[1], 10); }
+                else if (parts[2] && parts[2].length >= 4) { year = parseInt(parts[2], 10); month = parseInt(parts[1], 10); }
             }
-
-            if (year > 2400) {
-                return String(month >= 5 ? year : year - 1);
-            }
-            const beYear = month >= 5 ? (year + 543) : (year - 1 + 543);
-            return String(beYear);
+            if (year > 2400) return String(month >= 5 ? year : year - 1);
+            return String(month >= 5 ? (year + 543) : (year - 1 + 543));
         }
 
         function normalizeRole(rawRole, id = "") {
             const strId = String(id).trim();
-            if (strId === "44") return "admin"; 
-            if (strId === "25") return "hr";    
+            if (strId === "44") return "admin";
+            if (strId === "25") return "hr";
             if (!rawRole) return "teacher";
             const str = String(rawRole).toLowerCase().trim();
             if (str.includes("admin") || str.includes("แอดมิน")) return "admin";
@@ -217,7 +159,6 @@
             if (dateObj.getDay() !== 6) return false;
             const nthSat = getNthSaturdayOfMonth(dateObj);
             const strId = String(teacherId);
-
             if (nthSat === 1 && (strId === "52" || strId === "57")) return true;
             if (nthSat === 2 && (strId === "53" || strId === "54")) return true;
             if (nthSat === 3 && (strId === "56" || strId === "60")) return true;
@@ -226,11 +167,7 @@
         }
 
         function App() {
-            const [selectedYear, setSelectedYear] = React.useState(() => {
-                return localStorage.getItem("leave_academic_year") || "2569";
-            });
-
-            // เริ่มต้นด้วยรายชื่อสำรองหรือแคชที่มี เพื่อให้ล็อกอินได้ทันทีในทุกเครื่อง
+            const [selectedYear, setSelectedYear] = React.useState(() => localStorage.getItem("leave_academic_year") || "2569");
             const [users, setUsers] = React.useState(() => {
                 const saved = localStorage.getItem("leave_users");
                 if (saved) {
@@ -242,7 +179,6 @@
                 return FALLBACK_USERS;
             });
 
-            // ⚡ ระบบจดจำผู้ใช้: โหลด Session จาก Local Storage ถ้ามีอยู่แล้วให้ข้ามหน้าล็อกอินทันที
             const [currentUser, setCurrentUser] = React.useState(() => {
                 const savedUser = localStorage.getItem("leave_remembered_user");
                 if (savedUser) {
@@ -276,62 +212,40 @@
             const [loginPassword, setLoginPassword] = React.useState("");
             const [rememberMe, setRememberMe] = React.useState(false);
 
-            const [activeTab, setActiveTab] = React.useState(() => {
-                return localStorage.getItem("leave_active_tab") || "teacher";
-            }); 
-            const [adminSubTab, setAdminSubTab] = React.useState(() => {
-                return localStorage.getItem("leave_admin_sub_tab") || "leaves";
-            }); 
-            const [selectedTeacherId, setSelectedTeacherId] = React.useState(() => {
-                return localStorage.getItem("leave_selected_teacher_id") || "1";
-            });
+            const [activeTab, setActiveTab] = React.useState(() => localStorage.getItem("leave_active_tab") || "teacher");
+            const [adminSubTab, setAdminSubTab] = React.useState(() => localStorage.getItem("leave_admin_sub_tab") || "leaves");
+            const [selectedTeacherId, setSelectedTeacherId] = React.useState(() => localStorage.getItem("leave_selected_teacher_id") || "1");
 
-            const [formData, setFormData] = React.useState({ 
-                startDate: "", 
-                endDate: "", 
-                type: "personal", 
-                reason: "", 
-                period: "all_day",
-                isCovid: false 
-            });
+            const [formData, setFormData] = React.useState({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day", isCovid: false });
             const [notification, setNotification] = React.useState(null);
 
-            // Modals
             const [showRuleModal, setShowRuleModal] = React.useState(false);
             const [ruleTab, setRuleTab] = React.useState("teacher");
             const [showAddTeacherModal, setShowAddTeacherModal] = React.useState(false);
             const [newTeacher, setNewTeacher] = React.useState({ prefix: "นาย", name: "", email: "", sickQuota: 30, personalQuota: 15, role: "teacher", password: "1234", photo: "", hireDate: "" });
             const [showEditTeacherModal, setShowEditTeacherModal] = React.useState(false);
             const [editingTeacher, setEditingTeacher] = React.useState(null);
-            
-            // Edit Leave Modal for Admin/HR
+
             const [showEditLeaveModal, setShowEditLeaveModal] = React.useState(false);
             const [editingLeave, setEditingLeave] = React.useState(null);
 
-            // Holiday Modals
             const [showAddHolidayModal, setShowAddHolidayModal] = React.useState(false);
             const [newHoliday, setNewHoliday] = React.useState({ date: "", name: "", session: "all_day", academicYear: selectedYear });
             const [showEditHolidayModal, setShowEditHolidayModal] = React.useState(false);
             const [editingHoliday, setEditingHoliday] = React.useState(null);
 
-            // Activity Modals
             const [showAddActivityModal, setShowAddActivityModal] = React.useState(false);
             const [newActivity, setNewActivity] = React.useState({ date: "", name: "", session: "all_day", academicYear: selectedYear });
             const [showEditActivityModal, setShowEditActivityModal] = React.useState(false);
             const [editingActivity, setEditingActivity] = React.useState(null);
 
             const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, title: "", message: "", onConfirm: null });
-            
-            // Discipline Modals
             const [showAddDisciplineModal, setShowAddDisciplineModal] = React.useState(false);
             const [disciplineForm, setDisciplineForm] = React.useState({ teacherId: "", date: "", type: "forgotTime", note: "" });
             const [showViewDisciplineModal, setShowViewDisciplineModal] = React.useState(false);
             const [viewDisciplineTeacher, setViewDisciplineTeacher] = React.useState(null);
-
-            // Role Search
             const [roleSearch, setRoleSearch] = React.useState("");
 
-            // ซิงก์ LocalStorage
             React.useEffect(() => { localStorage.setItem("leave_academic_year", selectedYear); }, [selectedYear]);
             React.useEffect(() => { localStorage.setItem("leave_users", JSON.stringify(users)); }, [users]);
             React.useEffect(() => { localStorage.setItem("leave_holidays_all", JSON.stringify(allHolidays)); }, [allHolidays]);
@@ -342,68 +256,51 @@
             React.useEffect(() => { if (adminSubTab) localStorage.setItem("leave_admin_sub_tab", adminSubTab); }, [adminSubTab]);
             React.useEffect(() => { if (selectedTeacherId) localStorage.setItem("leave_selected_teacher_id", selectedTeacherId); }, [selectedTeacherId]);
 
-            // กรองวันหยุดและกิจกรรมตามปีการศึกษาที่เลือก
             const currentYearHolidays = React.useMemo(() => {
-                return allHolidays.filter(h => {
-                    const y = h.academicYear || h.AcademicYear || getAcademicYearFromDate(h.date);
-                    return String(y) === String(selectedYear);
-                });
+                return allHolidays.filter(h => String(h.academicYear || h.AcademicYear || getAcademicYearFromDate(h.date)) === String(selectedYear));
             }, [allHolidays, selectedYear]);
 
             const currentYearActivities = React.useMemo(() => {
-                return allActivities.filter(a => {
-                    const y = a.academicYear || a.AcademicYear || getAcademicYearFromDate(a.date);
-                    return String(y) === String(selectedYear);
-                });
+                return allActivities.filter(a => String(a.academicYear || a.AcademicYear || getAcademicYearFromDate(a.date)) === String(selectedYear));
             }, [allActivities, selectedYear]);
 
-            // กรองใบลาตามปีการศึกษาที่เลือก
             const currentYearLeaves = React.useMemo(() => {
-                return leaves.filter(l => {
-                    const y = l.academicYear || l.AcademicYear || getAcademicYearFromDate(l.startDate);
-                    return String(y) === String(selectedYear);
-                });
+                return leaves.filter(l => String(l.academicYear || l.AcademicYear || getAcademicYearFromDate(l.startDate)) === String(selectedYear));
             }, [leaves, selectedYear]);
 
-            // 🔄 ฟังก์ชันดึงข้อมูลจาก Google Sheets (เพิ่ม Cache-Busting + ขยาย Timeout ป้องกันหลุดในเครื่องอื่น)
             const fetchSheetData = React.useCallback(async (showNotification = false) => {
                 if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) return;
                 setIsSyncing(true);
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 25000);
-
                     const cacheBusterUrl = `${GOOGLE_SHEET_URL}?nocache=${Date.now()}`;
                     const response = await fetch(cacheBusterUrl, { signal: controller.signal });
                     clearTimeout(timeoutId);
-
                     if (!response.ok) throw new Error("HTTP error " + response.status);
-
                     const data = await response.json();
-                    
-                    // 1. ซิงก์ Users
+
                     if (data.users && Array.isArray(data.users) && data.users.length > 0) {
                         const mappedUsers = data.users.map(u => {
                             const userId = String(getField(u, "ID", "id", "รหัส", "รหัสประจำตัว", "ลำดับ") || "").trim();
-                            const sickVal = getField(u, "SickQuota", "sickQuota", "sickquota", "โควตาลาป่วย", "สิทธิ์ลาป่วย", "ลาป่วย", "sick_quota");
-                            const personalVal = getField(u, "PersonalQuota", "personalQuota", "personalquota", "โควตาลากิจ", "โควตาลากิจส่วนตัว", "สิทธิ์ลากิจ", "ลากิจ", "personal_quota");
-
+                            const sickVal = getField(u, "SickQuota", "sickQuota", "sickquota", "โควตาลาป่วย", "ลาป่วย");
+                            const personalVal = getField(u, "PersonalQuota", "personalQuota", "personalquota", "โควตาลากิจ", "ลากิจ");
                             return {
                                 id: userId,
-                                prefix: String(getField(u, "Prefix", "prefix", "คำนำหน้า", "คำนำหน้านาม") || ""),
-                                name: String(getField(u, "Name", "name", "ชื่อ", "ชื่อ-นามสกุล", "ชื่อ นามสกุล") || ""),
-                                role: normalizeRole(getField(u, "Role", "role", "ตำแหน่ง", "หน้าที่"), userId),
+                                prefix: String(getField(u, "Prefix", "prefix", "คำนำหน้า") || ""),
+                                name: String(getField(u, "Name", "name", "ชื่อ", "ชื่อ-นามสกุล") || ""),
+                                role: normalizeRole(getField(u, "Role", "role", "ตำแหน่ง"), userId),
                                 password: String(getField(u, "Password", "password", "รหัสผ่าน") !== undefined ? getField(u, "Password", "password", "รหัสผ่าน") : "1234"),
-                                email: String(getField(u, "Email", "email", "อีเมล", "username") || ""),
+                                email: String(getField(u, "Email", "email", "อีเมล") || ""),
                                 sickQuota: sickVal !== undefined ? Number(sickVal) : 30,
                                 personalQuota: personalVal !== undefined ? Number(personalVal) : 15,
-                                lateCount: Number(getField(u, "LateCount", "lateCount", "latecount", "สาย", "มาสาย") || 0),
-                                forgotTimeCount: Number(getField(u, "ForgotTimeCount", "forgotTimeCount", "forgottimecount", "ลืมสแกน", "ลืมบันทึกเวลา") || 0),
-                                middayOutShortCount: Number(getField(u, "MiddayOutShortCount", "middayOutShortCount", "middayoutshortcount") || 0),
-                                middayOutLongCount: Number(getField(u, "MiddayOutLongCount", "middayOutLongCount", "middayoutlongcount") || 0),
-                                missedMeetingCount: Number(getField(u, "MissedMeetingCount", "missedMeetingCount", "missedmeetingcount") || 0),
-                                photo: String(getField(u, "Photo", "photo", "รูป", "รูปภาพ") || ""),
-                                hireDate: String(getField(u, "HireDate", "hireDate", "hiredate", "วันที่เริ่มงาน") || "")
+                                lateCount: Number(getField(u, "LateCount", "lateCount", "latecount", "สาย") || 0),
+                                forgotTimeCount: Number(getField(u, "ForgotTimeCount", "forgotTimeCount", "forgottimecount", "ลืมสแกน") || 0),
+                                middayOutShortCount: Number(getField(u, "MiddayOutShortCount", "middayOutShortCount") || 0),
+                                middayOutLongCount: Number(getField(u, "MiddayOutLongCount", "middayOutLongCount") || 0),
+                                missedMeetingCount: Number(getField(u, "MissedMeetingCount", "missedMeetingCount") || 0),
+                                photo: String(getField(u, "Photo", "photo", "รูป") || ""),
+                                hireDate: String(getField(u, "HireDate", "hireDate", "hiredate") || "")
                             };
                         }).filter(validU => validU.id && validU.name);
 
@@ -413,36 +310,34 @@
                         }
                     }
 
-                    // 2. ซิงก์ Leaves
                     if (data.leaves && Array.isArray(data.leaves)) {
                         const mappedLeaves = data.leaves.map(l => {
-                            let parsedBreakdown = getField(l, "Breakdown", "breakdown", "รายละเอียด") || "";
+                            let parsedBreakdown = getField(l, "Breakdown", "breakdown") || "";
                             if (typeof parsedBreakdown === "string" && parsedBreakdown.trim().startsWith("[")) {
                                 try { parsedBreakdown = JSON.parse(parsedBreakdown); } catch (e) {}
                             }
-                            
-                            const rawType = String(getField(l, "Type", "type", "ประเภท", "ประเภทการลา") || "");
+                            const rawType = String(getField(l, "Type", "type", "ประเภท") || "");
                             const mappedType = (rawType.includes("ป่วย") || rawType.toLowerCase() === "sick") ? "sick" : "personal";
-                            const sDate = String(getField(l, "StartDate", "startDate", "startdate", "วันที่เริ่ม", "วันที่เริ่มลา") || "");
-                            const eDate = String(getField(l, "EndDate", "endDate", "enddate", "สิ้นสุดวันที่", "วันที่สิ้นสุด") || sDate);
-                            const acYear = String(getField(l, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(sDate));
-                            const deductedVal = getField(l, "TotalDeducted", "totalDeducted", "totaldeducted", "ยอดหัก", "ยอดหักวันลา", "วันลาที่หัก");
+                            const sDate = String(getField(l, "StartDate", "startDate", "startdate") || "");
+                            const eDate = String(getField(l, "EndDate", "endDate", "enddate") || sDate);
+                            const acYear = String(getField(l, "AcademicYear", "academicYear", "academicyear") || getAcademicYearFromDate(sDate));
+                            const deductedVal = getField(l, "TotalDeducted", "totalDeducted", "totaldeducted", "ยอดหัก");
 
                             return {
                                 id: String(getField(l, "ID", "id", "รหัสใบลา") || ""),
-                                teacherId: String(getField(l, "TeacherID", "teacherId", "teacherid", "รหัสครู", "รหัสบุคลากร", "รหัส") || "").trim(),
-                                teacherName: String(getField(l, "TeacherName", "teacherName", "teachername", "ชื่อครู", "ชื่อ-นามสกุล") || ""),
+                                teacherId: String(getField(l, "TeacherID", "teacherId", "teacherid", "รหัสครู") || "").trim(),
+                                teacherName: String(getField(l, "TeacherName", "teacherName", "teachername", "ชื่อครู") || ""),
                                 startDate: sDate,
                                 endDate: eDate,
                                 type: mappedType,
-                                period: String(getField(l, "Period", "period", "ช่วงเวลา", "ช่วง") || "all_day"),
-                                reason: String(getField(l, "Reason", "reason", "เหตุผล", "ความจำเป็น") || ""),
+                                period: String(getField(l, "Period", "period", "ช่วงเวลา") || "all_day"),
+                                reason: String(getField(l, "Reason", "reason", "เหตุผล") || ""),
                                 totalDeducted: deductedVal !== undefined ? Number(deductedVal) : 1,
                                 status: String(getField(l, "Status", "status", "สถานะ") || "อนุมัติแล้ว"),
                                 breakdown: parsedBreakdown,
-                                createdAt: String(getField(l, "CreatedAt", "createdAt", "createdat", "วันที่บันทึก") || ""),
-                                dutyFeeDeduction: Number(getField(l, "DutyFeeDeduction", "dutyFeeDeduction", "dutyfeededuction", "หักค่าเวร") || 0),
-                                summerFeeDeduction: Number(getField(l, "SummerFeeDeduction", "summerFeeDeduction", "summerfeededuction", "หักค่าสอนSummer") || 0),
+                                createdAt: String(getField(l, "CreatedAt", "createdAt") || ""),
+                                dutyFeeDeduction: Number(getField(l, "DutyFeeDeduction", "dutyFeeDeduction") || 0),
+                                summerFeeDeduction: Number(getField(l, "SummerFeeDeduction", "summerFeeDeduction") || 0),
                                 academicYear: acYear
                             };
                         });
@@ -451,30 +346,28 @@
                         localStorage.setItem("leave_leaves", JSON.stringify(validLeaves));
                     }
 
-                    // 3. ซิงก์ Holidays
                     if (data.holidays && Array.isArray(data.holidays)) {
                         const mappedHolidays = data.holidays.map(h => {
                             const dStr = String(getField(h, "Date", "date", "วันที่") || "");
                             return {
                                 date: dStr,
-                                name: String(getField(h, "Name", "name", "ชื่อวันหยุด", "วันหยุด") || ""),
-                                session: String(getField(h, "Session", "session", "ช่วงเวลา", "ช่วง") || "all_day"),
-                                academicYear: String(getField(h, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(dStr))
+                                name: String(getField(h, "Name", "name", "ชื่อวันหยุด") || ""),
+                                session: String(getField(h, "Session", "session", "ช่วงเวลา") || "all_day"),
+                                academicYear: String(getField(h, "AcademicYear", "academicYear") || getAcademicYearFromDate(dStr))
                             };
                         }).filter(h => h.date && h.name);
                         setAllHolidays(mappedHolidays);
                         localStorage.setItem("leave_holidays_all", JSON.stringify(mappedHolidays));
                     }
 
-                    // 4. ซิงก์ Activities
                     if (data.activities && Array.isArray(data.activities)) {
                         const mappedActivities = data.activities.map(a => {
                             const dStr = String(getField(a, "Date", "date", "วันที่") || "");
                             return {
                                 date: dStr,
-                                name: String(getField(a, "Name", "name", "ชื่อกิจกรรม", "กิจกรรม") || ""),
-                                session: String(getField(a, "Session", "session", "ช่วงเวลา", "ช่วง") || "all_day"),
-                                academicYear: String(getField(a, "AcademicYear", "academicYear", "academicyear", "ปีการศึกษา") || getAcademicYearFromDate(dStr))
+                                name: String(getField(a, "Name", "name", "ชื่อกิจกรรม") || ""),
+                                session: String(getField(a, "Session", "session", "ช่วงเวลา") || "all_day"),
+                                academicYear: String(getField(a, "AcademicYear", "academicYear") || getAcademicYearFromDate(dStr))
                             };
                         }).filter(a => a.date && a.name);
                         setAllActivities(mappedActivities);
@@ -482,13 +375,13 @@
                     }
 
                     if (showNotification) {
-                        setNotification({ message: `อัปเดตข้อมูลสดจาก Google Sheets เรียบร้อยแล้ว (บุคลากร ${data.users?.length || 0} ท่าน, ใบลา ${data.leaves?.length || 0} รายการ)`, type: "success" });
+                        setNotification({ message: `อัปเดตข้อมูลสดจาก Google Sheets เรียบร้อยแล้ว`, type: "success" });
                         setTimeout(() => setNotification(null), 3000);
                     }
                 } catch (error) {
-                    console.warn("Google Sheet sync notice:", error.message || error);
+                    console.warn("Sync notice:", error.message || error);
                     if (showNotification) {
-                        setNotification({ message: "ไม่สามารถเชื่อมต่อ Google Sheets ได้ในขณะนี้ ระบบใช้ข้อมูลที่บันทึกไว้ล่าสุด", type: "error" });
+                        setNotification({ message: "ระบบกำลังใช้งานข้อมูลที่บันทึกไว้ล่าสุด", type: "error" });
                         setTimeout(() => setNotification(null), 4000);
                     }
                 } finally {
@@ -496,12 +389,9 @@
                 }
             }, []);
 
-            // อัปเดตข้อมูล Session แบบเรียลไทม์ และ Polling ทุก 30 วินาที
             React.useEffect(() => {
                 fetchSheetData(false);
-                const pollingInterval = setInterval(() => {
-                    fetchSheetData(false);
-                }, 30000);
+                const pollingInterval = setInterval(() => { fetchSheetData(false); }, 30000);
                 return () => clearInterval(pollingInterval);
             }, [fetchSheetData]);
 
@@ -520,7 +410,6 @@
                 }
             }, [currentUser, users, selectedTeacherId]);
 
-            // คำนวณสถิติเฉพาะปีการศึกษาที่เลือก
             const getTeacherStats = (teacherId) => {
                 const teacherObj = users.find(u => String(u.id).trim() === String(teacherId).trim());
                 if (!teacherObj) return { sickUsed: 0, personalUsed: 0, personalDeductedFromLeaves: 0, latePenalty: 0, lateCount: 0, dutyFeeTotal: 0, summerFeeTotal: 0, userLeavesList: [] };
@@ -530,51 +419,31 @@
                     const tId = String(teacherId || "").trim();
                     const isIdMatch = (lId === tId) || (!isNaN(lId) && !isNaN(tId) && parseInt(lId, 10) === parseInt(tId, 10));
                     const isNameMatch = l.teacherName && teacherObj.name && l.teacherName.replace(/\s+/g, '').includes(teacherObj.name.replace(/\s+/g, ''));
-                    
                     const isApproved = !l.status || l.status.includes("อนุมัติ") || l.status.toLowerCase().includes("approved");
                     const isNotCanceled = !l.status || (!l.status.includes("ยกเลิก") && !l.status.includes("ไม่อนุมัติ"));
-
                     return (isIdMatch || isNameMatch) && isApproved && isNotCanceled;
                 });
                 
-                const sickUsed = userLeaves
-                    .filter(l => l.type === "sick" || l.type === "ลาป่วย")
-                    .reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
-                    
-                const personalDeductedFromLeaves = userLeaves
-                    .filter(l => l.type === "personal" || l.type === "ลากิจส่วนตัว" || l.type === "ลากิจ")
-                    .reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
-
+                const sickUsed = userLeaves.filter(l => l.type === "sick" || l.type === "ลาป่วย").reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
+                const personalDeductedFromLeaves = userLeaves.filter(l => l.type === "personal" || l.type === "ลากิจส่วนตัว" || l.type === "ลากิจ").reduce((sum, l) => sum + Number(l.totalDeducted || 0), 0);
                 const dutyFeeTotal = userLeaves.reduce((sum, l) => sum + Number(l.dutyFeeDeduction || 0), 0);
                 const summerFeeTotal = userLeaves.reduce((sum, l) => sum + Number(l.summerFeeDeduction || 0), 0);
-                    
+                
                 const lateCount = Number(teacherObj.lateCount || 0);
                 const forgotScanCount = Number(teacherObj.forgotTimeCount || 0);
-                
                 const latePenalty = Math.floor(lateCount / 3);
                 const forgotScanPenalty = Math.floor(forgotScanCount / 3);
-
                 const middayOutLongPenalty = (Number(teacherObj.middayOutLongCount) || 0) * 0.5;
                 const missedMeetingPenalty = (Number(teacherObj.missedMeetingCount) || 0) * 1.0;
-
                 const personalUsed = personalDeductedFromLeaves + latePenalty + forgotScanPenalty + middayOutLongPenalty + missedMeetingPenalty;
                 
                 return { 
-                    sickUsed, 
-                    personalUsed, 
-                    personalDeductedFromLeaves, 
-                    latePenalty, 
-                    forgotScanPenalty,
-                    middayOutLongPenalty,
-                    missedMeetingPenalty,
-                    lateCount,
-                    forgotTimeCount: forgotScanCount,
+                    sickUsed, personalUsed, personalDeductedFromLeaves, latePenalty, forgotScanPenalty,
+                    middayOutLongPenalty, missedMeetingPenalty, lateCount, forgotTimeCount: forgotScanCount,
                     middayOutShortCount: Number(teacherObj.middayOutShortCount) || 0,
                     middayOutLongCount: Number(teacherObj.middayOutLongCount) || 0,
                     missedMeetingCount: Number(teacherObj.missedMeetingCount) || 0,
-                    dutyFeeTotal,
-                    summerFeeTotal,
-                    userLeavesList: userLeaves
+                    dutyFeeTotal, summerFeeTotal, userLeavesList: userLeaves
                 };
             };
 
@@ -589,26 +458,16 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const MAX_SIZE = 240;
-                        let width = img.width;
-                        let height = img.height;
-
+                        let width = img.width, height = img.height;
                         if (width > height) {
-                            if (width > MAX_SIZE) {
-                                height *= MAX_SIZE / width;
-                                width = MAX_SIZE;
-                            }
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                         } else {
-                            if (height > MAX_SIZE) {
-                                width *= MAX_SIZE / height;
-                                height = MAX_SIZE;
-                            }
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                         }
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        const base64Str = canvas.toDataURL('image/jpeg', 0.85);
-                        callback(base64Str);
+                        callback(canvas.toDataURL('image/jpeg', 0.85));
                     };
                     img.src = e.target.result;
                 };
@@ -622,9 +481,7 @@
 
             const triggerConfirm = (title, message, onConfirmCallback) => {
                 setConfirmDialog({
-                    isOpen: true,
-                    title,
-                    message,
+                    isOpen: true, title, message,
                     onConfirm: () => {
                         onConfirmCallback();
                         setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null });
@@ -643,31 +500,13 @@
                 if (matched && matched.password === loginPassword) {
                     const normalizedUser = { ...matched, role: normalizeRole(matched.role, matched.id) };
                     setCurrentUser(normalizedUser);
-                    
                     if (rememberMe) {
                         localStorage.setItem("leave_remembered_user", JSON.stringify(normalizedUser));
                     }
-
                     showToast(`ยินดีต้อนรับ ${normalizedUser.prefix}${normalizedUser.name}`);
-                    setLoginId("");
-                    setLoginPassword("");
-
-                    if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
-                        fetch(GOOGLE_SHEET_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify({
-                                action: "loginNotify",
-                                teacherId: normalizedUser.id,
-                                name: `${normalizedUser.prefix}${normalizedUser.name}`,
-                                role: normalizedUser.role === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : normalizedUser.role === 'hr' ? 'เจ้าหน้าที่งานบุคคล' : 'ครูผู้สอน / บุคลากร',
-                                loginTime: new Date().toLocaleString("th-TH")
-                            })
-                        }).catch(err => console.warn("Login notify note:", err));
-                    }
+                    setLoginId(""); setLoginPassword("");
                 } else {
-                    showToast("ข้อมูลประจำตัวหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", "error");
+                    showToast("ข้อมูลประจำตัวหรือรหัสผ่านไม่ถูกต้อง", "error");
                 }
             };
 
@@ -692,9 +531,6 @@
                 return `${year}-${month}-${day}`;
             };
 
-            const getHolidayObj = (dateStr) => currentYearHolidays.find(h => h.date === dateStr);
-            const getSchoolActivity = (dateStr) => currentYearActivities.find(a => a.date === dateStr);
-
             const calculateLeaveDays = (startDateStr, endDateStr, period = "all_day", targetUser = selectedTeacher, isCovid = false) => {
                 const actualEndDateStr = period !== "all_day" ? startDateStr : endDateStr;
                 if (!startDateStr || !actualEndDateStr || !targetUser) return { total: 0, breakdown: [], dutyFeeDeduction: 0, summerFeeDeduction: 0 };
@@ -704,10 +540,7 @@
                 if (end < start) return { total: 0, breakdown: [], dutyFeeDeduction: 0, summerFeeDeduction: 0 };
 
                 const breakdown = [];
-                let totalDeducted = 0;
-                let totalDutyFee = 0;
-                let totalSummerFee = 0;
-
+                let totalDeducted = 0, totalDutyFee = 0, totalSummerFee = 0;
                 const userRole = normalizeRole(targetUser.role, targetUser.id);
                 const isMaidOrJanitor = userRole === "maid" || userRole === "janitor";
 
@@ -715,7 +548,7 @@
                 while (current <= end) {
                     const dateStr = getLocalDateString(current);
                     const dayOfWeek = current.getDay(); 
-                    const hol = getHolidayObj(dateStr);
+                    const hol = currentYearHolidays.find(h => h.date === dateStr);
                     const isHolidayAllDay = hol && (!hol.session || hol.session === "all_day");
                     const isHolidayHalfDay = hol && hol.session && hol.session !== "all_day";
 
@@ -734,74 +567,43 @@
                     } else {
                         let baseDeduction = 1.0;
                         let reason = "อัตราการลาตามเกณฑ์ปกติ";
-
-                        const schoolActivity = getSchoolActivity(dateStr);
+                        const schoolActivity = currentYearActivities.find(a => a.date === dateStr);
                         const isMeetingDay = schoolActivity && (schoolActivity.name.includes("ประชุม") || schoolActivity.name.includes("ฉันน้องพี่"));
 
                         if (isCovid) {
                             if (schoolActivity) {
                                 const isActivityAllDay = schoolActivity.session === "all_day";
-                                if (period === "all_day") {
-                                    baseDeduction = isActivityAllDay ? 2.0 : 1.5;
-                                    reason = `ลาป่วยโควิด-19 ตรงวันกิจกรรมพิเศษ (${schoolActivity.name})`;
-                                } else {
-                                    baseDeduction = isActivityAllDay ? 1.5 : 1.0;
-                                    reason = `ลาป่วยโควิด-19 ตรงวันกิจกรรมพิเศษ (${schoolActivity.name}) [ครึ่งวัน]`;
-                                }
+                                baseDeduction = (period === "all_day") ? (isActivityAllDay ? 2.0 : 1.5) : (isActivityAllDay ? 1.5 : 1.0);
+                                reason = `ลาป่วยโควิด-19 ตรงวันกิจกรรมพิเศษ (${schoolActivity.name})`;
                             } else {
-                                baseDeduction = period !== "all_day" ? 0.5 : 1.0;
+                                baseDeduction = (period !== "all_day") ? 0.5 : 1.0;
                                 reason = "ลาป่วยตรวจพบเชื้อโควิด-19 (ไม่คิดหักเพิ่มติดวันหยุด)";
                             }
                         } else {
                             if (!isMaidOrJanitor && isMeetingDay) {
-                                if (period === "afternoon") {
-                                    baseDeduction = 1.5;
-                                    reason = "ตรงวันประชุมพบกันฉันน้องพี่ (ช่วงครึ่งวันบ่าย)";
-                                } else if (period === "all_day") {
-                                    baseDeduction = 2.0;
-                                    reason = "ตรงวันประชุมพบกันฉันน้องพี่ (เต็มวัน)";
-                                } else {
-                                    baseDeduction = 0.5;
-                                    reason = "ช่วงเช้าปกติ (มีการประชุมช่วงบ่าย)";
-                                }
+                                if (period === "afternoon") { baseDeduction = 1.5; reason = "ตรงวันประชุมพบกันฉันน้องพี่ (ช่วงบ่าย)"; }
+                                else if (period === "all_day") { baseDeduction = 2.0; reason = "ตรงวันประชุมพบกันฉันน้องพี่ (เต็มวัน)"; }
+                                else { baseDeduction = 0.5; reason = "ช่วงเช้าปกติ (มีการประชุมช่วงบ่าย)"; }
                             } else if (schoolActivity) {
                                 const isActivityAllDay = schoolActivity.session === "all_day";
-                                if (period === "all_day") {
-                                    baseDeduction = isActivityAllDay ? 2.0 : 1.5;
-                                    reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name})`;
-                                } else {
-                                    baseDeduction = isActivityAllDay ? 1.5 : 1.0;
-                                    reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name}) [ครึ่งวัน]`;
-                                }
+                                baseDeduction = (period === "all_day") ? (isActivityAllDay ? 2.0 : 1.5) : (isActivityAllDay ? 1.5 : 1.0);
+                                reason = `ตรงวันกิจกรรมพิเศษประจำโรงเรียน (${schoolActivity.name})`;
                             } else {
                                 if (period === "all_day") {
-                                    if (dayOfWeek === 5 || dayOfWeek === 1) { 
-                                        baseDeduction = 2.0;
-                                        reason = "ลาเต็มวันติดวันหยุดเสาร์-อาทิตย์";
-                                    } else {
-                                        baseDeduction = 1.0;
-                                        reason = "เต็มวันปกติ";
-                                    }
-                                } else if (period === "afternoon" && dayOfWeek === 5) { 
-                                    baseDeduction = 1.5;
-                                    reason = "ลาครึ่งวันบ่ายติดวันเสาร์";
-                                } else if (period === "morning" && dayOfWeek === 1) { 
-                                    baseDeduction = 1.5;
-                                    reason = "ลาครึ่งวันเช้าติดวันอาทิตย์";
+                                    baseDeduction = (dayOfWeek === 5 || dayOfWeek === 1) ? 2.0 : 1.0;
+                                    reason = (dayOfWeek === 5 || dayOfWeek === 1) ? "ลาเต็มวันติดวันหยุดเสาร์-อาทิตย์" : "เต็มวันปกติ";
+                                } else if (period === "afternoon" && dayOfWeek === 5) {
+                                    baseDeduction = 1.5; reason = "ลาครึ่งวันบ่ายติดวันเสาร์";
+                                } else if (period === "morning" && dayOfWeek === 1) {
+                                    baseDeduction = 1.5; reason = "ลาครึ่งวันเช้าติดวันอาทิตย์";
                                 } else {
-                                    baseDeduction = 0.5;
-                                    reason = "ลาครึ่งวันปกติ";
+                                    baseDeduction = 0.5; reason = "ลาครึ่งวันปกติ";
                                 }
                             }
                         }
 
-                        if (!isMaidOrJanitor) {
-                            totalDutyFee += (period !== "all_day" ? 50 : 100);
-                        }
-
-                        if (!isMaidOrJanitor && isDateInSummer(dateStr)) {
-                            totalSummerFee += (period !== "all_day" ? 100 : 200);
-                        }
+                        if (!isMaidOrJanitor) totalDutyFee += (period !== "all_day" ? 50 : 100);
+                        if (!isMaidOrJanitor && isDateInSummer(dateStr)) totalSummerFee += (period !== "all_day" ? 100 : 200);
 
                         breakdown.push({ date: dateStr, base: period !== "all_day" ? 0.5 : 1.0, penaltyReason: reason, final: baseDeduction });
                         totalDeducted += baseDeduction;
@@ -819,19 +621,14 @@
                     showToast("กรุณากรอกข้อมูลวันที่และเหตุผลการลาให้ครบถ้วน", "error");
                     return;
                 }
-
                 const targetTeacher = users.find(u => String(u.id) === String(selectedTeacherId));
                 const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, targetTeacher, formData.isCovid);
-
                 if (calc.total === 0) {
-                    showToast("วันที่เลือกเป็นวันหยุดประจำสัปดาห์หรือวันหยุดราชการ ไม่คิดหักวันลา", "error");
+                    showToast("วันที่เลือกเป็นวันหยุด ไม่คิดหักวันลา", "error");
                     return;
                 }
-
                 const typeThaiName = formData.type === "personal" ? "ลากิจส่วนตัว" : (formData.isCovid ? "ลาป่วย (ตรวจพบเชื้อโควิด-19)" : "ลาป่วย");
                 const periodThaiName = formData.period === "all_day" ? "เต็มวัน" : (formData.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย");
-                const leaveAcademicYear = getAcademicYearFromDate(formData.startDate);
-
                 const newRequest = {
                     id: "L" + Date.now().toString().slice(-6),
                     teacherId: selectedTeacherId,
@@ -839,9 +636,7 @@
                     startDate: formData.startDate,
                     endDate: formData.period !== "all_day" ? formData.startDate : formData.endDate,
                     type: formData.type,
-                    typeThai: typeThaiName,
                     period: formData.period,
-                    periodThai: periodThaiName,
                     reason: formData.reason + (formData.isCovid ? " [ตรวจพบเชื้อโควิด-19]" : ""),
                     totalDeducted: calc.total,
                     dutyFeeDeduction: calc.dutyFeeDeduction,
@@ -849,63 +644,45 @@
                     status: "อนุมัติแล้ว",
                     breakdown: calc.breakdown,
                     createdAt: getLocalDateString(new Date()),
-                    academicYear: leaveAcademicYear
+                    academicYear: getAcademicYearFromDate(formData.startDate)
                 };
 
                 const updatedLeaves = [newRequest, ...leaves];
                 setLeaves(updatedLeaves);
                 localStorage.setItem("leave_leaves", JSON.stringify(updatedLeaves));
-
                 setFormData({ startDate: "", endDate: "", type: "personal", reason: "", period: "all_day", isCovid: false });
-                showToast("ยื่นคำขอและบันทึกประวัติวันลาเรียบร้อยแล้ว");
+                showToast("บันทึกประวัติวันลาเรียบร้อยแล้ว");
 
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
-                            action: "requestLeave",
-                            id: newRequest.id,
-                            teacherId: newRequest.teacherId,
-                            teacherName: newRequest.teacherName,
-                            startDate: newRequest.startDate,
-                            endDate: newRequest.endDate,
-                            type: typeThaiName, 
-                            period: periodThaiName, 
-                            reason: newRequest.reason,
-                            totalDeducted: newRequest.totalDeducted,
-                            status: "อนุมัติแล้ว",
-                            breakdown: newRequest.breakdown,
-                            createdAt: newRequest.createdAt,
-                            dutyFeeDeduction: newRequest.dutyFeeDeduction,
-                            summerFeeDeduction: newRequest.summerFeeDeduction,
+                            action: "requestLeave", id: newRequest.id, teacherId: newRequest.teacherId,
+                            teacherName: newRequest.teacherName, startDate: newRequest.startDate,
+                            endDate: newRequest.endDate, type: typeThaiName, period: periodThaiName,
+                            reason: newRequest.reason, totalDeducted: newRequest.totalDeducted,
+                            dutyFeeDeduction: newRequest.dutyFeeDeduction, summerFeeDeduction: newRequest.summerFeeDeduction,
                             academicYear: newRequest.academicYear
                         })
-                    }).catch(err => console.warn("Sheet save note:", err));
+                    }).catch(err => console.warn("Sheet save error:", err));
                 }
             };
 
             const handleDeleteLeave = (leaveId) => {
-                triggerConfirm(
-                    "ยืนยันการยกเลิกรายการใบขอลา",
-                    "ระบบจะทำการคืนสิทธิ์วันลาให้บุคลากรโดยอัตโนมัติ",
-                    () => {
-                        const updated = leaves.filter(l => l.id !== leaveId);
-                        setLeaves(updated);
-                        localStorage.setItem("leave_leaves", JSON.stringify(updated));
-                        showToast("ยกเลิกรายการและคืนสิทธิ์วันลาเรียบร้อยแล้ว");
-
-                        if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
-                            fetch(GOOGLE_SHEET_URL, {
-                                method: 'POST',
-                                mode: 'no-cors',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ action: "deleteLeave", leaveId })
-                            }).catch(err => console.warn("Sheet delete note:", err));
-                        }
+                triggerConfirm("ยืนยันการยกเลิกใบลา", "ระบบจะคืนสิทธิ์วันลาให้บุคลากร", () => {
+                    const updated = leaves.filter(l => l.id !== leaveId);
+                    setLeaves(updated);
+                    localStorage.setItem("leave_leaves", JSON.stringify(updated));
+                    showToast("ยกเลิกรายการเรียบร้อยแล้ว");
+                    if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
+                        fetch(GOOGLE_SHEET_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: "deleteLeave", leaveId })
+                        }).catch(err => console.warn("Delete note:", err));
                     }
-                );
+                });
             };
 
             const handleUpdateLeave = (e) => {
@@ -931,12 +708,11 @@
                 localStorage.setItem("leave_leaves", JSON.stringify(updatedLeaves));
                 setShowEditLeaveModal(false);
                 setEditingLeave(null);
-                showToast("แก้ไขข้อมูลใบลาและปรับยอดคำนวณเรียบร้อยแล้ว");
+                showToast("แก้ไขข้อมูลใบลาเรียบร้อยแล้ว");
 
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
                             action: "editLeave",
@@ -958,43 +734,26 @@
             const handleSaveHoliday = (holidayData, originalDate = null) => {
                 const targetAcYear = holidayData.academicYear || getAcademicYearFromDate(holidayData.date);
                 const itemToSave = { ...holidayData, academicYear: targetAcYear };
-                
-                let updated;
-                if (originalDate) {
-                    updated = allHolidays.map(h => h.date === originalDate ? itemToSave : h);
-                } else {
-                    updated = [...allHolidays, itemToSave];
-                }
+                const updated = originalDate ? allHolidays.map(h => h.date === originalDate ? itemToSave : h) : [...allHolidays, itemToSave];
                 setAllHolidays(updated);
                 localStorage.setItem("leave_holidays_all", JSON.stringify(updated));
-
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "saveHoliday",
-                            date: itemToSave.date,
-                            name: itemToSave.name,
-                            session: itemToSave.session,
-                            academicYear: itemToSave.academicYear,
-                            originalDate: originalDate
-                        })
+                        body: JSON.stringify({ action: "saveHoliday", ...itemToSave, originalDate })
                     }).catch(err => console.warn("Holiday save note:", err));
                 }
-                showToast("บันทึกวันหยุดลงระบบและชีทเรียบร้อยแล้ว");
+                showToast("บันทึกวันหยุดเรียบร้อยแล้ว");
             };
 
             const handleDeleteHoliday = (dateStr) => {
                 const updated = allHolidays.filter(h => h.date !== dateStr);
                 setAllHolidays(updated);
                 localStorage.setItem("leave_holidays_all", JSON.stringify(updated));
-
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: "deleteHoliday", date: dateStr })
                     }).catch(err => console.warn("Holiday delete note:", err));
@@ -1005,43 +764,26 @@
             const handleSaveActivity = (activityData, originalDate = null) => {
                 const targetAcYear = activityData.academicYear || getAcademicYearFromDate(activityData.date);
                 const itemToSave = { ...activityData, academicYear: targetAcYear };
-                
-                let updated;
-                if (originalDate) {
-                    updated = allActivities.map(a => a.date === originalDate ? itemToSave : a);
-                } else {
-                    updated = [...allActivities, itemToSave];
-                }
+                const updated = originalDate ? allActivities.map(a => a.date === originalDate ? itemToSave : a) : [...allActivities, itemToSave];
                 setAllActivities(updated);
                 localStorage.setItem("leave_activities_all", JSON.stringify(updated));
-
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "saveActivity",
-                            date: itemToSave.date,
-                            name: itemToSave.name,
-                            session: itemToSave.session,
-                            academicYear: itemToSave.academicYear,
-                            originalDate: originalDate
-                        })
+                        body: JSON.stringify({ action: "saveActivity", ...itemToSave, originalDate })
                     }).catch(err => console.warn("Activity save note:", err));
                 }
-                showToast("บันทึกกิจกรรมลงระบบและชีทเรียบร้อยแล้ว");
+                showToast("บันทึกกิจกรรมเรียบร้อยแล้ว");
             };
 
             const handleDeleteActivity = (dateStr) => {
                 const updated = allActivities.filter(a => a.date !== dateStr);
                 setAllActivities(updated);
                 localStorage.setItem("leave_activities_all", JSON.stringify(updated));
-
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: "deleteActivity", date: dateStr })
                     }).catch(err => console.warn("Activity delete note:", err));
@@ -1055,13 +797,11 @@
                         const currentVal = Number(u[field] || 0);
                         const newVal = Math.max(0, currentVal + delta);
                         const updated = { ...u, [field]: newVal };
-
                         if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                             fetch(GOOGLE_SHEET_URL, {
-                                method: 'POST',
-                                mode: 'no-cors',
+                                method: 'POST', mode: 'no-cors',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ action: "updateCount", teacherId: teacherId, field: field, count: newVal })
+                                body: JSON.stringify({ action: "updateCount", teacherId, field, count: newVal })
                             }).catch(err => console.warn("Update note:", err));
                         }
                         return updated;
@@ -1078,70 +818,23 @@
                         if (actionType === "updateRole") updated.role = fieldValue;
                         if (actionType === "updatePassword") updated.password = fieldValue;
                         if (actionType === "updateEmail") updated.email = fieldValue;
-
                         if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                             fetch(GOOGLE_SHEET_URL, {
-                                method: 'POST',
-                                mode: 'no-cors',
+                                method: 'POST', mode: 'no-cors',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({
-                                    action: actionType,
-                                    teacherId: teacherId,
+                                    action: actionType, teacherId,
                                     role: actionType === "updateRole" ? fieldValue : undefined,
                                     password: actionType === "updatePassword" ? fieldValue : undefined,
                                     email: actionType === "updateEmail" ? fieldValue : undefined
                                 })
-                            }).catch(err => console.warn("Sync user field note:", err));
+                            }).catch(err => console.warn("User update note:", err));
                         }
                         return updated;
                     }
                     return u;
                 }));
                 showToast("บันทึกการปรับเปลี่ยนเรียบร้อยแล้ว");
-            };
-
-            const handleAddDisciplineLog = (e) => {
-                e.preventDefault();
-                if (!disciplineForm.teacherId || !disciplineForm.date) {
-                    showToast("กรุณากรอกข้อมูลวันที่และบุคลากรให้ครบถ้วน", "error");
-                    return;
-                }
-
-                const logTypeLabels = {
-                    late: "เข้าปฏิบัติงานสาย",
-                    forgotTime: "ลืมบันทึกเวลาเข้า-ออกงาน",
-                    middayShort: "ออกนอกสถานที่ 1.01 - 1.30 ชั่วโมง (นับว่ามาสาย 1 ครั้ง)",
-                    middayLong: "ออกนอกสถานที่ตั้งแต่ 1.31 ชั่วโมงขึ้นไป (หักลากิจ 0.5 วัน)",
-                    missedMeeting: "ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)"
-                };
-
-                const newLog = {
-                    id: "LOG" + Date.now(),
-                    teacherId: disciplineForm.teacherId,
-                    date: disciplineForm.date,
-                    type: disciplineForm.type,
-                    typeName: logTypeLabels[disciplineForm.type] || disciplineForm.type,
-                    note: disciplineForm.note || "ไม่มีระบุหมายเหตุ",
-                    createdAt: getLocalDateString(new Date())
-                };
-
-                setDisciplineLogs([newLog, ...disciplineLogs]);
-
-                const fieldMapping = {
-                    late: "lateCount",
-                    forgotTime: "forgotTimeCount",
-                    middayShort: "middayOutShortCount",
-                    middayOutLongCount: "middayOutLongCount",
-                    missedMeeting: "missedMeetingCount"
-                };
-
-                if (fieldMapping[disciplineForm.type]) {
-                    handleUpdateDisciplineCount(disciplineForm.teacherId, fieldMapping[disciplineForm.type], 1);
-                }
-
-                setShowAddDisciplineModal(false);
-                setDisciplineForm({ teacherId: "", date: "", type: "forgotTime", note: "" });
-                showToast("ลงบันทึกประวัติตามวันที่เรียบร้อยแล้ว");
             };
 
             const renderAvatar = (teacherObj, sizeClass = "w-12 h-12 text-sm") => {
@@ -1259,7 +952,6 @@
                     <header className="luxury-gradient text-white shadow-xl sticky top-0 z-30 border-b border-emerald-700/50">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                             <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-                                {/* ฝั่งซ้าย: โลโก้ และ ชื่อโรงเรียน */}
                                 <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
                                     <div className="flex items-center gap-3">
                                         <div className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center flex-shrink-0 bg-white/10 rounded-2xl p-1.5 border border-white/20 shadow-inner">
@@ -1280,7 +972,6 @@
                                         </div>
                                     </div>
 
-                                    {/* แสดงโปรไฟล์ย่อสำหรับหน้าจอขนาดเล็ก */}
                                     <div className="flex lg:hidden items-center gap-2 bg-navy-950/80 px-2.5 py-1.5 rounded-xl border border-emerald-500/30">
                                         <div className="text-right">
                                             <p className="text-[10px] font-bold text-emerald-400 uppercase leading-none">{currentRole === 'admin' ? 'แอดมิน' : currentRole === 'hr' ? 'HR' : 'บุคลากร'}</p>
@@ -1292,9 +983,7 @@
                                     </div>
                                 </div>
 
-                                {/* ฝั่งขวา: เครื่องมือควบคุม */}
                                 <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto justify-end">
-                                    {/* 🎓 ตัวเลือกปีการศึกษา & ปุ่มซิงก์ */}
                                     <div className="flex items-center bg-navy-950/90 px-3 py-1.5 rounded-xl border border-emerald-500/40 shadow-sm">
                                         <i className="fa-solid fa-graduation-cap text-emerald-400 mr-2 text-xs"></i>
                                         <span className="text-xs font-bold text-slate-300 mr-2 hidden sm:inline">ปีการศึกษา:</span>
@@ -1318,7 +1007,6 @@
                                         </button>
                                     </div>
 
-                                    {/* ปุ่มสลับแท็บสำหรับ Admin / HR */}
                                     {isAdminOrHr && (
                                         <div className="flex bg-navy-950/90 p-1 rounded-xl border border-emerald-700/40 shadow-sm">
                                             <button 
@@ -1338,7 +1026,6 @@
                                         </div>
                                     )}
 
-                                    {/* บล็อกผู้ใช้งานปัจจุบัน */}
                                     <div className="hidden lg:flex items-center gap-2.5 bg-navy-950/90 pl-3.5 pr-2 py-1.5 rounded-xl border border-emerald-700/40 shadow-sm text-left">
                                         <div>
                                             <p className="text-[10px] font-bold text-emerald-400 uppercase leading-none">
@@ -2153,7 +1840,7 @@
                                                                 <select 
                                                                     value={u.role}
                                                                     onChange={(e) => handleUpdateUserField(u.id, "updateRole", e.target.value)}
-                                                                    className="bg-slate-50 border border-slate-300 text-slate-800 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold"
+                                                                    className="bg-slate-50 border border-slate-300 text-slate-800 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold"
                                                                 >
                                                                     <option value="admin">ผู้ดูแลระบบ (Admin)</option>
                                                                     <option value="hr">ฝ่ายบุคคล (HR)</option>
@@ -2188,646 +1875,6 @@
                             </div>
                         )}
                     </main>
-
-                    {/* Modals ทั้งหมด */}
-                    {showEditLeaveModal && editingLeave && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                                        <i className="fa-solid fa-pen-to-square text-emerald-700"></i>
-                                        แก้ไขข้อมูลใบลา (รหัสใบลา: {editingLeave.id})
-                                    </h3>
-                                    <button onClick={() => { setShowEditLeaveModal(false); setEditingLeave(null); }} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleUpdateLeave} className="space-y-4 text-xs sm:text-sm">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">วันที่เริ่มลา</label>
-                                            <input 
-                                                type="date" 
-                                                value={editingLeave.startDate}
-                                                onChange={(e) => setEditingLeave({ ...editingLeave, startDate: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">สิ้นสุดวันที่</label>
-                                            <input 
-                                                type="date" 
-                                                value={editingLeave.period !== "all_day" ? editingLeave.startDate : editingLeave.endDate}
-                                                onChange={(e) => setEditingLeave({ ...editingLeave, endDate: e.target.value })}
-                                                disabled={editingLeave.period !== "all_day"}
-                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                                required={editingLeave.period === "all_day"}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลา</label>
-                                            <select 
-                                                value={editingLeave.period}
-                                                onChange={(e) => setEditingLeave({ ...editingLeave, period: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                            >
-                                                <option value="all_day">เต็มวัน (1.0)</option>
-                                                <option value="morning">ครึ่งเช้า (0.5)</option>
-                                                <option value="afternoon">ครึ่งบ่าย (0.5)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">ประเภทการลา</label>
-                                            <select 
-                                                value={editingLeave.type}
-                                                onChange={(e) => setEditingLeave({ ...editingLeave, type: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                            >
-                                                <option value="personal">ลากิจส่วนตัว</option>
-                                                <option value="sick">ลาป่วย</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เหตุผลการลา</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingLeave.reason}
-                                            onChange={(e) => setEditingLeave({ ...editingLeave, reason: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
-                                            required
-                                        />
-                                    </div>
-
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกการแก้ไขและคำนวณยอดใหม่
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAddHolidayModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-[24px] shadow-2xl p-6 sm:p-8 w-full max-w-md border animate-fade-in text-left text-xs sm:text-sm">
-                                <div className="flex justify-between items-center border-b pb-3 mb-4">
-                                    <h3 className="font-bold text-slate-800 uppercase tracking-wide">เพิ่มวันหยุดราชการประจำปฏิทิน</h3>
-                                    <button onClick={() => setShowAddHolidayModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    if (!newHoliday.date || !newHoliday.name) return;
-                                    handleSaveHoliday(newHoliday);
-                                    setNewHoliday({ date: "", name: "", session: "all_day", academicYear: selectedYear });
-                                    setShowAddHolidayModal(false);
-                                }} className="space-y-4">
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ปีการศึกษา</label>
-                                        <input 
-                                            type="text" 
-                                            value={newHoliday.academicYear || selectedYear}
-                                            onChange={(e) => setNewHoliday({ ...newHoliday, academicYear: e.target.value })}
-                                            className="w-full bg-slate-100 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่</label>
-                                        <input 
-                                            type="date" 
-                                            value={newHoliday.date}
-                                            onChange={(e) => {
-                                                const d = e.target.value;
-                                                setNewHoliday({ ...newHoliday, date: d, academicYear: getAcademicYearFromDate(d) });
-                                            }}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อวันหยุด</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="วันสงกรานต์, วันตรุษจีน..."
-                                            value={newHoliday.name}
-                                            onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาหยุด</label>
-                                        <select 
-                                            value={newHoliday.session}
-                                            onChange={(e) => setNewHoliday({ ...newHoliday, session: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                        >
-                                            <option value="all_day">ตลอดวัน (เต็มวัน)</option>
-                                            <option value="morning">ครึ่งวันเช้า</option>
-                                            <option value="afternoon">ครึ่งวันบ่าย</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกวันหยุดลงระบบและชีท
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showEditHolidayModal && editingHoliday && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left text-xs sm:text-sm">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="font-bold text-slate-800">แก้ไขวันหยุดตามปฏิทินโรงเรียน</h3>
-                                    <button onClick={() => { setShowEditHolidayModal(false); setEditingHoliday(null); }} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSaveHoliday(editingHoliday, editingHoliday.originalDate);
-                                    setShowEditHolidayModal(false);
-                                    setEditingHoliday(null);
-                                }} className="space-y-4">
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ปีการศึกษา</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingHoliday.academicYear || selectedYear}
-                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, academicYear: e.target.value })}
-                                            className="w-full bg-slate-100 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่</label>
-                                        <input 
-                                            type="date" 
-                                            value={editingHoliday.date}
-                                            onChange={(e) => {
-                                                const d = e.target.value;
-                                                setEditingHoliday({ ...editingHoliday, date: d, academicYear: getAcademicYearFromDate(d) });
-                                            }}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อวันหยุด</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingHoliday.name}
-                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาหยุด</label>
-                                        <select 
-                                            value={editingHoliday.session}
-                                            onChange={(e) => setEditingHoliday({ ...editingHoliday, session: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                        >
-                                            <option value="all_day">ตลอดวัน (เต็มวัน)</option>
-                                            <option value="morning">ครึ่งวันเช้า</option>
-                                            <option value="afternoon">ครึ่งวันบ่าย</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกการแก้ไขวันหยุด
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAddActivityModal && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left text-xs sm:text-sm">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="font-bold text-slate-800">เพิ่มกิจกรรมพิเศษประจำโรงเรียน</h3>
-                                    <button onClick={() => setShowAddActivityModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    if (!newActivity.date || !newActivity.name) return;
-                                    handleSaveActivity(newActivity);
-                                    setNewActivity({ date: "", name: "", session: "all_day", academicYear: selectedYear });
-                                    setShowAddActivityModal(false);
-                                }} className="space-y-4">
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ปีการศึกษา</label>
-                                        <input 
-                                            type="text" 
-                                            value={newActivity.academicYear || selectedYear}
-                                            onChange={(e) => setNewActivity({ ...newActivity, academicYear: e.target.value })}
-                                            className="w-full bg-slate-100 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่จัดกิจกรรม</label>
-                                        <input 
-                                            type="date" 
-                                            value={newActivity.date}
-                                            onChange={(e) => {
-                                                const d = e.target.value;
-                                                setNewActivity({ ...newActivity, date: d, academicYear: getAcademicYearFromDate(d) });
-                                            }}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อกิจกรรมประจำโรงเรียน</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="พิธีไหว้ครู, กิจกรรมกีฬาสี..."
-                                            value={newActivity.name}
-                                            onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาจัดกิจกรรม</label>
-                                        <select 
-                                            value={newActivity.session}
-                                            onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                        >
-                                            <option value="all_day">ตลอดวัน</option>
-                                            <option value="morning">ครึ่งวันเช้า</option>
-                                            <option value="afternoon">ครึ่งวันบ่าย</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกกิจกรรมลงระบบและชีท
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showEditActivityModal && editingActivity && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border text-left text-xs sm:text-sm">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="font-bold text-slate-800">แก้ไขกิจกรรมพิเศษของโรงเรียน</h3>
-                                    <button onClick={() => { setShowEditActivityModal(false); setEditingActivity(null); }} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleSaveActivity(editingActivity, editingActivity.originalDate);
-                                    setShowEditActivityModal(false);
-                                    setEditingActivity(null);
-                                }} className="space-y-4">
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ปีการศึกษา</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingActivity.academicYear || selectedYear}
-                                            onChange={(e) => setEditingActivity({ ...editingActivity, academicYear: e.target.value })}
-                                            className="w-full bg-slate-100 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกวันที่จัดกิจกรรม</label>
-                                        <input 
-                                            type="date" 
-                                            value={editingActivity.date}
-                                            onChange={(e) => {
-                                                const d = e.target.value;
-                                                setEditingActivity({ ...editingActivity, date: d, academicYear: getAcademicYearFromDate(d) });
-                                            }}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อกิจกรรมประจำโรงเรียน</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingActivity.name}
-                                            onChange={(e) => setEditingActivity({ ...editingActivity, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลาจัดกิจกรรม</label>
-                                        <select 
-                                            value={editingActivity.session}
-                                            onChange={(e) => setEditingActivity({ ...editingActivity, session: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold"
-                                        >
-                                            <option value="all_day">ตลอดวัน</option>
-                                            <option value="morning">ครึ่งวันเช้า</option>
-                                            <option value="afternoon">ครึ่งวันบ่าย</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกการแก้ไขกิจกรรม
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showRuleModal && (
-                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-3xl border text-left max-h-[90vh] flex flex-col">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2.5">
-                                        <i className="fa-solid fa-book-open text-emerald-700"></i>
-                                        คู่มือและระเบียบข้อบังคับการหักวันลาปฏิบัติงาน
-                                    </h3>
-                                    <button onClick={() => setShowRuleModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-
-                                <div className="flex border-b border-slate-200 mb-5 gap-3">
-                                    <button 
-                                        onClick={() => setRuleTab("teacher")}
-                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                                    >
-                                        <i className="fa-solid fa-chalkboard-user"></i>
-                                        <span>กฎระเบียบครูผู้สอน</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => setRuleTab("maid")}
-                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'maid' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                                    >
-                                        <i className="fa-solid fa-broom"></i>
-                                        <span>กฎระเบียบพ่อบ้าน-แม่บ้าน</span>
-                                    </button>
-                                </div>
-
-                                <div className="overflow-y-auto flex-1 text-xs sm:text-sm space-y-4 text-slate-700 pr-3">
-                                    {ruleTab === "teacher" ? (
-                                        <div className="space-y-3.5">
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
-                                                    <i className="fa-regular fa-calendar-check text-emerald-700"></i>
-                                                    วันหยุดปกติและการลาติดวันหยุด:
-                                                </h4>
-                                                <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินของโรงเรียน <strong>ไม่คิดหักวันลา</strong></p>
-                                                <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
-                                                <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดราชการ <strong className="text-emerald-700">→ หัก 3 วัน</strong></p>
-                                                <p>• <strong>พิเศษสำหรับโควิด-19:</strong> ตรวจพบเชื้อโควิด ลาติดวันหยุดตามปฏิทินโรงเรียน หรือเสาร์-อาทิตย์ <strong className="text-emerald-700">→ ไม่หักวันลาเพิ่ม (คิด 1.0 วันปกติ)</strong> หักเพิ่มเฉพาะที่ลาติดวันกิจกรรมพิเศษ</p>
-                                            </div>
-
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
-                                                    <i className="fa-solid fa-handshake text-emerald-700"></i>
-                                                    วันประชุมพบกันฉันน้องพี่ & กิจกรรมพิเศษ:
-                                                </h4>
-                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 2 วัน</strong> / ไม่เข้าประชุม <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
-                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
-                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษครึ่งวัน <strong className="text-emerald-700">→ หัก 1.5 วัน</strong> (ลา 0.5 วัน หัก 1 วัน)</p>
-                                            </div>
-
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
-                                                    <i className="fa-solid fa-stopwatch text-emerald-700"></i>
-                                                    วินัยการเข้างาน, ค่าเวร & ค่าสอน Summer Course:
-                                                </h4>
-                                                <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
-                                                <p>• ออกนอกสถานที่: 1.01-1.30 ชม. <strong className="text-emerald-700">→ นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. <strong className="text-emerald-700">→ หักลากิจ 0.5 วัน</strong></p>
-                                                <p>• <strong>ค่าเวร:</strong> ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
-                                                <p>• <strong>ค่าสอน Summer Course:</strong> ลาช่วง 28 ก.ย. - 9 ต.ค. 69 หรือ 1 - 26 มี.ค. 70 <strong className="text-amber-700 font-bold">→ หักค่าสอนวันละ 200 บาท (ครึ่งวัน 100 บาท)</strong></p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3.5">
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
-                                                    <i className="fa-regular fa-calendar-days text-emerald-700"></i>
-                                                    วันหยุดประจำสัปดาห์แม่บ้าน:
-                                                </h4>
-                                                <p>• แม่บ้านทุกท่านได้สิทธิ์หยุดทุกวันอาทิตย์ และมีวันเสาร์หยุดประจำหมุนเวียนดังนี้:</p>
-                                                <p className="pl-3">• <strong>เสาร์ที่ 1 ของเดือน:</strong> คุณสุทิน (52), คุณสุวภัทร (57)</p>
-                                                <p className="pl-3">• <strong>เสาร์ที่ 2 ของเดือน:</strong> คุณสมใจ (53), คุณอรทัย (54)</p>
-                                                <p className="pl-3">• <strong>เสาร์ที่ 3 ของเดือน:</strong> คุณสำราญ (56), คุณสมจิต (60)</p>
-                                                <p className="pl-3">• <strong>เสาร์ที่ 4 ของเดือน:</strong> คุณกรกช (55)</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <button 
-                                    onClick={() => setShowRuleModal(false)}
-                                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs sm:text-sm mt-4"
-                                >
-                                    เข้าใจแล้ว ปิดหน้าต่าง
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAddDisciplineModal && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                                        <i className="fa-solid fa-calendar-plus text-emerald-700"></i>
-                                        บันทึกประวัติการลงเวลาและสถิติวินัย
-                                    </h3>
-                                    <button onClick={() => setShowAddDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-                                <form onSubmit={handleAddDisciplineLog} className="space-y-4 text-xs sm:text-sm">
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกบุคลากร</label>
-                                        <select 
-                                            value={disciplineForm.teacherId}
-                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, teacherId: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
-                                            required
-                                        >
-                                            <option value="">-- เลือกบุคลากร --</option>
-                                            {users.map(u => (
-                                                <option key={u.id} value={u.id}>[{u.id}] {u.prefix}{u.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">วันที่เกิดเหตุการณ์</label>
-                                        <input 
-                                            type="date" 
-                                            value={disciplineForm.date}
-                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, date: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ประเภทสถิติวินัย</label>
-                                        <select 
-                                            value={disciplineForm.type}
-                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, type: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold"
-                                        >
-                                            <option value="late">เข้าปฏิบัติงานสาย</option>
-                                            <option value="forgotTime">ลืมบันทึกเวลาเข้า-ออกงาน</option>
-                                            <option value="middayShort">ออกนอกสถานที่ 1.01 - 1.30 ชม. (นับว่ามาสาย 1 ครั้ง)</option>
-                                            <option value="middayLong">ออกนอกสถานที่ &gt; 1.30 ชม. (หักลากิจ 0.5 วัน)</option>
-                                            <option value="missedMeeting">ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">หมายเหตุเพิ่มเติม</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="ระบุสาเหตุหรือหมายเหตุประกอบ..."
-                                            value={disciplineForm.note}
-                                            onChange={(e) => setDisciplineForm({ ...disciplineForm, note: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-medium"
-                                        />
-                                    </div>
-                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกประวัติย้อนหลัง
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showViewDisciplineModal && viewDisciplineTeacher && (
-                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl border text-left flex flex-col max-h-[90vh]">
-                                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                                    <div className="flex items-center gap-3">
-                                        {renderAvatar(viewDisciplineTeacher, "w-12 h-12 text-sm")}
-                                        <div>
-                                            <h3 className="text-base sm:text-lg font-bold text-slate-800">
-                                                ประวัติการลงเวลา & สถิติวินัยสะสม
-                                            </h3>
-                                            <p className="text-xs text-slate-500 font-bold">
-                                                {viewDisciplineTeacher.prefix}{viewDisciplineTeacher.name} (รหัส: {viewDisciplineTeacher.id})
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setShowViewDisciplineModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
-                                </div>
-
-                                <div className="overflow-y-auto flex-1 space-y-6 pr-2">
-                                    {isAdminOrHr && (
-                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                                            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b pb-2">
-                                                <i className="fa-solid fa-sliders text-emerald-700"></i>
-                                                ปรับปรุงสถิติตัวเลขสะสมรายบุคคล
-                                            </h4>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">1. เข้างานสาย:</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
-                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.lateCount || 0}</span>
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">2. ลืมสแกนเวลา:</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
-                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.forgotTimeCount || 0}</span>
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">3. นอกสถานที่ (&gt; 1.30 ชม.):</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
-                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.middayOutLongCount || 0}</span>
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                                    <span className="font-bold text-slate-700">4. ขาดการประชุมพบกัน:</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">-</button>
-                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.missedMeetingCount || 0}</span>
-                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg flex items-center justify-center font-extrabold text-slate-700">+</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-                                            <i className="fa-solid fa-clock-rotate-left text-emerald-700"></i>
-                                            รายการบันทึกข้อบกพร่องตามวันที่
-                                        </h4>
-
-                                        {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).length === 0 ? (
-                                            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-200 text-slate-400">
-                                                <p className="font-semibold text-xs sm:text-sm">ไม่มีรายการบันทึกข้อบกพร่องตามวันที่ย้อนหลัง</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).map((log) => (
-                                                    <div key={log.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center text-xs sm:text-sm">
-                                                        <div>
-                                                            <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs">
-                                                                {log.typeName}
-                                                            </span>
-                                                            <p className="font-bold text-slate-800 mt-2">{formatThaiDate(log.date)}</p>
-                                                            <p className="text-xs text-slate-500 mt-0.5">{log.note}</p>
-                                                        </div>
-                                                        {isAdminOrHr && (
-                                                            <button 
-                                                                onClick={() => {
-                                                                    setDisciplineLogs(disciplineLogs.filter(item => item.id !== log.id));
-                                                                    showToast("ลบรายการเรียบร้อยแล้ว");
-                                                                }}
-                                                                className="text-slate-400 hover:text-red-500 p-2 rounded-lg"
-                                                            >
-                                                                <i className="fa-solid fa-trash-can text-base"></i>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <button 
-                                    onClick={() => setShowViewDisciplineModal(false)}
-                                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs sm:text-sm mt-5"
-                                >
-                                    ปิดหน้าต่าง
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
