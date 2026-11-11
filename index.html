@@ -42,7 +42,7 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" data-presets="react">
+    <script type="text/babel">
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzPk7KNtev5RAoNWWVxhG3ahBoeW5qW7lilzXTxqBavlSEOSIvlHFwZxHOr4OCnkY-Q6w/exec"; 
 
         const FALLBACK_USERS = [
@@ -1845,7 +1845,7 @@
                                                                     <option value="hr">ฝ่ายบุคคล (HR)</option>
                                                                     <option value="teacher">ครูผู้สอน (Teacher)</option>
                                                                     <option value="maid">เจ้าหน้าที่แม่บ้าน (Maid)</option>
-                                                                    <option value="janitor">พ่อบ้าน (Janitor)</option>
+                                                                    <option value="janitor">เจ้าหน้าที่พ่อบ้าน (Janitor)</option>
                                                                 </select>
                                                             </td>
                                                             <td className="py-3.5 px-3">
@@ -1853,7 +1853,7 @@
                                                                     type="text" 
                                                                     defaultValue={u.email}
                                                                     onBlur={(e) => handleUpdateUserField(u.id, "updateEmail", e.target.value)}
-                                                                    className="bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-mono w-48"
+                                                                    className="bg-slate-50 border border-slate-300 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-mono w-48"
                                                                 />
                                                             </td>
                                                             <td className="py-3.5 px-3">
@@ -1861,7 +1861,7 @@
                                                                     type="text" 
                                                                     defaultValue={u.password}
                                                                     onBlur={(e) => handleUpdateUserField(u.id, "updatePassword", e.target.value)}
-                                                                    className="bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-mono w-28 text-center font-bold"
+                                                                    className="bg-slate-50 border border-slate-300 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-mono w-28 text-center font-bold"
                                                                 />
                                                             </td>
                                                         </tr>
@@ -1875,6 +1875,7 @@
                         )}
                     </main>
 
+                    {/* Modals เพิ่ม/แก้ไขบุคลากร */}
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
