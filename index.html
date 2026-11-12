@@ -179,10 +179,19 @@
                 return FALLBACK_USERS;
             });
 
+            // อนุญาตให้จดจำ Session อัตโนมัติเฉพาะ Admin และ HR เท่านั้น
             const [currentUser, setCurrentUser] = React.useState(() => {
                 const savedUser = localStorage.getItem("leave_remembered_user");
                 if (savedUser) {
-                    try { return JSON.parse(savedUser); } catch(e) { return null; }
+                    try {
+                        const parsed = JSON.parse(savedUser);
+                        const role = normalizeRole(parsed.role, parsed.id);
+                        if (role === "admin" || role === "hr") {
+                            return parsed;
+                        } else {
+                            localStorage.removeItem("leave_remembered_user");
+                        }
+                    } catch (e) {}
                 }
                 return null;
             });
@@ -318,6 +327,15 @@
                             }
                             const rawType = String(getField(l, "Type", "type", "ประเภท") || "");
                             const mappedType = (rawType.includes("ป่วย") || rawType.toLowerCase() === "sick") ? "sick" : "personal";
+
+                            const rawPeriod = String(getField(l, "Period", "period", "ช่วงเวลา", "ช่วง") || "all_day").trim();
+                            let mappedPeriod = "all_day";
+                            if (rawPeriod.includes("เช้า") || rawPeriod.toLowerCase() === "morning") {
+                                mappedPeriod = "morning";
+                            } else if (rawPeriod.includes("บ่าย") || rawPeriod.toLowerCase() === "afternoon") {
+                                mappedPeriod = "afternoon";
+                            }
+
                             const sDate = String(getField(l, "StartDate", "startDate", "startdate") || "");
                             const eDate = String(getField(l, "EndDate", "endDate", "enddate") || sDate);
                             const acYear = String(getField(l, "AcademicYear", "academicYear", "academicyear") || getAcademicYearFromDate(sDate));
@@ -330,7 +348,7 @@
                                 startDate: sDate,
                                 endDate: eDate,
                                 type: mappedType,
-                                period: String(getField(l, "Period", "period", "ช่วงเวลา") || "all_day"),
+                                period: mappedPeriod,
                                 reason: String(getField(l, "Reason", "reason", "เหตุผล") || ""),
                                 totalDeducted: deductedVal !== undefined ? Number(deductedVal) : 1,
                                 status: String(getField(l, "Status", "status", "สถานะ") || "อนุมัติแล้ว"),
@@ -500,11 +518,30 @@
                 if (matched && matched.password === loginPassword) {
                     const normalizedUser = { ...matched, role: normalizeRole(matched.role, matched.id) };
                     setCurrentUser(normalizedUser);
-                    if (rememberMe) {
+                    
+                    // บันทึกการจดจำบัญชีเฉพาะแอดมินและ HR เท่านั้น
+                    if (rememberMe && (normalizedUser.role === "admin" || normalizedUser.role === "hr")) {
                         localStorage.setItem("leave_remembered_user", JSON.stringify(normalizedUser));
+                    } else {
+                        localStorage.removeItem("leave_remembered_user");
                     }
+
                     showToast(`ยินดีต้อนรับ ${normalizedUser.prefix}${normalizedUser.name}`);
                     setLoginId(""); setLoginPassword("");
+
+                    if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
+                        fetch(GOOGLE_SHEET_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                action: "loginNotify",
+                                teacherId: normalizedUser.id,
+                                name: `${normalizedUser.prefix}${normalizedUser.name}`,
+                                role: normalizedUser.role === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : normalizedUser.role === 'hr' ? 'เจ้าหน้าที่งานบุคคล' : 'ครูผู้สอน / บุคลากร',
+                                loginTime: new Date().toLocaleString("th-TH")
+                            })
+                        }).catch(err => console.warn("Login notify note:", err));
+                    }
                 } else {
                     showToast("ข้อมูลประจำตัวหรือรหัสผ่านไม่ถูกต้อง", "error");
                 }
@@ -613,7 +650,8 @@
                 return { total: totalDeducted, breakdown, dutyFeeDeduction: totalDutyFee, summerFeeDeduction: totalSummerFee };
             };
 
-            const leaveCalculation = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, selectedTeacher, formData.isCovid);
+            const isCovidCase = formData.isCovid || (formData.type === "sick" && /โควิด|covid/i.test(formData.reason));
+            const leaveCalculation = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, selectedTeacher, isCovidCase);
 
             const handleRequestLeave = (e) => {
                 e.preventDefault();
@@ -622,12 +660,12 @@
                     return;
                 }
                 const targetTeacher = users.find(u => String(u.id) === String(selectedTeacherId));
-                const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, targetTeacher, formData.isCovid);
+                const calc = calculateLeaveDays(formData.startDate, formData.endDate, formData.period, targetTeacher, isCovidCase);
                 if (calc.total === 0) {
                     showToast("วันที่เลือกเป็นวันหยุด ไม่คิดหักวันลา", "error");
                     return;
                 }
-                const typeThaiName = formData.type === "personal" ? "ลากิจส่วนตัว" : (formData.isCovid ? "ลาป่วย (ตรวจพบเชื้อโควิด-19)" : "ลาป่วย");
+                const typeThaiName = formData.type === "personal" ? "ลากิจส่วนตัว" : (isCovidCase ? "ลาป่วย (ตรวจพบเชื้อโควิด-19)" : "ลาป่วย");
                 const periodThaiName = formData.period === "all_day" ? "เต็มวัน" : (formData.period === "morning" ? "ครึ่งวันเช้า" : "ครึ่งวันบ่าย");
                 const newRequest = {
                     id: "L" + Date.now().toString().slice(-6),
@@ -637,7 +675,7 @@
                     endDate: formData.period !== "all_day" ? formData.startDate : formData.endDate,
                     type: formData.type,
                     period: formData.period,
-                    reason: formData.reason + (formData.isCovid ? " [ตรวจพบเชื้อโควิด-19]" : ""),
+                    reason: formData.reason + (isCovidCase && !formData.reason.includes("โควิด") ? " [ตรวจพบเชื้อโควิด-19]" : ""),
                     totalDeducted: calc.total,
                     dutyFeeDeduction: calc.dutyFeeDeduction,
                     summerFeeDeduction: calc.summerFeeDeduction,
@@ -690,12 +728,21 @@
                 if (!editingLeave) return;
 
                 const targetTeacher = users.find(u => String(u.id) === String(editingLeave.teacherId));
-                const isCovid = editingLeave.reason && editingLeave.reason.includes("โควิด");
-                const calc = calculateLeaveDays(editingLeave.startDate, editingLeave.endDate, editingLeave.period, targetTeacher, isCovid);
+                const actualEndDate = editingLeave.period !== "all_day" ? editingLeave.startDate : editingLeave.endDate;
+                const isCovid = editingLeave.isCovid || /โควิด|covid/i.test(editingLeave.reason || "");
+                
+                let updatedReason = editingLeave.reason || "";
+                if (isCovid && !updatedReason.includes("โควิด")) {
+                    updatedReason += " [ตรวจพบเชื้อโควิด-19]";
+                }
+
+                const calc = calculateLeaveDays(editingLeave.startDate, actualEndDate, editingLeave.period, targetTeacher, isCovid);
                 const acYear = getAcademicYearFromDate(editingLeave.startDate);
 
                 const updatedLeave = {
                     ...editingLeave,
+                    endDate: actualEndDate,
+                    reason: updatedReason,
                     totalDeducted: calc.total,
                     dutyFeeDeduction: calc.dutyFeeDeduction,
                     summerFeeDeduction: calc.summerFeeDeduction,
@@ -708,7 +755,7 @@
                 localStorage.setItem("leave_leaves", JSON.stringify(updatedLeaves));
                 setShowEditLeaveModal(false);
                 setEditingLeave(null);
-                showToast("แก้ไขข้อมูลใบลาเรียบร้อยแล้ว");
+                showToast("แก้ไขข้อมูลใบลาและปรับยอดคำนวณเรียบร้อยแล้ว");
 
                 if (GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                     fetch(GOOGLE_SHEET_URL, {
@@ -837,6 +884,50 @@
                 showToast("บันทึกการปรับเปลี่ยนเรียบร้อยแล้ว");
             };
 
+            const handleAddDisciplineLog = (e) => {
+                e.preventDefault();
+                if (!disciplineForm.teacherId || !disciplineForm.date) {
+                    showToast("กรุณากรอกข้อมูลวันที่และบุคลากรให้ครบถ้วน", "error");
+                    return;
+                }
+
+                const logTypeLabels = {
+                    late: "เข้าปฏิบัติงานสาย",
+                    forgotTime: "ลืมบันทึกเวลาเข้า-ออกงาน",
+                    middayShort: "ออกนอกสถานที่ 1.01 - 1.30 ชั่วโมง (นับว่ามาสาย 1 ครั้ง)",
+                    middayLong: "ออกนอกสถานที่ตั้งแต่ 1.31 ชั่วโมงขึ้นไป (หักลากิจ 0.5 วัน)",
+                    missedMeeting: "ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)"
+                };
+
+                const newLog = {
+                    id: "LOG" + Date.now(),
+                    teacherId: disciplineForm.teacherId,
+                    date: disciplineForm.date,
+                    type: disciplineForm.type,
+                    typeName: logTypeLabels[disciplineForm.type] || disciplineForm.type,
+                    note: disciplineForm.note || "ไม่มีระบุหมายเหตุ",
+                    createdAt: getLocalDateString(new Date())
+                };
+
+                setDisciplineLogs([newLog, ...disciplineLogs]);
+
+                const fieldMapping = {
+                    late: "lateCount",
+                    forgotTime: "forgotTimeCount",
+                    middayShort: "middayOutShortCount",
+                    middayLong: "middayOutLongCount",
+                    missedMeeting: "missedMeetingCount"
+                };
+
+                if (fieldMapping[disciplineForm.type]) {
+                    handleUpdateDisciplineCount(disciplineForm.teacherId, fieldMapping[disciplineForm.type], 1);
+                }
+
+                setShowAddDisciplineModal(false);
+                setDisciplineForm({ teacherId: "", date: "", type: "forgotTime", note: "" });
+                showToast("ลงบันทึกประวัติตามวันที่เรียบร้อยแล้ว");
+            };
+
             const renderAvatar = (teacherObj, sizeClass = "w-12 h-12 text-sm") => {
                 if (teacherObj && teacherObj.photo) {
                     return (
@@ -927,7 +1018,7 @@
                                         className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer"
                                     />
                                     <label htmlFor="rememberMe" className="text-sm font-bold text-slate-600 cursor-pointer select-none">
-                                        จดจำการเข้าสู่ระบบในเครื่องนี้ (Auto-login)
+                                        จดจำการเข้าสู่ระบบในเครื่องนี้ (เฉพาะแอดมิน / HR)
                                     </label>
                                 </div>
 
@@ -1334,7 +1425,7 @@
                                                         <input 
                                                             type="checkbox"
                                                             id="covidCheck"
-                                                            checked={formData.isCovid}
+                                                            checked={isCovidCase}
                                                             onChange={(e) => setFormData({ ...formData, isCovid: e.target.checked })}
                                                             className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
                                                         />
@@ -1875,15 +1966,353 @@
                         )}
                     </main>
 
+                    {/* Modal อ่านระเบียบข้อบังคับวันลาทั้งหมด */}
+                    {showRuleModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-3xl border text-left max-h-[90vh] flex flex-col">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2.5">
+                                        <i className="fa-solid fa-book-open text-emerald-700"></i>
+                                        คู่มือและระเบียบข้อบังคับการหักวันลาปฏิบัติงาน
+                                    </h3>
+                                    <button onClick={() => setShowRuleModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <div className="flex border-b border-slate-200 mb-5 gap-3">
+                                    <button 
+                                        onClick={() => setRuleTab("teacher")}
+                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'teacher' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    >
+                                        <i className="fa-solid fa-chalkboard-user"></i>
+                                        <span>กฎระเบียบครูผู้สอน</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setRuleTab("maid")}
+                                        className={`px-5 py-2.5 text-xs sm:text-sm font-bold transition rounded-t-xl flex items-center gap-2 ${ruleTab === 'maid' ? 'bg-emerald-700 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    >
+                                        <i className="fa-solid fa-broom"></i>
+                                        <span>กฎระเบียบพ่อบ้าน-แม่บ้าน</span>
+                                    </button>
+                                </div>
+
+                                <div className="overflow-y-auto flex-1 text-xs sm:text-sm space-y-4 text-slate-700 pr-3">
+                                    {ruleTab === "teacher" ? (
+                                        <div className="space-y-3.5">
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-regular fa-calendar-check text-emerald-700"></i>
+                                                    วันหยุดปกติและการลาติดวันหยุด:
+                                                </h4>
+                                                <p>• วันเสาร์-อาทิตย์ และวันหยุดตามปฏิทินของโรงเรียน <strong>ไม่คิดหักวันลา</strong></p>
+                                                <p>• ลา 0.5 วันบ่าย (วันศุกร์) ติดวันเสาร์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลา 0.5 วันเช้า (วันจันทร์) ติดวันอาทิตย์ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ <strong className="text-emerald-700">→ หัก 2 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ติดวันเสาร์-อาทิตย์ และวันหยุดราชการ <strong className="text-emerald-700">→ หัก 3 วัน</strong></p>
+                                                <p>• <strong>พิเศษสำหรับโควิด-19:</strong> ตรวจพบเชื้อโควิด ลาติดวันหยุดตามปฏิทินโรงเรียน หรือเสาร์-อาทิตย์ <strong className="text-emerald-700">→ ไม่หักวันลาเพิ่ม (คิดตามวันที่ลาจริง 1.0 หรือ 0.5 วัน)</strong> หักเพิ่มเฉพาะที่ลาติดวันกิจกรรมพิเศษ</p>
+                                            </div>
+
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-solid fa-handshake text-emerald-700"></i>
+                                                    วันประชุมพบกันฉันน้องพี่ & กิจกรรมพิเศษ:
+                                                </h4>
+                                                <p>• ลา 0.5 วันบ่าย ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 1.5 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ตรงกับวันประชุมพบกันฉันน้องพี่ <strong className="text-emerald-700">→ หัก 2 วัน</strong> / ไม่เข้าประชุม <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong></p>
+                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษตลอดวัน <strong className="text-emerald-700">→ หัก 2 วัน</strong> (ลา 0.5 วัน หัก 1.5 วัน)</p>
+                                                <p>• ลาเต็มวัน ตรงกับกิจกรรมพิเศษครึ่งวัน <strong className="text-emerald-700">→ หัก 1.5 วัน</strong> (ลา 0.5 วัน หัก 1 วัน)</p>
+                                            </div>
+
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-solid fa-stopwatch text-emerald-700"></i>
+                                                    วินัยการเข้างาน, ค่าเวร & ค่าสอน Summer Course:
+                                                </h4>
+                                                <p>• มาสาย หรือ ลืมสแกนนิ้ว ครบทุกๆ 3 ครั้ง <strong className="text-emerald-700">→ หักลากิจ 1 วัน</strong> (ครบ 9 ครั้ง ขึ้นข้อความสีแดง <span className="text-red-600 font-extrabold">"ลงบันทึกความผิด"</span>)</p>
+                                                <p>• ออกนอกสถานที่: 1.01-1.30 ชม. <strong className="text-emerald-700">→ นับสาย 1 ครั้ง</strong> / &gt; 1.31 ชม. <strong className="text-emerald-700">→ หักลากิจ 0.5 วัน</strong></p>
+                                                <p>• <strong>ค่าเวร:</strong> ลา 0.5 วัน หัก 50 บาท / ลาเต็มวัน หัก 100 บาท</p>
+                                                <p>• <strong>ค่าสอน Summer Course:</strong> ลาช่วง 28 ก.ย. - 9 ต.ค. 69 หรือ 1 - 26 มี.ค. 70 <strong className="text-amber-700 font-bold">→ หักค่าสอนวันละ 200 บาท (ครึ่งวัน 100 บาท)</strong></p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3.5">
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <h4 className="font-bold text-emerald-800 text-sm sm:text-base mb-1.5 flex items-center gap-2">
+                                                    <i className="fa-regular fa-calendar-days text-emerald-700"></i>
+                                                    วันหยุดประจำสัปดาห์แม่บ้าน:
+                                                </h4>
+                                                <p>• แม่บ้านทุกท่านได้สิทธิ์หยุดทุกวันอาทิตย์ และมีวันเสาร์หยุดประจำหมุนเวียนดังนี้:</p>
+                                                <p className="pl-3">• <strong>เสาร์ที่ 1 ของเดือน:</strong> คุณสุทิน (52), คุณสุวภัทร (57)</p>
+                                                <p className="pl-3">• <strong>เสาร์ที่ 2 ของเดือน:</strong> คุณสมใจ (53), คุณอรทัย (54)</p>
+                                                <p className="pl-3">• <strong>เสาร์ที่ 3 ของเดือน:</strong> คุณสำราญ (56), คุณสมจิต (60)</p>
+                                                <p className="pl-3">• <strong>เสาร์ที่ 4 ของเดือน:</strong> คุณกรกช (55)</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button 
+                                    onClick={() => setShowRuleModal(false)}
+                                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs sm:text-sm mt-4"
+                                >
+                                    เข้าใจแล้ว ปิดหน้าต่าง
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal แก้ไขใบลา */}
+                    {showEditLeaveModal && editingLeave && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-pen-to-square text-emerald-700"></i>
+                                        แก้ไขข้อมูลใบลา (รหัส: {editingLeave.id})
+                                    </h3>
+                                    <button onClick={() => { setShowEditLeaveModal(false); setEditingLeave(null); }} className="text-slate-400 hover:text-slate-600">
+                                        <i className="fa-solid fa-xmark text-xl"></i>
+                                    </button>
+                                </div>
+                                <form onSubmit={handleUpdateLeave} className="space-y-4 text-xs sm:text-sm">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">วันที่เริ่มลา</label>
+                                            <input type="date" value={editingLeave.startDate} onChange={(e) => setEditingLeave({ ...editingLeave, startDate: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">สิ้นสุดวันที่</label>
+                                            <input type="date" value={editingLeave.period !== "all_day" ? editingLeave.startDate : editingLeave.endDate} onChange={(e) => setEditingLeave({ ...editingLeave, endDate: e.target.value })} disabled={editingLeave.period !== "all_day"} className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold" required={editingLeave.period === "all_day"} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">ช่วงเวลา</label>
+                                            <select value={editingLeave.period} onChange={(e) => setEditingLeave({ ...editingLeave, period: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold">
+                                                <option value="all_day">เต็มวัน (1.0)</option>
+                                                <option value="morning">ครึ่งเช้า (0.5)</option>
+                                                <option value="afternoon">ครึ่งบ่าย (0.5)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-700 font-bold mb-1.5">ประเภทการลา</label>
+                                            <select value={editingLeave.type} onChange={(e) => setEditingLeave({ ...editingLeave, type: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold">
+                                                <option value="personal">ลากิจส่วนตัว</option>
+                                                <option value="sick">ลาป่วย</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    {editingLeave.type === "sick" && (
+                                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2.5">
+                                            <input type="checkbox" id="editCovidCheck" checked={editingLeave.isCovid || /โควิด|covid/i.test(editingLeave.reason || "")} onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                let cleanReason = (editingLeave.reason || "").replace(/\s*\[ตรวจพบเชื้อโควิด-19\]/g, "");
+                                                if (checked) cleanReason += " [ตรวจพบเชื้อโควิด-19]";
+                                                setEditingLeave({ ...editingLeave, isCovid: checked, reason: cleanReason });
+                                            }} className="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
+                                            <label htmlFor="editCovidCheck" className="text-xs font-bold text-amber-900 cursor-pointer">🦠 ตรวจพบเชื้อโควิด-19 (ไม่หักเพิ่มติดวันหยุด)</label>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">เหตุผลการลา</label>
+                                        <input type="text" value={editingLeave.reason} onChange={(e) => setEditingLeave({ ...editingLeave, reason: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-2.5 rounded-xl font-semibold" required />
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow mt-2">บันทึกการแก้ไขและคำนวณยอดใหม่</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal บันทึกประวัติการลงเวลาใหม่ */}
+                    {showAddDisciplineModal && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-calendar-plus text-emerald-700"></i>
+                                        บันทึกประวัติการลงเวลาและสถิติวินัย
+                                    </h3>
+                                    <button onClick={() => setShowAddDisciplineModal(false)} className="text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-xl"></i></button>
+                                </div>
+                                <form onSubmit={handleAddDisciplineLog} className="space-y-4 text-xs sm:text-sm">
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">เลือกบุคลากร</label>
+                                        <select value={disciplineForm.teacherId} onChange={(e) => setDisciplineForm({ ...disciplineForm, teacherId: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold" required>
+                                            <option value="">-- เลือกบุคลากร --</option>
+                                            {users.map(u => (<option key={u.id} value={u.id}>[{u.id}] {u.prefix}{u.name}</option>))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">วันที่เกิดเหตุการณ์</label>
+                                        <input type="date" value={disciplineForm.date} onChange={(e) => setDisciplineForm({ ...disciplineForm, date: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">ประเภทสถิติวินัย</label>
+                                        <select value={disciplineForm.type} onChange={(e) => setDisciplineForm({ ...disciplineForm, type: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-bold">
+                                            <option value="late">เข้าปฏิบัติงานสาย</option>
+                                            <option value="forgotTime">ลืมบันทึกเวลาเข้า-ออกงาน</option>
+                                            <option value="middayShort">ออกนอกสถานที่ 1.01 - 1.30 ชม. (นับว่ามาสาย 1 ครั้ง)</option>
+                                            <option value="middayLong">ออกนอกสถานที่ &gt; 1.30 ชม. (หักลากิจ 0.5 วัน)</option>
+                                            <option value="missedMeeting">ขาดการประชุมพบกันฉันน้องพี่ (หักลากิจ 1 วัน)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-700 font-bold mb-1.5">หมายเหตุเพิ่มเติม</label>
+                                        <input type="text" placeholder="ระบุสาเหตุหรือหมายเหตุประกอบ..." value={disciplineForm.note} onChange={(e) => setDisciplineForm({ ...disciplineForm, note: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl font-medium" />
+                                    </div>
+                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3.5 rounded-xl shadow mt-2">บันทึกประวัติย้อนหลัง</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal สถิติวินัยและการลงเวลา */}
+                    {showViewDisciplineModal && viewDisciplineTeacher && (
+                        <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-2xl border text-left flex flex-col max-h-[90vh]">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <div className="flex items-center gap-3">
+                                        {renderAvatar(viewDisciplineTeacher, "w-12 h-12 text-sm")}
+                                        <div>
+                                            <h3 className="text-base sm:text-lg font-bold text-slate-800">ประวัติการลงเวลา & สถิติวินัยสะสม</h3>
+                                            <p className="text-xs text-slate-500 font-bold">{viewDisciplineTeacher.prefix}{viewDisciplineTeacher.name} (รหัส: {viewDisciplineTeacher.id})</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowViewDisciplineModal(false)} className="text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-xl"></i></button>
+                                </div>
+                                <div className="overflow-y-auto flex-1 space-y-6 pr-2">
+                                    {isAdminOrHr && (
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                                            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b pb-2"><i className="fa-solid fa-sliders text-emerald-700"></i>ปรับปรุงสถิติตัวเลขสะสมรายบุคคล</h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">1. เข้างานสาย:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.lateCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "lateCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">+</button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">2. ลืมสแกนเวลา:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.forgotTimeCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "forgotTimeCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">+</button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">3. นอกสถานที่ (&gt; 1.30 ชม.):</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.middayOutLongCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "middayOutLongCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">+</button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                                    <span className="font-bold text-slate-700">4. ขาดการประชุมพบกัน:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">-</button>
+                                                        <span className="font-mono font-bold text-base px-2">{viewDisciplineTeacher.missedMeetingCount || 0}</span>
+                                                        <button onClick={() => handleUpdateDisciplineCount(viewDisciplineTeacher.id, "missedMeetingCount", 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 border rounded-lg font-extrabold">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 text-sm mb-3">รายการบันทึกข้อบกพร่องตามวันที่</h4>
+                                        {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).length === 0 ? (
+                                            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">ไม่มีรายการบันทึกย้อนหลัง</div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {disciplineLogs.filter(l => String(l.teacherId) === String(viewDisciplineTeacher.id)).map((log) => (
+                                                    <div key={log.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                                                        <div>
+                                                            <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">{log.typeName}</span>
+                                                            <p className="font-bold text-slate-800 mt-2">{formatThaiDate(log.date)}</p>
+                                                            <p className="text-slate-500 mt-0.5">{log.note}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowViewDisciplineModal(false)} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs sm:text-sm mt-5">ปิดหน้าต่าง</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal เพิ่ม/แก้ไข วันหยุด & กิจกรรม */}
+                    {showAddHolidayModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left text-xs">
+                                <h3 className="font-bold text-sm text-slate-800 mb-3">เพิ่มวันหยุดตามปฏิทินโรงเรียน</h3>
+                                <form onSubmit={(e) => { e.preventDefault(); handleSaveHoliday(newHoliday); setNewHoliday({ date: "", name: "", session: "all_day", academicYear: selectedYear }); setShowAddHolidayModal(false); }} className="space-y-3">
+                                    <div><label className="block font-bold mb-1">วันที่</label><input type="date" value={newHoliday.date} onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value, academicYear: getAcademicYearFromDate(e.target.value) })} className="w-full border p-2.5 rounded-xl font-bold" required /></div>
+                                    <div><label className="block font-bold mb-1">ชื่อวันหยุด</label><input type="text" value={newHoliday.name} onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })} className="w-full border p-2.5 rounded-xl font-semibold" required /></div>
+                                    <div><label className="block font-bold mb-1">ช่วงเวลา</label><select value={newHoliday.session} onChange={(e) => setNewHoliday({ ...newHoliday, session: e.target.value })} className="w-full border p-2.5 rounded-xl font-bold"><option value="all_day">ตลอดวัน</option><option value="morning">ครึ่งเช้า</option><option value="afternoon">ครึ่งบ่าย</option></select></div>
+                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3 rounded-xl">บันทึกวันหยุด</button>
+                                    <button type="button" onClick={() => setShowAddHolidayModal(false)} className="w-full bg-slate-100 py-2.5 rounded-xl font-bold">ยกเลิก</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showEditHolidayModal && editingHoliday && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left text-xs">
+                                <h3 className="font-bold text-sm text-slate-800 mb-3">แก้ไขวันหยุด</h3>
+                                <form onSubmit={(e) => { e.preventDefault(); handleSaveHoliday(editingHoliday, editingHoliday.originalDate); setShowEditHolidayModal(false); setEditingHoliday(null); }} className="space-y-3">
+                                    <div><label className="block font-bold mb-1">วันที่</label><input type="date" value={editingHoliday.date} onChange={(e) => setEditingHoliday({ ...editingHoliday, date: e.target.value, academicYear: getAcademicYearFromDate(e.target.value) })} className="w-full border p-2.5 rounded-xl font-bold" required /></div>
+                                    <div><label className="block font-bold mb-1">ชื่อวันหยุด</label><input type="text" value={editingHoliday.name} onChange={(e) => setEditingHoliday({ ...editingHoliday, name: e.target.value })} className="w-full border p-2.5 rounded-xl font-semibold" required /></div>
+                                    <div><label className="block font-bold mb-1">ช่วงเวลา</label><select value={editingHoliday.session} onChange={(e) => setEditingHoliday({ ...editingHoliday, session: e.target.value })} className="w-full border p-2.5 rounded-xl font-bold"><option value="all_day">ตลอดวัน</option><option value="morning">ครึ่งเช้า</option><option value="afternoon">ครึ่งบ่าย</option></select></div>
+                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3 rounded-xl">บันทึกการแก้ไข</button>
+                                    <button type="button" onClick={() => { setShowEditHolidayModal(false); setEditingHoliday(null); }} className="w-full bg-slate-100 py-2.5 rounded-xl font-bold">ยกเลิก</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAddActivityModal && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left text-xs">
+                                <h3 className="font-bold text-sm text-slate-800 mb-3">เพิ่มกิจกรรมพิเศษ</h3>
+                                <form onSubmit={(e) => { e.preventDefault(); handleSaveActivity(newActivity); setNewActivity({ date: "", name: "", session: "all_day", academicYear: selectedYear }); setShowAddActivityModal(false); }} className="space-y-3">
+                                    <div><label className="block font-bold mb-1">วันที่</label><input type="date" value={newActivity.date} onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value, academicYear: getAcademicYearFromDate(e.target.value) })} className="w-full border p-2.5 rounded-xl font-bold" required /></div>
+                                    <div><label className="block font-bold mb-1">ชื่อกิจกรรม</label><input type="text" value={newActivity.name} onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })} className="w-full border p-2.5 rounded-xl font-semibold" required /></div>
+                                    <div><label className="block font-bold mb-1">ช่วงเวลา</label><select value={newActivity.session} onChange={(e) => setNewActivity({ ...newActivity, session: e.target.value })} className="w-full border p-2.5 rounded-xl font-bold"><option value="all_day">ตลอดวัน</option><option value="morning">ครึ่งเช้า</option><option value="afternoon">ครึ่งบ่าย</option></select></div>
+                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3 rounded-xl">บันทึกกิจกรรม</button>
+                                    <button type="button" onClick={() => setShowAddActivityModal(false)} className="w-full bg-slate-100 py-2.5 rounded-xl font-bold">ยกเลิก</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {showEditActivityModal && editingActivity && (
+                        <div className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border text-left text-xs">
+                                <h3 className="font-bold text-sm text-slate-800 mb-3">แก้ไขกิจกรรมพิเศษ</h3>
+                                <form onSubmit={(e) => { e.preventDefault(); handleSaveActivity(editingActivity, editingActivity.originalDate); setShowEditActivityModal(false); setEditingActivity(null); }} className="space-y-3">
+                                    <div><label className="block font-bold mb-1">วันที่</label><input type="date" value={editingActivity.date} onChange={(e) => setEditingActivity({ ...editingActivity, date: e.target.value, academicYear: getAcademicYearFromDate(e.target.value) })} className="w-full border p-2.5 rounded-xl font-bold" required /></div>
+                                    <div><label className="block font-bold mb-1">ชื่อกิจกรรม</label><input type="text" value={editingActivity.name} onChange={(e) => setEditingActivity({ ...editingActivity, name: e.target.value })} className="w-full border p-2.5 rounded-xl font-semibold" required /></div>
+                                    <div><label className="block font-bold mb-1">ช่วงเวลา</label><select value={editingActivity.session} onChange={(e) => setEditingActivity({ ...editingActivity, session: e.target.value })} className="w-full border p-2.5 rounded-xl font-bold"><option value="all_day">ตลอดวัน</option><option value="morning">ครึ่งเช้า</option><option value="afternoon">ครึ่งบ่าย</option></select></div>
+                                    <button type="submit" className="w-full bg-navy-900 text-white font-bold py-3 rounded-xl">บันทึกการแก้ไข</button>
+                                    <button type="button" onClick={() => { setShowEditActivityModal(false); setEditingActivity(null); }} className="w-full bg-slate-100 py-2.5 rounded-xl font-bold">ยกเลิก</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Modals เพิ่ม/แก้ไขบุคลากร */}
                     {showAddTeacherModal && (
                         <div className="fixed inset-0 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
                                 <div className="flex justify-between items-center border-b pb-4 mb-4">
                                     <h3 className="text-base font-bold text-slate-800">บันทึกเพิ่มข้อมูลบุคลากรใหม่</h3>
-                                    <button onClick={() => setShowAddTeacherModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
+                                    <button onClick={() => setShowAddTeacherModal(false)} className="text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-xl"></i></button>
                                 </div>
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
@@ -1891,86 +2320,28 @@
                                     const newId = String(users.length + 1);
                                     const u = { ...newTeacher, id: newId, lateCount: 0, forgotTimeCount: 0, middayOutShortCount: 0, middayOutLongCount: 0, missedMeetingCount: 0 };
                                     setUsers([...users, u]);
-
                                     if (newTeacher.photo && GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                                         fetch(GOOGLE_SHEET_URL, {
-                                            method: 'POST',
-                                            mode: 'no-cors',
-                                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                            body: JSON.stringify({
-                                                action: "uploadPhoto",
-                                                teacherId: newId,
-                                                base64: newTeacher.photo
-                                            })
+                                            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                            body: JSON.stringify({ action: "uploadPhoto", teacherId: newId, base64: newTeacher.photo })
                                         }).catch(err => console.error("Photo upload error:", err));
                                     }
-
                                     setShowAddTeacherModal(false);
                                     showToast(`เพิ่มข้อมูลบุคลากรเรียบร้อยแล้ว`);
                                 }} className="space-y-4 text-xs sm:text-sm">
                                     <div className="flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                                        {newTeacher.photo ? (
-                                            <img src={newTeacher.photo} className="w-14 h-14 rounded-full object-cover border-2 border-emerald-700 shadow" />
-                                        ) : (
-                                            <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
-                                                <i className="fa-solid fa-camera text-xl"></i>
-                                            </div>
-                                        )}
+                                        {newTeacher.photo ? (<img src={newTeacher.photo} className="w-14 h-14 rounded-full object-cover border-2 border-emerald-700 shadow" />) : (<div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-400"><i className="fa-solid fa-camera text-xl"></i></div>)}
                                         <div className="flex-1">
                                             <label className="block text-slate-700 font-bold mb-1">เลือกรูปถ่ายประจำตัว</label>
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    const file = e.target.files[0];
-                                                    if (file) {
-                                                        handleImageUpload(file, (base64) => {
-                                                            setNewTeacher({ ...newTeacher, photo: base64 });
-                                                        });
-                                                    }
-                                                }}
-                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
-                                            />
+                                            <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleImageUpload(file, (base64) => setNewTeacher({ ...newTeacher, photo: base64 })); }} className="w-full text-xs text-slate-500" />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อ-นามสกุลจริง</label>
-                                        <input 
-                                            type="text" 
-                                            value={newTeacher.name}
-                                            onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
-                                            required
-                                        />
-                                    </div>
+                                    <div><label className="block text-slate-700 font-bold mb-1.5">ชื่อ-นามสกุลจริง</label><input type="text" value={newTeacher.name} onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl" required /></div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">บทบาทหน้าที่</label>
-                                            <select 
-                                                value={newTeacher.role}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, role: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"
-                                            >
-                                                <option value="teacher">ครูผู้สอน</option>
-                                                <option value="maid">แม่บ้าน</option>
-                                                <option value="janitor">พ่อบ้าน</option>
-                                                <option value="hr">ฝ่ายบุคคล (HR)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">รหัสผ่านเข้าใช้งาน</label>
-                                            <input 
-                                                type="text" 
-                                                value={newTeacher.password}
-                                                onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
-                                                required
-                                            />
-                                        </div>
+                                        <div><label className="block text-slate-700 font-bold mb-1.5">บทบาทหน้าที่</label><select value={newTeacher.role} onChange={(e) => setNewTeacher({ ...newTeacher, role: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-3.5 py-3 rounded-xl font-bold"><option value="teacher">ครูผู้สอน</option><option value="maid">แม่บ้าน</option><option value="janitor">พ่อบ้าน</option><option value="hr">ฝ่ายบุคคล (HR)</option></select></div>
+                                        <div><label className="block text-slate-700 font-bold mb-1.5">รหัสผ่านเข้าใช้งาน</label><input type="text" value={newTeacher.password} onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl" required /></div>
                                     </div>
-                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกข้อมูลบุคลากร
-                                    </button>
+                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">บันทึกข้อมูลบุคลากร</button>
                                 </form>
                             </div>
                         </div>
@@ -1981,90 +2352,33 @@
                             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg border text-left">
                                 <div className="flex justify-between items-center border-b pb-4 mb-4">
                                     <h3 className="text-base font-bold text-slate-800">แก้ไขข้อมูลบุคลากร</h3>
-                                    <button onClick={() => setShowEditTeacherModal(false)} className="text-slate-400 hover:text-slate-600">
-                                        <i className="fa-solid fa-xmark text-xl"></i>
-                                    </button>
+                                    <button onClick={() => setShowEditTeacherModal(false)} className="text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-xl"></i></button>
                                 </div>
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
                                     setUsers(users.map(u => u.id === editingTeacher.id ? editingTeacher : u));
-
                                     if (editingTeacher.photo && editingTeacher.photo.startsWith("data:image") && GOOGLE_SHEET_URL && !GOOGLE_SHEET_URL.includes("YOUR_SCRIPT_ID")) {
                                         fetch(GOOGLE_SHEET_URL, {
-                                            method: 'POST',
-                                            mode: 'no-cors',
-                                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                            body: JSON.stringify({
-                                                action: "uploadPhoto",
-                                                teacherId: editingTeacher.id,
-                                                base64: editingTeacher.photo
-                                            })
+                                            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                            body: JSON.stringify({ action: "uploadPhoto", teacherId: editingTeacher.id, base64: editingTeacher.photo })
                                         }).catch(err => console.error("Photo upload error:", err));
                                     }
-
                                     setShowEditTeacherModal(false);
                                     showToast("ปรับปรุงข้อมูลเรียบร้อยแล้ว");
                                 }} className="space-y-4 text-xs sm:text-sm">
                                     <div className="flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                                        {editingTeacher.photo ? (
-                                            <img src={editingTeacher.photo} className="w-14 h-14 rounded-full object-cover border-2 border-emerald-700 shadow" />
-                                        ) : (
-                                            <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
-                                                <i className="fa-solid fa-camera text-xl"></i>
-                                            </div>
-                                        )}
+                                        {editingTeacher.photo ? (<img src={editingTeacher.photo} className="w-14 h-14 rounded-full object-cover border-2 border-emerald-700 shadow" />) : (<div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-400"><i className="fa-solid fa-camera text-xl"></i></div>)}
                                         <div className="flex-1">
                                             <label className="block text-slate-700 font-bold mb-1">เปลี่ยนรูปถ่ายประจำตัว</label>
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    const file = e.target.files[0];
-                                                    if (file) {
-                                                        handleImageUpload(file, (base64) => {
-                                                            setEditingTeacher({ ...editingTeacher, photo: base64 });
-                                                        });
-                                                    }
-                                                }}
-                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
-                                            />
+                                            <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleImageUpload(file, (base64) => setEditingTeacher({ ...editingTeacher, photo: base64 })); }} className="w-full text-xs text-slate-500" />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-slate-700 font-bold mb-1.5">ชื่อ-นามสกุลจริง</label>
-                                        <input 
-                                            type="text" 
-                                            value={editingTeacher.name}
-                                            onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
-                                            required
-                                        />
-                                    </div>
+                                    <div><label className="block text-slate-700 font-bold mb-1.5">ชื่อ-นามสกุลจริง</label><input type="text" value={editingTeacher.name} onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl" required /></div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">โควตาลากิจส่วนตัว</label>
-                                            <input 
-                                                type="number" 
-                                                value={editingTeacher.personalQuota}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, personalQuota: Number(e.target.value) })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-slate-700 font-bold mb-1.5">โควตาลาป่วย</label>
-                                            <input 
-                                                type="number" 
-                                                value={editingTeacher.sickQuota}
-                                                onChange={(e) => setEditingTeacher({ ...editingTeacher, sickQuota: Number(e.target.value) })}
-                                                className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl"
-                                                required
-                                            />
-                                        </div>
+                                        <div><label className="block text-slate-700 font-bold mb-1.5">โควตาลากิจส่วนตัว</label><input type="number" value={editingTeacher.personalQuota} onChange={(e) => setEditingTeacher({ ...editingTeacher, personalQuota: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl" required /></div>
+                                        <div><label className="block text-slate-700 font-bold mb-1.5">โควตาลาป่วย</label><input type="number" value={editingTeacher.sickQuota} onChange={(e) => setEditingTeacher({ ...editingTeacher, sickQuota: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-300 px-4 py-3 rounded-xl" required /></div>
                                     </div>
-                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">
-                                        บันทึกปรับปรุงข้อมูล
-                                    </button>
+                                    <button type="submit" className="w-full bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow mt-2">บันทึกปรับปรุงข้อมูล</button>
                                 </form>
                             </div>
                         </div>
